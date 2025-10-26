@@ -3,9 +3,9 @@
   "version": "0.0.1",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/onspark/pkg-jwt-read.git"
+    "url": "https://github.com/OnSPARK-CA/pkg-jwt-read.git"
   },
-  "description": "Auth utility functions",
+  "description": "Jwt read functions",
   "main": "index.js",
   "scripts": {
     "test": "export NODE_ENV=test && mocha --watch --recursive"
@@ -18,11 +18,11 @@
   "author": "OnSPARK team",
   "license": "ISC",
   "devDependencies": {
-    "mocha": "10.1.0"
+    "mocha": "11.7.4"
   },
   "dependencies": {
-    "@chatpta/auth-util": "3.0.0",
-    "@chatpta/common-util": "3.0.2",
-    "@chatpta/validate": "3.0.3"
+    "@onspark/auth-util": "0.0.1",
+    "@onspark/common-util": "0.0.1",
+    "@onspark/validate": "0.0.1"
   }
 }
