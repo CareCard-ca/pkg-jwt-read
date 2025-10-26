@@ -1,9 +1,9 @@
 {
-  "name": "@chatpta/jwt-read",
-  "version": "4.0.1",
+  "name": "@onspark/jwt-read",
+  "version": "0.0.1",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/chatpta/pkg-jwt-read.git"
+    "url": "git+https://github.com/onspark/pkg-jwt-read.git"
   },
   "description": "Auth utility functions",
   "main": "index.js",
@@ -15,7 +15,7 @@
     "utility",
     "cryptology"
   ],
-  "author": "Chatpta team",
+  "author": "OnSPARK team",
   "license": "ISC",
   "devDependencies": {
     "mocha": "10.1.0"
