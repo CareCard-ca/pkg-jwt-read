@@ -1,0 +1,28 @@
+{
+  "name": "@chatpta/jwt-read",
+  "version": "4.0.1",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/chatpta/pkg-jwt-read.git"
+  },
+  "description": "Auth utility functions",
+  "main": "index.js",
+  "scripts": {
+    "test": "export NODE_ENV=test && mocha --watch --recursive"
+  },
+  "keywords": [
+    "auth",
+    "utility",
+    "cryptology"
+  ],
+  "author": "Chatpta team",
+  "license": "ISC",
+  "devDependencies": {
+    "mocha": "10.1.0"
+  },
+  "dependencies": {
+    "@chatpta/auth-util": "3.0.0",
+    "@chatpta/common-util": "3.0.2",
+    "@chatpta/validate": "3.0.3"
+  }
+}
