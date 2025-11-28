@@ -22,7 +22,7 @@
   },
   "dependencies": {
     "@onspark/auth-util": "0.0.1",
-    "@onspark/common-util": "0.0.1",
+    "@onspark/common-util": "1.0.0",
     "@onspark/validate": "0.0.1"
   }
 }
