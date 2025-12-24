@@ -1,9 +1,9 @@
 {
-  "name": "@onspark/jwt-read",
-  "version": "0.0.4",
+  "name": "@carecard/jwt-read",
+  "version": "2.0.1",
   "repository": {
     "type": "git",
-    "url": "https://github.com/OnSPARK-CA/pkg-jwt-read.git"
+    "url": "https://github.com/CareCard-ca/pkg-jwt-read.git"
   },
   "description": "Jwt read functions",
   "main": "index.js",
@@ -15,14 +15,14 @@
     "utility",
     "cryptology"
   ],
-  "author": "OnSPARK team",
+  "author": "CareCard team",
   "license": "ISC",
   "devDependencies": {
     "mocha": "11.7.4"
   },
   "dependencies": {
-    "@onspark/auth-util": "0.0.1",
-    "@onspark/common-util": "1.0.0",
-    "@onspark/validate": "0.0.1"
+    "@carecard/auth-util": "2.0.1",
+    "@carecard/common-util": "2.0.1",
+    "@carecard/validate": "2.0.1"
   }
 }
