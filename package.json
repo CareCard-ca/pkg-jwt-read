@@ -1,6 +1,6 @@
 {
   "name": "@carecard/jwt-read",
-  "version": "2.0.1",
+  "version": "3.0.0",
   "repository": {
     "type": "git",
     "url": "https://github.com/CareCard-ca/pkg-jwt-read.git"
@@ -18,11 +18,11 @@
   "author": "CareCard team",
   "license": "ISC",
   "devDependencies": {
-    "mocha": "11.7.4"
+    "mocha": "11.7.5"
   },
   "dependencies": {
-    "@carecard/auth-util": "2.0.1",
-    "@carecard/common-util": "2.0.1",
-    "@carecard/validate": "2.0.1"
+    "@carecard/auth-util": "3.0.0",
+    "@carecard/common-util": "2.0.2",
+    "@carecard/validate": "2.2.12"
   }
 }
