@@ -1,4 +1,12 @@
-const privateKey = "-----BEGIN RSA PRIVATE KEY-----\n" +
+const privateKey = "-----BEGIN PRIVATE KEY-----\n" +
+    "MC4CAQAwBQYDK2VwBCIEIIZb+iZmDglOb0b9WQAgujTcSkk4EHt9seE1fRaWTQKO\n" +
+    "-----END PRIVATE KEY-----";
+
+const publicKey = "-----BEGIN PUBLIC KEY-----\n" +
+    "MCowBQYDK2VwAyEACuMVU6yPYtjnwJwNnKPi5eBwTCmEi07ccNhrFqYadZo=\n" +
+    "-----END PUBLIC KEY-----";
+
+const oldPrivateKey = "-----BEGIN RSA PRIVATE KEY-----\n" +
     "MIICWgIBAAKBgF/34KV8D2pL57AiOSBYaNeCdVZEbXTOjR2J/UEH/F240gTxVT2K" +
     "nXOP4W6OdFkSEsdDWLqhLO2OP68oakh3dm0Yzb8U+4Eos5Z3ZS+hgZCiutmm4Ef2" +
     "krUshS8BI8MJvI4YPn4meJzaDz3SccQ2O9V6YpaYX1VqHO48qNGpg/LdAgMBAAEC" +
@@ -14,7 +22,7 @@ const privateKey = "-----BEGIN RSA PRIVATE KEY-----\n" +
     "7Z/g7Yg/WeznAvpqYx3b6m3DpPzrPU6KWQ/Gfs+L\n" +
     "-----END RSA PRIVATE KEY-----";
 
-const publicKey = "-----BEGIN PUBLIC KEY-----\n" +
+const oldPublicKey = "-----BEGIN PUBLIC KEY-----\n" +
     "MIGeMA0GCSqGSIb3DQEBAQUAA4GMADCBiAKBgF/34KV8D2pL57AiOSBYaNeCdVZE" +
     "bXTOjR2J/UEH/F240gTxVT2KnXOP4W6OdFkSEsdDWLqhLO2OP68oakh3dm0Yzb8U" +
     "+4Eos5Z3ZS+hgZCiutmm4Ef2krUshS8BI8MJvI4YPn4meJzaDz3SccQ2O9V6YpaY" +
@@ -23,6 +31,8 @@ const publicKey = "-----BEGIN PUBLIC KEY-----\n" +
 
 module.exports = exports = {
     privateKey,
-    publicKey
+    publicKey,
+    oldPrivateKey,
+    oldPublicKey
 };
 

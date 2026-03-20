@@ -11,6 +11,7 @@ module.exports = {
     jwtClientId: jwtLib.jwtClientId,
     visitorClientId: jwtLib.visitorClientId,
     isJwtExpired: jwtLib.isJwtExpired,
+    jwtAgeInSeconds: jwtLib.jwtAgeInSeconds,
     verifyJwtAndRole: jwtLib.verifyJwtAndRole,
     throwUsedTokenError: jwtLib.throwUsedTokenError,
     doesJwtUserHasRole: jwtLib.doesJwtUserHasRole,

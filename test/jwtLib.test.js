@@ -1,15 +1,22 @@
 const { describe, it } = require( "mocha" );
 const assert = require( "assert" );
 const jwt = require( '../lib/jwtLib' );
-const { publicKey } = require( "./keys" );
+const { publicKey, oldPublicKey, privateKey } = require( "./keys" );
 const { throwError } = require( "../lib/jwtLib" );
+const { jwtUtilAuth } = require( '@carecard/auth-util' );
 
 describe( "Lib controller jwt", function () {
 
-    const jwtString = "eyJhbGciOiJzaGE1MTIiLCJ0eXAiOiJKV1QifQ.eyJpYXQiOjE2Mzg2NjIzMTQ5OTMsImNsaWVudF9pZCI6IjhiMGRiO" +
+    const jwtStringOld = "eyJhbGciOiJzaGE1MTIiLCJ0eXAiOiJKV1QifQ.eyJpYXQiOjE2Mzg2NjIzMTQ5OTMsImNsaWVudF9pZCI6IjhiMGRiO" +
         "Dc3LWE2YjMtNGEyMy1hNDkzLWU2ODc5MTVjZGQ4NyIsInJvbGVzIjpbXX0.JmXjeU-D1-V0Wd5upURf1K72iXGuVuq5tUkHp0TqRiN1xwg6" +
         "RUhzB9HqBnsSgOyDt1BFhr-GPZdomPG0YHW8x8eza-46efledv2gl24ZT2uP-X9V70G-UVGcj8qDQZzP7u_ZkCY3SxA3Tzv7s_V6mAzVuBQ" +
         "vm5ga93fh2HwHEoE";
+
+    const jwtString = jwtUtilAuth.createSignedJwtFromObject(
+        { alg: 'EdDSA' },
+        { iat: 1638662314, client_id: '8b0db877-a6b3-4a23-a493-e687915cdd87', roles: [] },
+        privateKey
+    );
 
     const jwtStringBad = "eyJhbGciOiJzaGE1MTIiLCJ0eXAiOiJKV1QifQ.eyJpYXQiOjE2Mzg2NjIzMTQ5OTMsImNsaWVudF9pZCI6IjhiMGRiO" +
         "Dc3LWE2YjMtNGEyMy1hNDkzLWU2ODVjZGQ4NyIsInJvbGVzIjpbXX0.JmXjeU-D1-V0Wd5upURf1K72iXGuVuq5tUkHp0TqRiN1xwg6" +
@@ -43,6 +50,15 @@ describe( "Lib controller jwt", function () {
         assert.deepStrictEqual( isSignatureValid, true );
     } );
 
+    it( "verifyJwtSignature (old sha512)", async function () {
+
+        // Act
+        const isSignatureValid = await jwt._isJwtSignatureValid( jwtStringOld, oldPublicKey );
+
+        // Assert
+        assert.deepStrictEqual( isSignatureValid, true );
+    } );
+
     it( "extractJwtObject", async function () {
         // Arrange
         const req = {
@@ -54,11 +70,12 @@ describe( "Lib controller jwt", function () {
         };
 
         const expectedJwt = {
-            header: { alg: 'sha512', typ: 'JWT' },
+            header: { alg: 'EdDSA', typ: 'JWT' },
             payload: {
-                iat: 1638662314993,
+                iat: 1638662314,
                 client_id: '8b0db877-a6b3-4a23-a493-e687915cdd87',
-                roles: []
+                roles: [],
+                exp: 1638662314 + 3600
             }
         }
 
@@ -81,11 +98,12 @@ describe( "Lib controller jwt", function () {
         };
 
         const expectedJwt = {
-            header: { alg: 'sha512', typ: 'JWT' },
+            header: { alg: 'EdDSA', typ: 'JWT' },
             payload: {
-                iat: 1638662314993,
+                iat: 1638662314,
                 client_id: '8b0db877-a6b3-4a23-a493-e687915cdd87',
-                roles: []
+                roles: [],
+                exp: 1638662314 + 3600
             }
         }
 
@@ -96,13 +114,25 @@ describe( "Lib controller jwt", function () {
         assert.deepStrictEqual( req.jwt, expectedJwt );
     } );
 
-    it( "jwtAgeInMilliseconds", async function () {
+    it( "jwtAgeInSeconds", async function () {
 
         // Arrange
-        const req = { jwt: { payload: { iat: 1638662314993 } } };
+        const req = { jwt: { payload: { iat: 1638662314 } } };
 
         // Act
-        let age = jwt.jwtAgeInMilliseconds( req );
+        let age = jwt.jwtAgeInSeconds( req );
+
+        // Assert
+        assert( age > 1000000 );
+    } );
+
+    it( "jwtAgeInSeconds (legacy ms)", async function () {
+
+        // Arrange
+        const req = { jwt: { payload: { iat: 1638662314000 } } };
+
+        // Act
+        let age = jwt.jwtAgeInSeconds( req );
 
         // Assert
         assert( age > 1000000 );
@@ -111,7 +141,7 @@ describe( "Lib controller jwt", function () {
     it( "isJwtExpired", async function () {
 
         // Arrange
-        const req = { jwt: { payload: { iat: 1638677253179 } } };
+        const req = { jwt: { payload: { iat: Math.floor( Date.now() / 1000 ) - 100 } } };
         const validityInSeconds = 30;
 
         // Act
@@ -163,7 +193,7 @@ describe( "Lib controller jwt", function () {
 
     it( "verifyJwtAndRole", async function () {
 
-        const validJwt = 'Bearer eyJhbGciOiJzaGE1MTIiLCJ0eXAiOiJKV1QifQ.eyJpYXQiOjE2Mzg3MjM1ODkyOTYsImNsaWVudF9pZCI6ImRhZDZlYjZhLWQwMGYtNDZhNS04N2Y2LWY4MDEwNGMzYTUzOCIsInJvbGVzIjpbImFkbWluIl19.Pt3dA-aOpER4ykEVDbzvJe92uIurz0OSOi3Zd2UjWkexUeFIbW_ID5RlCs47VI0UzZMyCTlNvkMGUA-1aCtN3y_IR2PPUdd51t9F3hTeH5XcqInJpG40wc4aw8XKLm1QG6aCw5HoLHuAxd5oc9cqU1ZuF4LsMpTwr-pJNdjEZug';
+        const validJwt = "Bearer " + jwtString;
 
         // Arrange
         const req = {
@@ -188,6 +218,12 @@ describe( "Lib controller jwt", function () {
 
         // Act
         const jwtMiddleware = jwt.verifyJwtAndRole( "admin", publicKey, throwUsedTokenError );
+        // We need to make sure the roles include admin
+        const payload = jwtUtilAuth.getHeaderPayloadFromJwt( jwtString ).payload;
+        payload.roles = [ "admin" ];
+        const jwtWithAdmin = jwtUtilAuth.createSignedJwtFromObject( { alg: 'EdDSA' }, payload, privateKey );
+        req.get = ( h ) => h === "Authorization" ? "Bearer " + jwtWithAdmin : null;
+
         await jwtMiddleware( req, res, next );
 
         // Assert
@@ -196,7 +232,7 @@ describe( "Lib controller jwt", function () {
 
     it( "verifyJwt", async function () {
 
-        const validJwt = 'Bearer eyJhbGciOiJzaGE1MTIiLCJ0eXAiOiJKV1QifQ.eyJpYXQiOjE2NDI0NjMzNDQyNzgsImNsaWVudF9pZCI6IjRmZTg5ODlkLWZlOWQtNDEwMS1hZWVmLTVkYjljYmMwNzlkZiIsInJvbGVzIjpbImFkbWluIl0sImVtYWlsX25vdF9jb25maXJtZWQiOnRydWV9.LDT5gfpjtC3PZ8XdbS4QtdEbUWDY_UH3hbdeEt5dDJqOpH-1pHEUvd2N2QtoYmrPby23-X-Y7Oy-8JiGWjxNuLRpUgePuOJzEz4keYOrUTDCE1tL4vmmFk59eXkg0FILOJypAfZom8BM2iecSXkKK1EFKjo6pHZH8XCA3mpg8Lg';
+        const validJwt = "Bearer " + jwtString;
 
         // Arrange
         const req = {
@@ -224,18 +260,16 @@ describe( "Lib controller jwt", function () {
         await jwtMiddleware( req, res, next );
 
         // Assert
-        assert.deepStrictEqual( req.jwt.payload.iat, 1642463344278 );
+        assert.deepStrictEqual( req.jwt.payload.iat, 1638662314 );
     } );
 
     it( "verifyWebToken", async function () {
-
-        const webToken = 'eyJhbGciOiJzaGE1MTIiLCJ0eXAiOiJKV1QifQ.eyJpYXQiOjE2NDI0NjMzNDQyNzgsImNsaWVudF9pZCI6IjRmZTg5ODlkLWZlOWQtNDEwMS1hZWVmLTVkYjljYmMwNzlkZiIsInJvbGVzIjpbImFkbWluIl0sImVtYWlsX25vdF9jb25maXJtZWQiOnRydWV9.LDT5gfpjtC3PZ8XdbS4QtdEbUWDY_UH3hbdeEt5dDJqOpH-1pHEUvd2N2QtoYmrPby23-X-Y7Oy-8JiGWjxNuLRpUgePuOJzEz4keYOrUTDCE1tL4vmmFk59eXkg0FILOJypAfZom8BM2iecSXkKK1EFKjo6pHZH8XCA3mpg8Lg';
 
         // Arrange
         const req = {
             get( header ) {
                 if ( header === "AnyCustomName" ) {
-                    return webToken;
+                    return jwtString;
                 }
             }
         };
@@ -257,7 +291,7 @@ describe( "Lib controller jwt", function () {
         await jwtMiddleware( req, res, next );
 
         // Assert
-        assert.deepStrictEqual( req.jwt.payload.iat, 1642463344278 );
+        assert.deepStrictEqual( req.jwt.payload.iat, 1638662314 );
     } );
 
     it( "throws error", function () {
@@ -361,11 +395,12 @@ describe( "Lib controller jwt", function () {
         };
 
         const expectedJwt = {
-            header: { alg: 'sha512', typ: 'JWT' },
+            header: { alg: 'EdDSA', typ: 'JWT' },
             payload: {
-                iat: 1638662314993,
+                iat: 1638662314,
                 client_id: '8b0db877-a6b3-4a23-a493-e687915cdd87',
-                roles: []
+                roles: [],
+                exp: 1638662314 + 3600
             }
         }
 
@@ -404,7 +439,7 @@ describe( "Lib controller jwt", function () {
 
     it( "verifyJwtNoThrow good jwt", async function () {
 
-        const validJwt = 'Bearer eyJhbGciOiJzaGE1MTIiLCJ0eXAiOiJKV1QifQ.eyJpYXQiOjE2NDI0NjMzNDQyNzgsImNsaWVudF9pZCI6IjRmZTg5ODlkLWZlOWQtNDEwMS1hZWVmLTVkYjljYmMwNzlkZiIsInJvbGVzIjpbImFkbWluIl0sImVtYWlsX25vdF9jb25maXJtZWQiOnRydWV9.LDT5gfpjtC3PZ8XdbS4QtdEbUWDY_UH3hbdeEt5dDJqOpH-1pHEUvd2N2QtoYmrPby23-X-Y7Oy-8JiGWjxNuLRpUgePuOJzEz4keYOrUTDCE1tL4vmmFk59eXkg0FILOJypAfZom8BM2iecSXkKK1EFKjo6pHZH8XCA3mpg8Lg';
+        const validJwt = "Bearer " + jwtString;
 
         // Arrange
         const req = {
@@ -423,27 +458,21 @@ describe( "Lib controller jwt", function () {
         const next = () => {
         }
 
-        function throwUsedTokenError() {
-            throw new Error( "Used_Token" );
-        }
-
         // Act
         const jwtMiddleware = jwt.verifyJwtNoThrow( publicKey );
         await jwtMiddleware( req, res, next );
 
         // Assert
-        assert.deepStrictEqual( req.jwt.payload.iat, 1642463344278 );
+        assert.deepStrictEqual( req.jwt.payload.iat, 1638662314 );
     } );
 
     it( "verifyWebTokenNoThrow good jwt", async function () {
-
-        const validJwt = 'eyJhbGciOiJzaGE1MTIiLCJ0eXAiOiJKV1QifQ.eyJpYXQiOjE2NDI0NjMzNDQyNzgsImNsaWVudF9pZCI6IjRmZTg5ODlkLWZlOWQtNDEwMS1hZWVmLTVkYjljYmMwNzlkZiIsInJvbGVzIjpbImFkbWluIl0sImVtYWlsX25vdF9jb25maXJtZWQiOnRydWV9.LDT5gfpjtC3PZ8XdbS4QtdEbUWDY_UH3hbdeEt5dDJqOpH-1pHEUvd2N2QtoYmrPby23-X-Y7Oy-8JiGWjxNuLRpUgePuOJzEz4keYOrUTDCE1tL4vmmFk59eXkg0FILOJypAfZom8BM2iecSXkKK1EFKjo6pHZH8XCA3mpg8Lg';
 
         // Arrange
         const req = {
             get( header ) {
                 if ( header === "AnyCustomName" ) {
-                    return validJwt;
+                    return jwtString;
                 }
             }
         };
@@ -461,7 +490,7 @@ describe( "Lib controller jwt", function () {
         await jwtMiddleware( req, res, next );
 
         // Assert
-        assert.deepStrictEqual( req.jwt.payload.iat, 1642463344278 );
+        assert.deepStrictEqual( req.jwt.payload.iat, 1638662314 );
     } );
 
     it( "verifyJwtNoThrow bad jwt", async function () {
@@ -517,21 +546,18 @@ describe( "Lib controller jwt", function () {
 
     it( "verifyVisitorNoThrow good jwt", async function () {
 
-        const visitor = {
-            version: '1.0.0',
-            status: 'success',
-            originalUrl: '/api/v1/auth/visitor',
-            data: {
-                visitor_id: 'b63887af-4fd5-47ad-9aed-687866809554',
-                visitor_token: 'bearer eyJhbGciOiJzaGE1MTIiLCJ0eXAiOiJKV1QifQ.eyJpYXQiOjE2NTg0NDQyOTA1OTgsImNsaWVudF9pZCI6ImI2Mzg4N2FmLTRmZDUtNDdhZC05YWVkLTY4Nzg2NjgwOTU1NCJ9.UHYuMeGUDBpq6vvLAkg5kAjhE7j1zKjtHoOTxHN8r1_jx0KBwobD_DJxRSXp_RI884uKZa3FuZksHHLAn85tarvDf0-c0NDBfSrtST_rMsjKsO4p5n4CDTv346-drSZODtLuG18EPT2vOQ_0BKw7yS9i7B_l-Uxjqdl84UtfhYc'
-            }
-        }
+        const visitorId = 'b63887af-4fd5-47ad-9aed-687866809554';
+        const visitorToken = "bearer " + jwtUtilAuth.createSignedJwtFromObject(
+            { alg: 'EdDSA' },
+            { iat: 1658444290, client_id: visitorId },
+            privateKey
+        );
 
         // Arrange
         const req = {
             get( header ) {
                 if ( header === "Visitor" ) {
-                    return visitor.data.visitor_token;
+                    return visitorToken;
                 }
             }
         };
@@ -544,15 +570,11 @@ describe( "Lib controller jwt", function () {
         const next = () => {
         }
 
-        function throwUsedTokenError() {
-            throw new Error( "Used_Token" );
-        }
-
         // Act
-        const jwtMiddleware = jwt.verifyVisitorNoThrow( publicKey, throwUsedTokenError );
+        const jwtMiddleware = jwt.verifyVisitorNoThrow( publicKey );
         await jwtMiddleware( req, res, next );
 
         // Assert
-        assert.deepStrictEqual( req.visitor.payload.client_id, visitor.data.visitor_id );
+        assert.deepStrictEqual( req.visitor.payload.client_id, visitorId );
     } );
 } );
