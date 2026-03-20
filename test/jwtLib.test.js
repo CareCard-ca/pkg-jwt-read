@@ -151,6 +151,22 @@ describe( "Lib controller jwt", function () {
         assert( isExpired );
     } );
 
+    it( "isJwtExpired with exp claim", async function () {
+
+        // Arrange - Expired
+        const reqExpired = { jwt: { payload: { exp: Math.floor( Date.now() / 1000 ) - 10 } } };
+        // Arrange - Not expired
+        const reqValid = { jwt: { payload: { exp: Math.floor( Date.now() / 1000 ) + 100 } } };
+
+        // Act
+        let isExpiredTrue = jwt.isJwtExpired( reqExpired );
+        let isExpiredFalse = jwt.isJwtExpired( reqValid );
+
+        // Assert
+        assert.strictEqual( isExpiredTrue, true, "Should be expired" );
+        assert.strictEqual( isExpiredFalse, false, "Should not be expired" );
+    } );
+
     it( "isJwtUserHasRole", async function () {
 
         // Arrange
