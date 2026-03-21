@@ -9,7 +9,7 @@
   "main": "index.js",
   "types": "index.d.ts",
   "scripts": {
-    "test": "export NODE_ENV=test && mocha --watch --recursive",
+    "test": "export NODE_ENV=test && mocha --recursive",
     "test:types": "tsc --noEmit && mocha -r ts-node/register test/types.test.ts"
   },
   "keywords": [
