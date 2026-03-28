@@ -36,7 +36,7 @@ describe('pkg-jwt-read TypeScript Type Definitions', () => {
             jwt: {
                 header: {},
                 payload: {
-                    client_id: '123',
+                    sub: '123',
                     exp: Math.floor(Date.now() / 1000) + 3600,
                     iat: Math.floor(Date.now() / 1000) - 3600,
                     roles: ['admin']
@@ -60,7 +60,7 @@ describe('pkg-jwt-read TypeScript Type Definitions', () => {
             visitor: {
                 header: {},
                 payload: {
-                    client_id: 'visitor-123'
+                    sub: 'visitor-123'
                 },
                 visitorClientId: () => 'visitor-123'
             }

@@ -8,7 +8,7 @@ describe( "Attached JWT methods", function () {
 
     const jwtString = jwtUtilAuth.createSignedJwtFromObject(
         { alg: 'EdDSA' },
-        { iat: Math.floor(Date.now() / 1000) - 100, client_id: 'test-client', roles: ['admin'] },
+        { iat: Math.floor(Date.now() / 1000) - 100, sub: 'test-client', roles: ['admin'] },
         privateKey
     );
 

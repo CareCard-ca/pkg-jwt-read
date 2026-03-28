@@ -7,21 +7,15 @@ const { jwtUtilAuth } = require( '@carecard/auth-util' );
 
 describe( "Lib controller jwt", function () {
 
-    const jwtStringOld = "eyJhbGciOiJzaGE1MTIiLCJ0eXAiOiJKV1QifQ.eyJpYXQiOjE2Mzg2NjIzMTQ5OTMsImNsaWVudF9pZCI6IjhiMGRiO" +
-        "Dc3LWE2YjMtNGEyMy1hNDkzLWU2ODc5MTVjZGQ4NyIsInJvbGVzIjpbXX0.JmXjeU-D1-V0Wd5upURf1K72iXGuVuq5tUkHp0TqRiN1xwg6" +
-        "RUhzB9HqBnsSgOyDt1BFhr-GPZdomPG0YHW8x8eza-46efledv2gl24ZT2uP-X9V70G-UVGcj8qDQZzP7u_ZkCY3SxA3Tzv7s_V6mAzVuBQ" +
-        "vm5ga93fh2HwHEoE";
+    const jwtStringOld = "eyJhbGciOiJzaGE1MTIiLCJ0eXAiOiJKV1QifQ.eyJpYXQiOjE2Mzg2NjIzMTQ5OTMsInN1YiI6IjhiMGRiODc3LWE2YjMtNGEyMy1hNDkzLWU2ODc5MTVjZGQ4NyIsInJvbGVzIjpbXX0.EiL-cF1CSLuuF3ikdyNj6nXtJYy0AH50T4zu0K1eEn15ASh23Vy1v3M0eqVebHjGKAA5I67ZTHhE7PG7qlLL09g5JIktnHhJyrbM4DA2NDwvPfWuVm7WyYQWY41t9-9GvHtxkZ_YBnR5nZFJZGCL6zRtychrb7zik9DFwt3SgGw";
 
     const jwtString = jwtUtilAuth.createSignedJwtFromObject(
         { alg: 'EdDSA' },
-        { iat: 1638662314, client_id: '8b0db877-a6b3-4a23-a493-e687915cdd87', roles: [] },
+        { iat: 1638662314, sub: '8b0db877-a6b3-4a23-a493-e687915cdd87', roles: [] },
         privateKey
     );
 
-    const jwtStringBad = "eyJhbGciOiJzaGE1MTIiLCJ0eXAiOiJKV1QifQ.eyJpYXQiOjE2Mzg2NjIzMTQ5OTMsImNsaWVudF9pZCI6IjhiMGRiO" +
-        "Dc3LWE2YjMtNGEyMy1hNDkzLWU2ODVjZGQ4NyIsInJvbGVzIjpbXX0.JmXjeU-D1-V0Wd5upURf1K72iXGuVuq5tUkHp0TqRiN1xwg6" +
-        "RUhzB9HqBnsSgOyDt1BFhW8x8eza-46efledv2gl24ZT2uP-X9V70G-UVGcj8qDQZzP7u_ZkCY3SxA3Tzv7s_V6mAzVuBQ" +
-        "vm5ga93fh2HwHEoE";
+    const jwtStringBad = "eyJhbGciOiJzaGE1MTIiLCJ0eXAiOiJKV1QifQ.eyJpYXQiOjE2Mzg2NjIzMTQ5OTMsInN1YiI6IjhiMGRiODc3LWE2YjMtNGEyMy1hNDkzLWU2ODVjZGQ4NyIsInJvbGVzIjpbXX0.VmNajThGY2v463PZgRyo8ORrLaCV5fDqc656Tjm6ADh-AYtLusk5oTXIRpq77vmHb8yuYCveMLYRLej40VKBBg2smTWQt6aVbDYTKmwzO-9vfFa5H6pBOEajSZZHcGIHeqXIphdLd7D-ovSBFYQqMv7NUWhqxKbJMOckUYpv8To";
 
     it( "validateJwt", async function () {
 
@@ -73,7 +67,7 @@ describe( "Lib controller jwt", function () {
             header: { alg: 'EdDSA', typ: 'JWT' },
             payload: {
                 iat: 1638662314,
-                client_id: '8b0db877-a6b3-4a23-a493-e687915cdd87',
+                sub: '8b0db877-a6b3-4a23-a493-e687915cdd87',
                 roles: [],
                 exp: 1638662314 + 3600
             }
@@ -101,7 +95,7 @@ describe( "Lib controller jwt", function () {
             header: { alg: 'EdDSA', typ: 'JWT' },
             payload: {
                 iat: 1638662314,
-                client_id: '8b0db877-a6b3-4a23-a493-e687915cdd87',
+                sub: '8b0db877-a6b3-4a23-a493-e687915cdd87',
                 roles: [],
                 exp: 1638662314 + 3600
             }
@@ -186,7 +180,7 @@ describe( "Lib controller jwt", function () {
     it( "jwtClientId", async function () {
 
         // Arrange
-        const req = { jwt: { payload: { client_id: '8b0db877-a6b3-4a23-a493-e687915cdd87' } } };
+        const req = { jwt: { payload: { sub: '8b0db877-a6b3-4a23-a493-e687915cdd87' } } };
 
         // Act
         let clientId = jwt.jwtClientId( req );
@@ -198,7 +192,7 @@ describe( "Lib controller jwt", function () {
     it( "visitorClientId", async function () {
 
         // Arrange
-        const req = { visitor: { payload: { client_id: '8b0db877-a6b3-4a23-a493-e687915cdd87' } } };
+        const req = { visitor: { payload: { sub: '8b0db877-a6b3-4a23-a493-e687915cdd87' } } };
 
         // Act
         let clientId = jwt.visitorClientId( req );
@@ -414,7 +408,7 @@ describe( "Lib controller jwt", function () {
             header: { alg: 'EdDSA', typ: 'JWT' },
             payload: {
                 iat: 1638662314,
-                client_id: '8b0db877-a6b3-4a23-a493-e687915cdd87',
+                sub: '8b0db877-a6b3-4a23-a493-e687915cdd87',
                 roles: [],
                 exp: 1638662314 + 3600
             }
@@ -441,7 +435,7 @@ describe( "Lib controller jwt", function () {
             header: { alg: 'sha512', typ: 'JWT' },
             payload: {
                 iat: 1638662314993,
-                client_id: "8b0db877-a6b3-4a23-a493-e685cdd87",
+                sub: "8b0db877-a6b3-4a23-a493-e685cdd87",
                 roles: []
             }
         }
@@ -565,7 +559,7 @@ describe( "Lib controller jwt", function () {
         const visitorId = 'b63887af-4fd5-47ad-9aed-687866809554';
         const visitorToken = "bearer " + jwtUtilAuth.createSignedJwtFromObject(
             { alg: 'EdDSA' },
-            { iat: 1658444290, client_id: visitorId },
+            { iat: 1658444290, sub: visitorId },
             privateKey
         );
 
@@ -591,6 +585,6 @@ describe( "Lib controller jwt", function () {
         await jwtMiddleware( req, res, next );
 
         // Assert
-        assert.deepStrictEqual( req.visitor.payload.client_id, visitorId );
+        assert.deepStrictEqual( req.visitor.payload.sub, visitorId );
     } );
 } );

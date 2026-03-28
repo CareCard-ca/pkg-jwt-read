@@ -8,7 +8,7 @@ import { Request, Response, NextFunction } from 'express';
  * Basic structure of a JWT payload as used in this package.
  */
 export interface JwtPayload {
-    client_id?: string;
+    sub?: string;
     exp?: number;
     iat?: number;
     roles?: string[];
@@ -76,12 +76,12 @@ export function verifyWebTokenNoThrow(publicKey: string, headerName: string): (r
 export function verifyVisitorNoThrow(publicKey: string): (req: AuthenticatedRequest, res: Response, next: NextFunction) => void;
 
 /**
- * Returns the client_id from the extracted JWT in req.jwt.
+ * Returns the sub from the extracted JWT in req.jwt.
  */
 export function jwtClientId(req?: any): string | undefined;
 
 /**
- * Returns the client_id from the extracted visitor token in req.visitor.
+ * Returns the sub from the extracted visitor token in req.visitor.
  */
 export function visitorClientId(req?: any): string | undefined;
 
