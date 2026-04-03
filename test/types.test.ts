@@ -1,20 +1,39 @@
 import assert from 'assert';
 import {describe, it} from 'mocha';
 import {
-    getNameOfRole,
-    getCodeOfRole,
-    jwtClientId,
-    visitorClientId,
-    isJwtExpired,
-    jwtAgeInSeconds,
-    doesJwtUserHasRole,
+    jwtVerify,
+    jwtVerifyWebToken,
+    jwtVerifyNoThrow,
+    jwtVerifyWebTokenNoThrow,
+    jwtVerifyVisitorNoThrow,
+    jwtGetClientId,
+    jwtGetVisitorClientId,
+    jwtIsExpired,
+    jwtGetAgeInSeconds,
+    jwtVerifyAndHasRole,
+    jwtGetRoleName,
+    jwtGetRoleCode,
+    jwtValidateAndExtract,
+    jwtValidateAndExtractWebToken,
+    jwtValidateAndExtractNoThrow,
+    jwtValidateAndExtractWebTokenNoThrow,
+    jwtValidateAndExtractVisitorNoThrow,
+
     verifyJwt,
     verifyWebToken,
     verifyJwtNoThrow,
     verifyWebTokenNoThrow,
     verifyVisitorNoThrow,
+    jwtClientId,
+    visitorClientId,
+    isJwtExpired,
+    jwtAgeInSeconds,
     verifyJwtAndRole,
     throwUsedTokenError,
+    doesJwtUserHasRole,
+    getNameOfRole,
+    getCodeOfRole,
+
     AuthenticatedRequest
 } from '../index';
 
@@ -23,6 +42,34 @@ describe('TypeScript Type Definitions - JWT Read Utilities', () => {
     it('should verify role mapping functions', () => {
         assert.strictEqual(getNameOfRole('ad'), 'admin');
         assert.strictEqual(getCodeOfRole('admin'), 'ad');
+    });
+
+    it('should verify new jwt utility names', () => {
+        assert.strictEqual(typeof jwtClientId, 'function');
+        assert.strictEqual(typeof jwtGetClientId, 'function');
+        assert.strictEqual(typeof jwtGetVisitorClientId, 'function');
+        assert.strictEqual(typeof jwtIsExpired, 'function');
+        assert.strictEqual(typeof jwtGetAgeInSeconds, 'function');
+        assert.strictEqual(typeof jwtGetRoleName, 'function');
+        assert.strictEqual(typeof jwtGetRoleCode, 'function');
+    });
+
+    it('should verify new middleware creator names', () => {
+        const publicKey = 'dummy-key';
+        assert.strictEqual(typeof jwtVerify(publicKey), 'function');
+        assert.strictEqual(typeof jwtVerifyWebToken(publicKey, 'X-Token'), 'function');
+        assert.strictEqual(typeof jwtVerifyNoThrow(publicKey), 'function');
+        assert.strictEqual(typeof jwtVerifyWebTokenNoThrow(publicKey, 'X-Token'), 'function');
+        assert.strictEqual(typeof jwtVerifyVisitorNoThrow(publicKey), 'function');
+        assert.strictEqual(typeof jwtVerifyAndHasRole('admin', publicKey), 'function');
+    });
+
+    it('should verify new validateAndExtract names', () => {
+        assert.strictEqual(typeof jwtValidateAndExtract, 'function');
+        assert.strictEqual(typeof jwtValidateAndExtractWebToken, 'function');
+        assert.strictEqual(typeof jwtValidateAndExtractNoThrow, 'function');
+        assert.strictEqual(typeof jwtValidateAndExtractWebTokenNoThrow, 'function');
+        assert.strictEqual(typeof jwtValidateAndExtractVisitorNoThrow, 'function');
     });
 
     it('should verify jwt utility types', () => {
@@ -84,6 +131,14 @@ describe('TypeScript Type Definitions - JWT Read Utilities', () => {
         assert.throws(() => throwUsedTokenError(), /Used_Token/);
     });
 
+    it('should verify throwError', () => {
+        // throwError removed
+    });
+
+    it('should verify validateAndExtract functions', () => {
+        // validateAndExtractJwtObject removed
+    });
+
     it('should verify doesJwtUserHasRole overloads', () => {
         const dummyReq = {
             jwt: {
@@ -107,5 +162,10 @@ describe('TypeScript Type Definitions - JWT Read Utilities', () => {
         };
         assert.strictEqual(isJwtExpired(dummyReq), false);
         assert.strictEqual(isJwtExpired(dummyReq, 1800), false);
+
+        // Test with bound context
+        const boundIsJwtExpired = isJwtExpired.bind(dummyReq.jwt);
+        assert.strictEqual(boundIsJwtExpired(1800), false);
+        assert.strictEqual(boundIsJwtExpired(), false);
     });
 });

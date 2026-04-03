@@ -198,6 +198,10 @@ describe( "Lib jwtLib.js", function () {
             const req = { jwt: { payload: { exp: Math.floor( Date.now() / 1000 ) + 100 } } };
             assert.strictEqual( jwtLib.isJwtExpired( req ), false );
         } );
+        it( "should return true if no exp claim and no validity seconds provided", function () {
+            const req = { jwt: { payload: { iat: Math.floor( Date.now() / 1000 ) - 100 } } };
+            assert.strictEqual( jwtLib.isJwtExpired( req ), true );
+        } );
 
         it( "should work as an attached method with arguments", function () {
             const jwtObj = { payload: { iat: Math.floor( Date.now() / 1000 ) - 100 } };

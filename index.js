@@ -20,22 +20,32 @@ module.exports = {
     jwtValidateAndExtractWebTokenNoThrow: jwtLib.validateAndExtractWebTokenObjectNoThrow,
     jwtValidateAndExtractVisitorNoThrow: jwtLib.validateAndExtractVisitorObjectNoThrow,
 
-
-    /**
-     * @Deprecated use new names starting with jwt...
-     */
+    /** @deprecated use jwtVerify */
     verifyJwt: jwtLib.verifyJwt,
+    /** @deprecated use jwtVerifyWebToken */
     verifyWebToken: jwtLib.verifyWebToken,
+    /** @deprecated use jwtVerifyNoThrow */
     verifyJwtNoThrow: jwtLib.verifyJwtNoThrow,
+    /** @deprecated use jwtVerifyWebTokenNoThrow */
     verifyWebTokenNoThrow: jwtLib.verifyWebTokenNoThrow,
+    /** @deprecated use jwtVerifyVisitorNoThrow */
     verifyVisitorNoThrow: jwtLib.verifyVisitorNoThrow,
+    /** @deprecated use jwtGetClientId */
     jwtClientId: jwtLib.jwtClientId,
+    /** @deprecated use jwtGetVisitorClientId */
     visitorClientId: jwtLib.visitorClientId,
+    /** @deprecated use jwtIsExpired */
     isJwtExpired: jwtLib.isJwtExpired,
+    /** @deprecated use jwtGetAgeInSeconds */
     jwtAgeInSeconds: jwtLib.jwtAgeInSeconds,
+    /** @deprecated use jwtVerifyAndHasRole */
     verifyJwtAndRole: jwtLib.verifyJwtAndRole,
+    /** @deprecated use jwtThrowUsedTokenError */
     throwUsedTokenError: jwtLib.throwUsedTokenError,
+    /** @deprecated use jwtDoesJwtUserHasRole */
     doesJwtUserHasRole: jwtLib.doesJwtUserHasRole,
+    /** @deprecated use jwtGetRoleName */
     getNameOfRole: jwtRoles.getNameOfRoleFromCode,
+    /** @deprecated use jwtGetRoleCode */
     getCodeOfRole: jwtRoles.getCodeFromNameOfRole
 };
