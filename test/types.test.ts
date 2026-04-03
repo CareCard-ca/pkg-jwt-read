@@ -18,7 +18,8 @@ import {
     AuthenticatedRequest
 } from '../index';
 
-describe('pkg-jwt-read TypeScript Type Definitions', () => {
+
+describe('TypeScript Type Definitions - JWT Read Utilities', () => {
     it('should verify role mapping functions', () => {
         assert.strictEqual(getNameOfRole('ad'), 'admin');
         assert.strictEqual(getCodeOfRole('admin'), 'ad');
@@ -91,15 +92,9 @@ describe('pkg-jwt-read TypeScript Type Definitions', () => {
                 }
             }
         };
-
         // Test with two arguments (req, role)
         assert.strictEqual(doesJwtUserHasRole(dummyReq, 'admin'), true);
         assert.strictEqual(doesJwtUserHasRole(dummyReq, 'user'), false);
-
-        // Test with one argument (role) - assumes 'this' context in actual lib, 
-        // but here we just verify it compiles and handles the overload.
-        // In the implementation, if one argument is passed and it's a string, it treats it as userRole.
-        assert.strictEqual(typeof doesJwtUserHasRole, 'function');
     });
 
     it('should verify isJwtExpired overloads', () => {

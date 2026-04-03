@@ -1,8 +1,8 @@
 const jwtLib = require( './lib/jwtLib' );
 const jwtRoles = require( './lib/jwtRoles' );
 
-
 module.exports = {
+    // From pkg-jwt-read
     verifyJwt: jwtLib.verifyJwt,
     verifyWebToken: jwtLib.verifyWebToken,
     verifyJwtNoThrow: jwtLib.verifyJwtNoThrow,
@@ -18,4 +18,3 @@ module.exports = {
     getNameOfRole: jwtRoles.getNameOfRoleFromCode,
     getCodeOfRole: jwtRoles.getCodeFromNameOfRole
 };
-

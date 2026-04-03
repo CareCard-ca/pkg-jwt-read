@@ -1,25 +1,56 @@
 /**
- * Utility functions for reading and verifying JWTs.
+ * Utility functions for authentication and authorization in the CareCard ecosystem.
  */
 
 import { Request, Response, NextFunction } from 'express';
 
 /**
- * Basic structure of a JWT payload as used in this package.
+ * Represents the standard JWT header structure.
+ */
+export interface JwtHeader {
+  /** The cryptographic algorithm used to secure the JWT. */
+  alg?: string;
+  /** The media type of the JWT. Defaults to 'JWT'. */
+  typ?: string;
+  /** Any other custom header fields. */
+  [key: string]: any;
+}
+
+/**
+ * Represents the standard JWT payload (claims) structure.
  */
 export interface JwtPayload {
-    sub?: string;
-    exp?: number;
-    iat?: number;
-    roles?: string[];
-    [key: string]: any;
+  /** Issued at time, in seconds since the epoch. */
+  iat?: number;
+  /** Expiration time, in seconds since the epoch. */
+  exp?: number;
+  /** Not before time, in seconds since the epoch. */
+  nbf?: number;
+  /** Authentication time, in seconds since the epoch. */
+  auth_time?: number;
+  /** Subject (usually the client ID). */
+  sub?: string;
+  /** Roles assigned to the user. */
+  roles?: string[];
+  /** Any other custom payload fields. */
+  [key: string]: any;
+}
+
+/**
+ * Container for the decoded header and payload of a JWT.
+ */
+export interface JwtParts {
+  /** Decoded JWT header. */
+  header: JwtHeader;
+  /** Decoded JWT payload. */
+  payload: JwtPayload;
 }
 
 /**
  * Structure of the JWT object attached to the request.
  */
 export interface JwtRequestObject {
-    header: any;
+    header: JwtHeader;
     payload: JwtPayload;
     age?: number;
     jwtClientId: (req?: any) => string | undefined;
@@ -32,7 +63,7 @@ export interface JwtRequestObject {
  * Structure of the visitor object attached to the request.
  */
 export interface VisitorRequestObject {
-    header: any;
+    header: JwtHeader;
     payload: JwtPayload;
     visitorClientId: (req?: any) => string | undefined;
 }
