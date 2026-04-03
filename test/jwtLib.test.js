@@ -2,11 +2,11 @@ const { describe, it } = require( "mocha" );
 const assert = require( "assert" );
 const jwtLib = require( '../lib/jwtLib' );
 const { publicKey, privateKey } = require( "./keys/keys" );
-const { jwtUtilAuth, createKeys } = require( '@carecard/auth-util' );
+const { generateKeyPair, jwtCreateSignedToken, jwtGetHeaderPayload } = require( '@carecard/auth-util' );
 
 describe( "Lib jwtLib.js", function () {
 
-    const jwtString = jwtUtilAuth.createSignedJwtFromObject(
+    const jwtString = jwtCreateSignedToken(
         { alg: 'EdDSA' },
         { iat: 1638662314, sub: '8b0db877-a6b3-4a23-a493-e687915cdd87', roles: [] },
         privateKey
@@ -74,8 +74,8 @@ describe( "Lib jwtLib.js", function () {
         } );
 
         it( "should return true for valid RSA sha512 signature", async function () {
-            const { privateKey: rsaPrivateKey, publicKey: rsaPublicKey } = createKeys('rsa');
-            const jwt = jwtUtilAuth.createSignedJwtFromObject({ alg: 'sha512' }, { sub: 'test' }, rsaPrivateKey);
+            const { privateKey: rsaPrivateKey, publicKey: rsaPublicKey } = generateKeyPair('rsa');
+            const jwt = jwtCreateSignedToken({ alg: 'sha512' }, { sub: 'test' }, rsaPrivateKey);
             const isValid = await jwtLib._isJwtSignatureValid( jwt, rsaPublicKey );
             assert.strictEqual( isValid, true );
         } );
@@ -242,9 +242,9 @@ describe( "Lib jwtLib.js", function () {
 
     describe( "verifyJwtAndRole", function () {
         it( "should allow access if user has the role", async function () {
-            const payload = jwtUtilAuth.getHeaderPayloadFromJwt( jwtString ).payload;
+            const payload = jwtGetHeaderPayload( jwtString ).payload;
             payload.roles = [ "admin" ];
-            const jwtWithAdmin = jwtUtilAuth.createSignedJwtFromObject( { alg: 'EdDSA' }, payload, privateKey );
+            const jwtWithAdmin = jwtCreateSignedToken( { alg: 'EdDSA' }, payload, privateKey );
             const req = { get: ( h ) => h === "Authorization" ? "Bearer " + jwtWithAdmin : null };
             let nextCalled = false;
             const middleware = jwtLib.verifyJwtAndRole( "admin", publicKey, () => { throw new Error("Should not throw"); } );
@@ -273,9 +273,9 @@ describe( "Lib jwtLib.js", function () {
         } );
 
         it( "should hit catch block if next throws", async function () {
-            const payload = jwtUtilAuth.getHeaderPayloadFromJwt( jwtString ).payload;
+            const payload = jwtGetHeaderPayload( jwtString ).payload;
             payload.roles = [ "admin" ];
-            const jwtWithAdmin = jwtUtilAuth.createSignedJwtFromObject( { alg: 'EdDSA' }, payload, privateKey );
+            const jwtWithAdmin = jwtCreateSignedToken( { alg: 'EdDSA' }, payload, privateKey );
             const req = { get: ( h ) => h === "Authorization" ? "Bearer " + jwtWithAdmin : null };
             const middleware = jwtLib.verifyJwtAndRole( "admin", publicKey, () => {} );
 
@@ -442,7 +442,7 @@ describe( "Lib jwtLib.js", function () {
     describe( "verifyVisitorNoThrow", function () {
         it( "should extract and validate visitor token", async function () {
             const visitorId = 'b63887af-4fd5-47ad-9aed-687866809554';
-            const visitorToken = "Bearer " + jwtUtilAuth.createSignedJwtFromObject( { alg: 'EdDSA' }, { sub: visitorId }, privateKey );
+            const visitorToken = "Bearer " + jwtCreateSignedToken( { alg: 'EdDSA' }, { sub: visitorId }, privateKey );
             const req = { get: ( h ) => h === "Visitor" ? visitorToken : null };
             const middleware = jwtLib.verifyVisitorNoThrow( publicKey );
             middleware(req, {}, () => {});
@@ -527,7 +527,7 @@ describe( "Lib jwtLib.js", function () {
 
         it( "should attach methods to req.visitor", async function () {
             const visitorId = 'b63887af-4fd5-47ad-9aed-687866809554';
-            const visitorToken = jwtUtilAuth.createSignedJwtFromObject( { alg: 'EdDSA' }, { sub: visitorId }, privateKey );
+            const visitorToken = jwtCreateSignedToken( { alg: 'EdDSA' }, { sub: visitorId }, privateKey );
             const req = {};
             jwtLib._extractVisitorObjectNoThrow( req, visitorToken );
             assert.strictEqual( typeof req.visitor.visitorClientId, 'function' );
