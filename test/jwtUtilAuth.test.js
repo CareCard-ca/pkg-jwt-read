@@ -4,7 +4,7 @@ const jwtUtilAuthFromFile = require( '../lib/jwtUtilAuth' )
 
 
 const keys = require( './keys/keys' );
-const { generateKeyPair } = require( '../lib/keyGen' );
+const { createKeys } = require( '@carecard/auth-util' );
 
 describe( 'JwtUtilAuth test', function () {
     describe( 'createSignedJwtFromObject', function () {
@@ -46,7 +46,7 @@ describe( 'JwtUtilAuth test', function () {
         } );
 
         it( 'should return a valid signed JWT with RSA algorithm', function () {
-            const { privateKey: rsaPrivateKey, publicKey: rsaPublicKey } = generateKeyPair( 'rsa' );
+            const { privateKey: rsaPrivateKey, publicKey: rsaPublicKey } = createKeys( 'rsa' );
             const header = { alg: 'sha256' };
             const payload = { sub: '123' };
             const jwt = jwtUtilAuthFromFile.createSignedJwtFromObject( header, payload, rsaPrivateKey );
@@ -135,7 +135,7 @@ describe( 'JwtUtilAuth test', function () {
         } );
 
         it( '_sign and _verify should work for RSA (sha256)', function () {
-            const { privateKey: rsaPrivateKey, publicKey: rsaPublicKey } = generateKeyPair( 'rsa' );
+            const { privateKey: rsaPrivateKey, publicKey: rsaPublicKey } = createKeys( 'rsa' );
             const token = 'header.payload';
             const sig = jwtUtilAuthFromFile._sign( token, 'sha256', rsaPrivateKey );
             const isValid = jwtUtilAuthFromFile._verify( token, sig, 'sha256', rsaPublicKey );
