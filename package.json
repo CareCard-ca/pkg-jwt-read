@@ -1,28 +1,40 @@
 {
-  "name": "@chatpta/jwt-read",
-  "version": "4.0.1",
+  "name": "@carecard/jwt-read",
+  "version": "3.1.13",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/chatpta/pkg-jwt-read.git"
+    "url": "https://github.com/CareCard-ca/pkg-jwt-read.git"
   },
-  "description": "Auth utility functions",
+  "description": "Jwt read functions",
   "main": "index.js",
+  "types": "index.d.ts",
   "scripts": {
-    "test": "export NODE_ENV=test && mocha --watch --recursive"
+    "test": "export NODE_ENV=test && mocha --recursive",
+    "test:types": "tsc --noEmit && mocha -r ts-node/register test/types.test.ts",
+    "test:coverage": "tsc --noEmit && export NODE_ENV=test && nyc mocha --recursive -r ts-node/register 'test/**/*.{js,ts}'",
+    "prepare": "husky"
   },
   "keywords": [
     "auth",
     "utility",
-    "cryptology"
+    "cryptology",
+    "jwt"
   ],
-  "author": "Chatpta team",
+  "author": "CareCard team",
   "license": "ISC",
   "devDependencies": {
-    "mocha": "10.1.0"
+    "@types/express": "5.0.6",
+    "@types/mocha": "10.0.10",
+    "@types/node": "25.5.0",
+    "husky": "^9.1.7",
+    "mocha": "11.7.5",
+    "nyc": "^18.0.0",
+    "ts-node": "10.9.2",
+    "typescript": "5.9.3"
   },
   "dependencies": {
-    "@chatpta/auth-util": "3.0.0",
-    "@chatpta/common-util": "3.0.2",
-    "@chatpta/validate": "3.0.3"
+    "@carecard/common-util": "3.1.11",
+    "@carecard/auth-util": "3.1.12",
+    "@carecard/validate": "3.0.10"
   }
 }

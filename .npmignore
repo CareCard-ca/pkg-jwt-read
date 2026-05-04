@@ -1,2 +1,12 @@
 .idea
+.DS_Store
+node_modules
 test
+coverage
+.nyc_output
+dist
+tsconfig.json
+.gitignore
+.junie
+.husky
+.github
