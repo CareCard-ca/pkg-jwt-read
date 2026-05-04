@@ -31,11 +31,11 @@ const verifyAdmin = verifyJwtAndRole('admin', publicKey, throwUsedTokenError);
 
 // In an Express controller/middleware
 try {
-  await verifyAdmin(req, res, next);
-  // If successful, req.jwt contains { header, payload }
-  console.log(req.jwt.payload.sub);
+    await verifyAdmin(req, res, next);
+    // If successful, req.jwt contains { header, payload }
+    console.log(req.jwt.payload.sub);
 } catch (error) {
-  // Handle verification error
+    // Handle verification error
 }
 ```
 
@@ -46,7 +46,7 @@ const { verifyJwt, isJwtExpired } = require('@carecard/jwt-read');
 
 const result = verifyJwt(rawJwt, publicKey);
 if (result && !isJwtExpired(result)) {
-  console.log('JWT is valid and not expired:', result.payload);
+    console.log('JWT is valid and not expired:', result.payload);
 }
 ```
 
@@ -82,7 +82,6 @@ npm run test:types
 ## Architecture
 
 The package is organized into several modules:
-
 - `jwtLib`: Main logic for JWT verification, extraction, and Express integration.
 - `jwtRoles`: Role mapping between internal codes and names.
 
