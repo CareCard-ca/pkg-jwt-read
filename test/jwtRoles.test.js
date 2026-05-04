@@ -4,36 +4,33 @@ const jwtRoles = require( '../lib/jwtRoles' );
 
 describe( "Lib jwt Roles", function () {
 
-    it( "jwtAdminRoleCode", function () {
+    describe( "getNameOfRoleFromCode", function () {
+        it( "should return admin for ad", function () {
+            assert.strictEqual( jwtRoles.getNameOfRoleFromCode( "ad" ), "admin" );
+        } );
 
-        // Act
-        const receivedCode = jwtRoles.getCodeFromNameOfRole( "admin" );
-        const receivedName = jwtRoles.getNameOfRoleFromCode( receivedCode );
+        it( "should return super_admin for su", function () {
+            assert.strictEqual( jwtRoles.getNameOfRoleFromCode( "su" ), "super_admin" );
+        } );
 
-        // Assert
-        assert.deepStrictEqual( receivedCode, "ad" );
-        assert.deepStrictEqual( receivedName, "admin" );
+        it( "should return empty string for unknown code", function () {
+            assert.strictEqual( jwtRoles.getNameOfRoleFromCode(), "" );
+            assert.strictEqual( jwtRoles.getNameOfRoleFromCode( "unknown" ), "" );
+        } );
     } );
 
-    it( "jwtSuperAdminRoleCode", function () {
+    describe( "getCodeFromNameOfRole", function () {
+        it( "should return ad for admin", function () {
+            assert.strictEqual( jwtRoles.getCodeFromNameOfRole( "admin" ), "ad" );
+        } );
 
-        // Act
-        const receivedCode = jwtRoles.getCodeFromNameOfRole( "super_admin" );
-        const receivedName = jwtRoles.getNameOfRoleFromCode( receivedCode );
+        it( "should return su for super_admin", function () {
+            assert.strictEqual( jwtRoles.getCodeFromNameOfRole( "super_admin" ), "su" );
+        } );
 
-        // Assert
-        assert.deepStrictEqual( receivedCode, "su" );
-        assert.deepStrictEqual( receivedName, "super_admin" );
-    } );
-
-    it( "jwtDefaultRole", function () {
-
-        // Act
-        const receivedCode = jwtRoles.getCodeFromNameOfRole();
-        const receivedName = jwtRoles.getNameOfRoleFromCode();
-
-        // Assert
-        assert.deepStrictEqual( receivedCode, "" );
-        assert.deepStrictEqual( receivedName, "" );
+        it( "should return empty string for unknown name", function () {
+            assert.strictEqual( jwtRoles.getCodeFromNameOfRole(), "" );
+            assert.strictEqual( jwtRoles.getCodeFromNameOfRole( "unknown" ), "" );
+        } );
     } );
 } );
