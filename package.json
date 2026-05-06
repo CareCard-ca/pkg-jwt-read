@@ -9,9 +9,9 @@
   "main": "index.js",
   "types": "index.d.ts",
   "scripts": {
-    "test": "export NODE_ENV=test && mocha --recursive",
+    "test": "mocha --recursive",
     "test:types": "tsc --noEmit && mocha -r ts-node/register test/types.test.ts",
-    "test:coverage": "tsc --noEmit && export NODE_ENV=test && nyc mocha --recursive -r ts-node/register 'test/**/*.{js,ts}'",
+    "test:coverage": "tsc --noEmit &&  nyc mocha --recursive -r ts-node/register 'test/**/*.{js,ts}'",
     "prepare": "husky"
   },
   "keywords": [
