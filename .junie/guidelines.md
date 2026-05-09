@@ -8,13 +8,13 @@ The package follows a simple functional utility pattern, organized into modular 
 
 - **Entry Point**: `index.js` - Centralized export of all utility functions.
 - **JWT Verification Layer (`lib/jwtLib.js`)**:
-    - Handles signature verification of JWTs using public keys.
-    - Provides middleware-like functions for Express (e.g., `verifyJwtAndRole`).
-    - Handles extraction of `sub` (clientId) and other claims from JWT objects.
-    - Includes expiration checks and TTL calculations.
-    - Integration with `@carecard/common-util` for standardized error throwing.
+  - Handles signature verification of JWTs using public keys.
+  - Provides middleware-like functions for Express (e.g., `verifyJwtAndRole`).
+  - Handles extraction of `sub` (clientId) and other claims from JWT objects.
+  - Includes expiration checks and TTL calculations.
+  - Integration with `@carecard/common-util` for standardized error throwing.
 - **Role Mapping Layer (`lib/jwtRoles.js`)**:
-    - Translates between internal role codes (e.g., `ad`) and human-readable role names (e.g., `admin`).
+  - Translates between internal role codes (e.g., `ad`) and human-readable role names (e.g., `admin`).
 
 ## Coding Patterns
 
@@ -28,9 +28,9 @@ The package follows a simple functional utility pattern, organized into modular 
 - **Framework**: Mocha.
 - **Directory**: `test/`.
 - **Test Structure**:
-    - `lib/` modules should have corresponding test files in `test/`.
-    - `test/attachedMethods.test.js`: Tests methods that are attached to objects or used as context.
-    - `test/types.test.ts`: Verifies TypeScript type definitions using `tsc`.
+  - `lib/` modules should have corresponding test files in `test/`.
+  - `test/attachedMethods.test.js`: Tests methods that are attached to objects or used as context.
+  - `test/types.test.ts`: Verifies TypeScript type definitions using `tsc`.
 - **Environment**: Set `NODE_ENV=test`.
 
 ## Future Development
