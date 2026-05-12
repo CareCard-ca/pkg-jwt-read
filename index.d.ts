@@ -2,7 +2,7 @@
  * Utility functions for authentication and authorization in the CareCard ecosystem.
  */
 
-import { Request, Response, NextFunction } from 'express';
+import {NextFunction, Request, Response} from 'express';
 
 /**
  * Represents the standard JWT header structure.
@@ -50,44 +50,50 @@ export interface JwtParts {
  * Structure of the JWT object attached to the request.
  */
 export interface JwtRequestObject {
-    header: JwtHeader;
-    payload: JwtPayload;
-    age?: number;
-    jwtClientId: (req?: any) => string | undefined;
-    doesJwtUserHasRole: (role: string) => boolean;
-    isJwtExpired: (jwtValiditySeconds?: number) => boolean;
-    jwtAgeInSeconds: (req?: any) => number;
+  header: JwtHeader;
+  payload: JwtPayload;
+  age?: number;
+  jwtClientId: (req?: any) => string | undefined;
+  doesJwtUserHasRole: (role: string) => boolean;
+  isJwtExpired: (jwtValiditySeconds?: number) => boolean;
+  jwtAgeInSeconds: (req?: any) => number;
 }
 
 /**
  * Structure of the visitor object attached to the request.
  */
 export interface VisitorRequestObject {
-    header: JwtHeader;
-    payload: JwtPayload;
-    visitorClientId: (req?: any) => string | undefined;
+  header: JwtHeader;
+  payload: JwtPayload;
+  visitorClientId: (req?: any) => string | undefined;
 }
 
 /**
  * Extended Express Request to include jwt and visitor objects.
  */
 export interface AuthenticatedRequest extends Request {
-    jwt?: JwtRequestObject | null;
-    visitor?: VisitorRequestObject | null;
+  jwt?: JwtRequestObject | null;
+  visitor?: VisitorRequestObject | null;
 }
-
 
 /**
  * Returns a middleware that verifies a JWT from the 'Authorization: Bearer <token>' header
  * and extracts it into req.jwt. Throws an error if invalid.
  */
-export function jwtVerify(publicKey: string, customErrorFunction?: () => void): (req: AuthenticatedRequest, res: Response, next: NextFunction) => void;
+export function jwtVerify(
+  publicKey: string,
+  customErrorFunction?: () => void,
+): (req: AuthenticatedRequest, res: Response, next: NextFunction) => void;
 
 /**
  * Returns a middleware that verifies a JWT from a custom header and extracts it into req.jwt.
  * Throws an error if invalid.
  */
-export function jwtVerifyWebToken(publicKey: string, headerName: string, customErrorFunction?: () => void): (req: AuthenticatedRequest, res: Response, next: NextFunction) => void;
+export function jwtVerifyWebToken(
+  publicKey: string,
+  headerName: string,
+  customErrorFunction?: () => void,
+): (req: AuthenticatedRequest, res: Response, next: NextFunction) => void;
 
 /**
  * Returns a middleware that verifies a JWT from the 'Authorization: Bearer <token>' header
@@ -99,7 +105,10 @@ export function jwtVerifyNoThrow(publicKey: string): (req: AuthenticatedRequest,
  * Returns a middleware that verifies a JWT from a custom header and extracts it into req.jwt.
  * Returns false instead of throwing if invalid.
  */
-export function jwtVerifyWebTokenNoThrow(publicKey: string, headerName: string): (req: AuthenticatedRequest, res: Response, next: NextFunction) => void;
+export function jwtVerifyWebTokenNoThrow(
+  publicKey: string,
+  headerName: string,
+): (req: AuthenticatedRequest, res: Response, next: NextFunction) => void;
 
 /**
  * Returns a middleware that verifies a visitor token from the 'Visitor' header
@@ -132,7 +141,11 @@ export function jwtGetAgeInSeconds(req?: any): number;
 /**
  * Returns a middleware that verifies the JWT and checks if the user has the required role.
  */
-export function jwtVerifyAndHasRole(userRole: string, publicKey: string, customErrorFunction?: () => void): (req: AuthenticatedRequest, res: Response, next: NextFunction) => void;
+export function jwtVerifyAndHasRole(
+  userRole: string,
+  publicKey: string,
+  customErrorFunction?: () => void,
+): (req: AuthenticatedRequest, res: Response, next: NextFunction) => void;
 
 /**
  * Gets the full name of a role from its code (e.g., 'ad' -> 'admin').
@@ -145,6 +158,22 @@ export function jwtGetRoleName(roleCode: string): string;
 export function jwtGetRoleCode(roleName: string): string;
 
 /**
+ * Represents the context derived from the JWT request.
+ */
+export interface JwtContext {
+  /** The user ID (sub) from the JWT. Always returned. */
+  user_id: string | undefined;
+  /** The role of the user. Only set to 'super_admin' when roles contains 'ad'. */
+  role?: string;
+}
+
+/**
+ * Returns the context derived from the JWT in req.jwt.
+ * Always returns user_id. If the roles array contains 'ad', also returns role: 'super_admin'.
+ */
+export function jwtGetContext(req: any): JwtContext;
+
+/**
  * Validates the JWT from the Authorization header and extracts it into req.jwt.
  */
 export function jwtValidateAndExtract(req: AuthenticatedRequest, publicKey: string, customErrorFunction?: () => void): void;
@@ -152,7 +181,12 @@ export function jwtValidateAndExtract(req: AuthenticatedRequest, publicKey: stri
 /**
  * Validates the JWT from a custom header and extracts it into req.jwt.
  */
-export function jwtValidateAndExtractWebToken(req: AuthenticatedRequest, publicKey: string, headerName: string, customErrorFunction?: () => void): void;
+export function jwtValidateAndExtractWebToken(
+  req: AuthenticatedRequest,
+  publicKey: string,
+  headerName: string,
+  customErrorFunction?: () => void,
+): void;
 
 /**
  * Validates the JWT from the Authorization header and extracts it into req.jwt (no-throw).
@@ -169,20 +203,26 @@ export function jwtValidateAndExtractWebTokenNoThrow(req: AuthenticatedRequest, 
  */
 export function jwtValidateAndExtractVisitorNoThrow(req: AuthenticatedRequest, publicKey: string): void;
 
-
 /**
  * Returns a middleware that verifies a JWT from the 'Authorization: Bearer <token>' header
  * and extracts it into req.jwt. Throws an error if invalid.
  * @deprecated use jwtVerify
  */
-export function verifyJwt(publicKey: string, customErrorFunction?: () => void): (req: AuthenticatedRequest, res: Response, next: NextFunction) => void;
+export function verifyJwt(
+  publicKey: string,
+  customErrorFunction?: () => void,
+): (req: AuthenticatedRequest, res: Response, next: NextFunction) => void;
 
 /**
  * Returns a middleware that verifies a JWT from a custom header and extracts it into req.jwt.
  * Throws an error if invalid.
  * @deprecated use jwtVerifyWebToken
  */
-export function verifyWebToken(publicKey: string, headerName: string, customErrorFunction?: () => void): (req: AuthenticatedRequest, res: Response, next: NextFunction) => void;
+export function verifyWebToken(
+  publicKey: string,
+  headerName: string,
+  customErrorFunction?: () => void,
+): (req: AuthenticatedRequest, res: Response, next: NextFunction) => void;
 
 /**
  * Returns a middleware that verifies a JWT from the 'Authorization: Bearer <token>' header
@@ -196,7 +236,10 @@ export function verifyJwtNoThrow(publicKey: string): (req: AuthenticatedRequest,
  * Returns false instead of throwing if invalid.
  * @deprecated use jwtVerifyWebTokenNoThrow
  */
-export function verifyWebTokenNoThrow(publicKey: string, headerName: string): (req: AuthenticatedRequest, res: Response, next: NextFunction) => void;
+export function verifyWebTokenNoThrow(
+  publicKey: string,
+  headerName: string,
+): (req: AuthenticatedRequest, res: Response, next: NextFunction) => void;
 
 /**
  * Returns a middleware that verifies a visitor token from the 'Visitor' header
@@ -237,14 +280,17 @@ export function jwtAgeInSeconds(req?: any): number;
  * Returns a middleware that verifies the JWT and checks if the user has the required role.
  * @deprecated use jwtVerifyAndHasRole
  */
-export function verifyJwtAndRole(userRole: string, publicKey: string, customErrorFunction?: () => void): (req: AuthenticatedRequest, res: Response, next: NextFunction) => void;
+export function verifyJwtAndRole(
+  userRole: string,
+  publicKey: string,
+  customErrorFunction?: () => void,
+): (req: AuthenticatedRequest, res: Response, next: NextFunction) => void;
 
 /**
  * Throws a Used_Token error.
  * @deprecated use jwtThrowUsedTokenError
  */
 export function throwUsedTokenError(): never;
-
 
 /**
  * Checks if the user in the extracted JWT has the specified role.
@@ -260,10 +306,8 @@ export function doesJwtUserHasRole(userRole: string): boolean;
  */
 export function getNameOfRole(roleCode: string): string;
 
-
 /**
  * Gets the code of a role from its name (e.g., 'admin' -> 'ad').
  * @deprecated use jwtGetRoleCode
  */
 export function getCodeOfRole(roleName: string): string;
-
