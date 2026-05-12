@@ -8,8 +8,10 @@ import {
   isJwtExpired,
   jwtAgeInSeconds,
   jwtClientId,
+  JwtContext,
   jwtGetAgeInSeconds,
   jwtGetClientId,
+  jwtGetContext,
   jwtGetRoleCode,
   jwtGetRoleName,
   jwtGetVisitorClientId,
@@ -122,6 +124,24 @@ describe('TypeScript Type Definitions - JWT Read Utilities', () => {
     assert.strictEqual(typeof verifyWebTokenNoThrow(publicKey, 'X-Token'), 'function');
     assert.strictEqual(typeof verifyVisitorNoThrow(publicKey), 'function');
     assert.strictEqual(typeof verifyJwtAndRole('admin', publicKey), 'function');
+  });
+
+  it('should verify jwtGetContext types and behavior', () => {
+    assert.strictEqual(typeof jwtGetContext, 'function');
+
+    const adminReq: AuthenticatedRequest = {
+      jwt: { payload: { sub: 'user-1', roles: ['ad'] } },
+    } as any;
+    const adminContext: JwtContext = jwtGetContext(adminReq);
+    assert.strictEqual(adminContext.user_id, 'user-1');
+    assert.strictEqual(adminContext.role, 'super_admin');
+
+    const userReq: AuthenticatedRequest = {
+      jwt: { payload: { sub: 'user-2', roles: ['provider'] } },
+    } as any;
+    const userContext: JwtContext = jwtGetContext(userReq);
+    assert.strictEqual(userContext.user_id, 'user-2');
+    assert.strictEqual(userContext.role, undefined);
   });
 
   it('should verify throwUsedTokenError', () => {
