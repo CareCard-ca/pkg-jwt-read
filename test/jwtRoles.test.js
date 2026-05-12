@@ -32,4 +32,41 @@ describe('Lib jwt Roles', function () {
       assert.strictEqual(jwtRoles.getCodeFromNameOfRole('unknown'), '');
     });
   });
+
+  describe('getContext', function () {
+    it('should return super_admin role with user_id when roles array contains ad', function () {
+      const req = { jwt: { payload: { sub: 'user-1', roles: ['ad'] } } };
+      assert.deepStrictEqual(jwtRoles.getContext(req), { user_id: 'user-1', role: 'super_admin' });
+    });
+
+    it('should return super_admin when roles array contains ad among other roles', function () {
+      const req = { jwt: { payload: { sub: 'user-1', roles: ['ag', 'ad'] } } };
+      assert.deepStrictEqual(jwtRoles.getContext(req), { user_id: 'user-1', role: 'super_admin' });
+    });
+
+    it('should return only user_id when roles array does not contain ad', function () {
+      const req = { jwt: { payload: { sub: 'user-2', roles: ['ag'] } } };
+      assert.deepStrictEqual(jwtRoles.getContext(req), { user_id: 'user-2' });
+    });
+
+    it('should return only user_id when roles array is empty', function () {
+      const req = { jwt: { payload: { sub: 'user-3', roles: [] } } };
+      assert.deepStrictEqual(jwtRoles.getContext(req), { user_id: 'user-3' });
+    });
+
+    it('should return only user_id when roles is undefined', function () {
+      const req = { jwt: { payload: { sub: 'user-4' } } };
+      assert.deepStrictEqual(jwtRoles.getContext(req), { user_id: 'user-4' });
+    });
+
+    it('should not treat su as super_admin', function () {
+      const req = { jwt: { payload: { sub: 'user-5', roles: ['su'] } } };
+      assert.deepStrictEqual(jwtRoles.getContext(req), { user_id: 'user-5' });
+    });
+
+    it('should handle missing jwt object', function () {
+      const req = {};
+      assert.deepStrictEqual(jwtRoles.getContext(req), { user_id: undefined });
+    });
+  });
 });
