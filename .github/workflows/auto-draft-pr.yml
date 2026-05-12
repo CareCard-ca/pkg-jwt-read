@@ -1,0 +1,114 @@
+name: Auto Draft PR
+
+# Creates a draft Pull Request automatically when a feature/fix/hotfix/etc.
+# branch is pushed.
+#
+# Why not `workflow_run`?
+#   GitHub only dispatches `workflow_run` events for workflow files that
+#   exist on the repository's DEFAULT branch. Until this file is merged
+#   into the default branch, a `workflow_run`-based trigger silently does
+#   nothing. Triggering directly on `push` (with the same branch filters
+#   as CI) is more reliable and works from the branch itself.
+#
+# Routing rules:
+#   - If the branch name starts with "main-" (e.g. main-hotfix-x), open a
+#     draft PR targeting `main`.
+#   - For any other branch (except protected base branches), open a draft
+#     PR targeting `development`.
+#
+# Branch patterns mirror `.github/workflows/ci.yml` and support nested
+# names such as `feature/foo/bar`, `fix/bug-1`, `hotfix/...`, etc.
+
+on:
+  push:
+    branches:
+      - 'feature/**'
+      - 'releases/**'
+      - 'release*'
+      - 'hotfix/**'
+      - 'iss/**'
+      - 'fix/**'
+      - 'main-*'
+      - 'main-**'
+    paths-ignore:
+      - '**.md'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  open-draft-pr:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Determine target base branch
+        id: target
+        env:
+          HEAD_BRANCH: ${{ github.ref_name }}
+        run: |
+          set -euo pipefail
+          echo "Head branch: $HEAD_BRANCH"
+
+          # Skip protected/base branches – we never open a PR from them to themselves.
+          case "$HEAD_BRANCH" in
+            main|master|development|develop)
+              echo "Branch '$HEAD_BRANCH' is a base branch – skipping PR creation."
+              echo "skip=true" >> "$GITHUB_OUTPUT"
+              exit 0
+              ;;
+          esac
+
+          if [[ "$HEAD_BRANCH" == main-* ]]; then
+            BASE="main"
+          else
+            BASE="development"
+          fi
+
+          echo "Target base branch: $BASE"
+          echo "base=$BASE"          >> "$GITHUB_OUTPUT"
+          echo "head=$HEAD_BRANCH"   >> "$GITHUB_OUTPUT"
+          echo "skip=false"          >> "$GITHUB_OUTPUT"
+
+      - name: Checkout repository
+        if: steps.target.outputs.skip == 'false'
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Create draft Pull Request (if missing)
+        if: steps.target.outputs.skip == 'false'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          HEAD: ${{ steps.target.outputs.head }}
+          BASE: ${{ steps.target.outputs.base }}
+          REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+
+          # Avoid creating duplicates: check for an existing open PR for this head -> base.
+          # `gh pr list --head` expects the branch name (without owner prefix) for same-repo PRs.
+          EXISTING=$(gh pr list \
+            --repo "$REPO" \
+            --state open \
+            --head "$HEAD" \
+            --base "$BASE" \
+            --json number \
+            --jq '.[0].number' || true)
+
+          if [[ -n "${EXISTING:-}" ]]; then
+            echo "An open PR already exists for $HEAD -> $BASE (#$EXISTING). Nothing to do."
+            exit 0
+          fi
+
+          TITLE="Draft: merge \`$HEAD\` into \`$BASE\`"
+          BODY=$'Auto-created draft PR for branch `'"$HEAD"$'`.\n\nTarget base: `'"$BASE"$'`\n\nMark this PR as ready for review when you want it to be reviewed/merged.'
+
+          gh pr create \
+            --repo "$REPO" \
+            --draft \
+            --base "$BASE" \
+            --head "$HEAD" \
+            --title "$TITLE" \
+            --body  "$BODY"
