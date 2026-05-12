@@ -158,6 +158,22 @@ export function jwtGetRoleName(roleCode: string): string;
 export function jwtGetRoleCode(roleName: string): string;
 
 /**
+ * Represents the context derived from the JWT request.
+ */
+export interface JwtContext {
+  /** The user ID (sub) from the JWT. Always returned. */
+  user_id: string | undefined;
+  /** The role of the user. Only set to 'super_admin' when roles contains 'ad'. */
+  role?: string;
+}
+
+/**
+ * Returns the context derived from the JWT in req.jwt.
+ * Always returns user_id. If the roles array contains 'ad', also returns role: 'super_admin'.
+ */
+export function jwtGetContext(req: any): JwtContext;
+
+/**
  * Validates the JWT from the Authorization header and extracts it into req.jwt.
  */
 export function jwtValidateAndExtract(req: AuthenticatedRequest, publicKey: string, customErrorFunction?: () => void): void;
