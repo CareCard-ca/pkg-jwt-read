@@ -1,6 +1,6 @@
 {
   "name": "@carecard/jwt-read",
-  "version": "3.1.13",
+  "version": "3.1.14",
   "repository": {
     "type": "git",
     "url": "https://github.com/CareCard-ca/pkg-jwt-read.git"
@@ -41,8 +41,8 @@
     "typescript": "5.9.3"
   },
   "dependencies": {
-    "@carecard/common-util": "3.1.11",
-    "@carecard/auth-util": "3.1.12",
-    "@carecard/validate": "3.0.10"
+    "@carecard/common-util": "3.1.13",
+    "@carecard/auth-util": "3.1.13",
+    "@carecard/validate": "3.1.16"
   }
 }
