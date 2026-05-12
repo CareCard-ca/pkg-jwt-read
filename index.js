@@ -14,6 +14,7 @@ module.exports = {
   jwtVerifyAndHasRole: jwtLib.verifyJwtAndRole,
   jwtGetRoleName: jwtRoles.getNameOfRoleFromCode,
   jwtGetRoleCode: jwtRoles.getCodeFromNameOfRole,
+  jwtGetContext: jwtRoles.getContext,
   jwtValidateAndExtract: jwtLib.validateAndExtractJwtObject,
   jwtValidateAndExtractWebToken: jwtLib.validateAndExtractWebToken,
   jwtValidateAndExtractNoThrow: jwtLib.validateAndExtractJwtObjectNoThrow,
