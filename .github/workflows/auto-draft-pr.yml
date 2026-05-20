@@ -36,6 +36,7 @@ on:
 
 permissions:
   contents: read
+  issues: write
   pull-requests: write
 
 jobs:
@@ -84,6 +85,8 @@ jobs:
           HEAD: ${{ steps.target.outputs.head }}
           BASE: ${{ steps.target.outputs.base }}
           REPO: ${{ github.repository }}
+          PR_ASSIGNEE: ${{ github.actor }}
+          PR_REVIEWER: singh-pankaj-k
         run: |
           set -euo pipefail
 
@@ -98,17 +101,73 @@ jobs:
             --jq '.[0].number' || true)
 
           if [[ -n "${EXISTING:-}" ]]; then
-            echo "An open PR already exists for $HEAD -> $BASE (#$EXISTING). Nothing to do."
+            echo "An open PR already exists for $HEAD -> $BASE (#$EXISTING). Updating PR metadata."
+            PR_NUMBER="$EXISTING"
+          else
+            TITLE="Draft: merge \`$HEAD\` into \`$BASE\`"
+            BODY=$'Auto-created draft PR for branch `'"$HEAD"$'`.\n\nTarget base: `'"$BASE"$'`\n\nMark this PR as ready for review when you want it to be reviewed/merged.'
+
+            gh pr create \
+              --repo "$REPO" \
+              --draft \
+              --base "$BASE" \
+              --head "$HEAD" \
+              --title "$TITLE" \
+              --body  "$BODY"
+
+            PR_NUMBER=$(gh pr list \
+              --repo "$REPO" \
+              --state open \
+              --head "$HEAD" \
+              --base "$BASE" \
+              --json number \
+              --jq '.[0].number')
+          fi
+
+          gh pr edit "$PR_NUMBER" \
+            --repo "$REPO" \
+            --add-assignee "$PR_ASSIGNEE"
+
+          PR_AUTHOR=$(gh pr view "$PR_NUMBER" \
+            --repo "$REPO" \
+            --json author \
+            --jq '.author.login')
+
+          if [[ "$PR_AUTHOR" == "$PR_REVIEWER" ]]; then
+            echo "Skipping reviewer request because $PR_REVIEWER is the PR author."
+          else
+            gh pr edit "$PR_NUMBER" \
+              --repo "$REPO" \
+              --add-reviewer "$PR_REVIEWER"
+          fi
+
+      - name: Assign matching issue ticket (best effort)
+        if: steps.target.outputs.skip == 'false'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          HEAD: ${{ steps.target.outputs.head }}
+          REPO: ${{ github.repository }}
+          PR_ASSIGNEE: ${{ github.actor }}
+        run: |
+          set -euo pipefail
+
+          TICKET_NUMBER=""
+          if [[ "$HEAD" =~ (^|/)(iss|issue|issues)[/-]?#?([0-9]+)([^0-9]|$) ]]; then
+            TICKET_NUMBER="${BASH_REMATCH[3]}"
+          fi
+
+          if [[ -z "$TICKET_NUMBER" ]]; then
+            echo "No GitHub issue ticket number found in branch '$HEAD'. Skipping ticket assignment."
             exit 0
           fi
 
-          TITLE="Draft: merge \`$HEAD\` into \`$BASE\`"
-          BODY=$'Auto-created draft PR for branch `'"$HEAD"$'`.\n\nTarget base: `'"$BASE"$'`\n\nMark this PR as ready for review when you want it to be reviewed/merged.'
+          if ! gh issue view "$TICKET_NUMBER" --repo "$REPO" --json number >/dev/null 2>&1; then
+            echo "GitHub issue #$TICKET_NUMBER was not found. Skipping ticket assignment."
+            exit 0
+          fi
 
-          gh pr create \
-            --repo "$REPO" \
-            --draft \
-            --base "$BASE" \
-            --head "$HEAD" \
-            --title "$TITLE" \
-            --body  "$BODY"
+          if gh issue edit "$TICKET_NUMBER" --repo "$REPO" --add-assignee "$PR_ASSIGNEE"; then
+            echo "Assigned issue ticket #$TICKET_NUMBER to $PR_ASSIGNEE."
+          else
+            echo "::warning::Could not assign issue ticket #$TICKET_NUMBER to $PR_ASSIGNEE."
+          fi
