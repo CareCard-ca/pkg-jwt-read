@@ -23,6 +23,8 @@ on:
   push:
     branches:
       - 'feature/**'
+      - 'feat/**'
+      - 'improvement/**'
       - 'releases/**'
       - 'release*'
       - 'hotfix/**'
@@ -30,6 +32,8 @@ on:
       - 'fix/**'
       - 'main-*'
       - 'main-**'
+      - 'data**'
+      - 'data/**'
     paths-ignore:
       - '**.md'
   workflow_dispatch:
