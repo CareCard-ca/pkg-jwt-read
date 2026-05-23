@@ -92,6 +92,7 @@ The `pkg-*` directories are reusable CareCard packages. Shared API response, err
 
 - Write or update tests before implementation whenever changing behavior.
 - Testing is mandatory before finalizing code changes. Do not stop after implementation if tests, `.junie`, or `.husky` checks remain unrun.
+- Code coverage must never be lower than the previous commit. When coverage tooling exists, compare against the previous commit or recorded baseline before finalizing, add tests to maintain or improve coverage, and never reduce coverage thresholds to make checks pass.
 - Keep tests readable and domain-specific. Prefer explicit helper names over generic test utilities that hide important behavior.
 - Use existing test frameworks and layouts:
   - JavaScript `api-*`: usually Mocha, Supertest, `test/index.test.js`, and Docker-backed Postgres scripts.
