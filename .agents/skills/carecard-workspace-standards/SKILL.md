@@ -83,6 +83,23 @@ config.
 7. Run targeted tests first, then broader repository checks.
 8. Run every direct `.husky` script before finishing. Do not bypass hooks.
 
+## Agent Guidance Git Workflow
+
+When changes are made to any `*/.agents/*` path, apply the branch-specific
+commit and push rules from inside the affected child repository:
+
+1. If the current Git branch is `development`, fetch the latest
+   `origin/development`, create `feature/codex` from the updated
+   remote `development` branch, commit the new `.agents` change to
+   `feature/codex`, and push `feature/codex` to GitHub. Preserve user work
+   and do not overwrite unrelated local changes.
+2. If the current Git branch is `feature/codex`, commit the `.agents` change
+   to `feature/codex` and push it to GitHub.
+3. If the current Git branch is neither `development` nor `feature/codex`,
+   follow the explicit user instruction for that branch.
+4. If none of the above rules apply and the user has not explicitly instructed
+   a commit or push, do not automatically commit or push to GitHub.
+
 ## Shared Packages And API Contracts
 
 - Prefer `@carecard/common-util`, `@carecard/auth-util`, `@carecard/jwt-read`,
