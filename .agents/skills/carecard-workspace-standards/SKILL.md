@@ -57,6 +57,7 @@ config.
   opportunistic refactors, and edits in generated or heavy-output directories
   such as `node_modules`, `dist`, `coverage`, `.next`, `logs`, and generated
   stores.
+- Always ignore `.DS_Store`; do not stage or commit it.
 - Use meaningful names that expose intent and domain behavior.
 - Prefer PostgreSQL functions, stored procedures, database search, fuzzy search,
   trigram search, full-text search, vector search, and database-side
