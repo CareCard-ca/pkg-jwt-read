@@ -1,0 +1,4 @@
+interface:
+  display_name: "Package JWT Read"
+  short_description: "CareCard JWT read workflow"
+  default_prompt: "Use $pkg-jwt-read when changing @carecard/jwt-read."

@@ -1,0 +1,4 @@
+interface:
+  display_name: "CareCard Workspace Standards"
+  short_description: "Shared CareCard repo workflow rules"
+  default_prompt: "Use $carecard-workspace-standards before changing a CareCard workspace repository."
