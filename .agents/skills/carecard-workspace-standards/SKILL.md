@@ -5,49 +5,6 @@ description: Follow the shared SO_CareCardCa/CareCard workspace coding, testing,
 
 # CareCard Workspace Standards
 
-## Purpose
-
-Use before modifying, testing, reviewing, or debugging any CareCard workspace repository or cross-repository contract.
-
-## When To Use
-
-- Use before modifying, testing, reviewing, or debugging any CareCard workspace repository or cross-repository contract.
-- Use as the first shared context before selecting narrower repository-specific skills.
-
-## When Not To Use
-
-- Do not use for service-local behavior that should remain inside one API or app.
-- Do not change package public APIs without updating consumers and compatibility tests.
-
-## Relevant Files And Directories
-
-- `.agents/config.toml`
-- `.agents/skills`
-- `api-*` services
-- `pkg-*` packages
-- `app-*` frontends
-- `.husky` and `.junie` validation guidance
-
-## Coding Principles
-
-- Preserve the repository structure, naming style, module system, and local helper patterns.
-- Prefer readable, maintainable code with meaningful function, variable, file, and test names.
-- Avoid new dependencies unless the existing stack cannot reasonably solve the task and the user confirms the tradeoff.
-- Keep public exports stable and update CommonJS, ESM, TypeScript declaration, and compatibility surfaces together when present.
-
-## Testing Expectations
-
-- Write or update package tests before behavior or public API changes.
-- Include type/export compatibility tests where the package already has them.
-- Run package test, lint, type, and Husky validation commands required by the changed area.
-
-## Safety Constraints
-
-- Do not edit generated output, dependency folders, logs, coverage, dist, or build artifacts unless the task explicitly requires it.
-- Do not revert or overwrite user changes; stage only files related to the requested skill or instruction update.
-- Never suppress errors, lint failures, type failures, security failures, or failing tests; fix the underlying issue or report the blocker.
-- Do not log or expose secrets, JWTs, passwords, credentials, private keys, sensitive personal data, SQL internals, or stack traces.
-
 ## Workspace Model
 
 Treat `/Users/pankajpriscilla/SO_CareCardCa` as a collection of independent Git
@@ -120,56 +77,28 @@ config.
 5. If a repository contains `.junie` guidance or validation scripts, read
    applicable guidance and run every executable or directly documented
    validation command before finishing.
-6. Audit and update the documentation and skill after every change in the code.
-   Keep the relevant `.agents` skill and documentation in the same change so
-   repository guidance stays current.
+6. When updating a repository, adding a feature, fixing a bug, or making any
+   other significant change, update the relevant `.agents` skill and
+   documentation in the same change so repository guidance stays current.
 7. Run targeted tests first, then broader repository checks.
 8. Run every direct `.husky` script before finishing. Do not bypass hooks.
 
-## Remote Git Operations Guardrail
-
-Do not run remote Git or GitHub operations unless the current user request explicitly asks for that remote operation. This includes `git fetch`, `git pull`, `git push`, `git push --delete`, remote branch cleanup, GitHub API calls, and any `gh pr` command that creates, updates, readies, merges, closes, or cleans up a pull request. Do not infer permission from branch names, validation needs, prior workflow habits, or convenience; ask first when remote state would be useful but was not requested.
-
-## Commit Continuation Rule
-
-Do not amend existing commits unless the user explicitly asks for an amend. If
-hooks, formatters, tests, docs, skills, validation, or review follow-up create
-additional changes after a commit already exists, keep history additive by
-making a new commit in the affected repository.
-
 ## Agent Guidance Git Workflow
 
-When this skill or any repository-owned `.agents` guidance changes, use the
-repository's agents-only Git workflow:
+When changes are made to any `*/.agents/*` path, apply the branch-specific
+commit and push rules from inside the affected child repository:
 
-1. Work from the affected repository root and confirm only intended `.agents`
-   files changed.
-2. Use `development` as the base branch when `origin/development` exists;
-   otherwise use the repository's default base branch, usually `main`.
-3. Create or update `feature/codex` from the updated remote base branch and
-   commit all the changed `.agents` guidance files there.
-4. Push `feature/codex`, create or reuse a pull request into the base branch,
-   and mark the pull request ready for review with `gh pr ready <number>`.
-5. Squash-merge with administrator privileges and delete the remote branch:
-
-   ```sh
-   gh pr merge <number> --squash --admin --delete-branch
-   ```
-
-6. After merge, update the local base branch and remove the local feature
-   branch:
-
-   ```sh
-   git fetch origin <base> --prune
-   git switch <base>
-   git pull --ff-only origin <base>
-   git branch -d feature/codex
-   git ls-remote --heads origin feature/codex
-   ```
-
-Do not commit or push `.agents` guidance changes directly from `development`
-or `main`. Do not stage unrelated files, generated output, dependency folders,
-build artifacts, logs, or `.DS_Store`.
+1. If the current Git branch is `development`, fetch the latest
+   `origin/development`, create `feature/codex` from the updated
+   remote `development` branch, commit the new `.agents` change to
+   `feature/codex`, and push `feature/codex` to GitHub. Preserve user work
+   and do not overwrite unrelated local changes.
+2. If the current Git branch is `feature/codex`, commit the `.agents` change
+   to `feature/codex` and push it to GitHub.
+3. If the current Git branch is neither `development` nor `feature/codex`,
+   follow the explicit user instruction for that branch.
+4. If none of the above rules apply and the user has not explicitly instructed
+   a commit or push, do not automatically commit or push to GitHub.
 
 ## Shared Packages And API Contracts
 
@@ -211,16 +140,6 @@ database tests, `@carecard/*` packages, and `sub-apps`
 controller/router/model patterns. TypeScript services such as `api-contact-us`
 and `api-template-ts` use Jest or TypeScript tooling and should keep their
 existing TypeScript style.
-
-- Keep environment-specific files explicit: `.env.development`, `.env.test`,
-  and `.env.production`. Docker Compose database services must use the matching
-  env file for their environment, and containerized application services should
-  use `.env.production` unless a compose file intentionally defines a separate
-  development app service.
-- Keep Docker Compose service keys, explicit `container_name` values, host ports,
-  and service URLs unique and descriptive across the workspace. When a Docker
-  name or port changes, update the matching env files, scripts, README docs, and
-  repo-local skills in the same change.
 
 - Keep controllers thin: parse input, authorize, validate, call domain/model
   logic, build a response, and pass errors to `next`.
