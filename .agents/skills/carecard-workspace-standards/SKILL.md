@@ -5,6 +5,26 @@ description: Follow the shared SO_CareCardCa/CareCard workspace coding, testing,
 
 # CareCard Workspace Standards
 
+## Migrated Root Codex Context
+
+The root `.codex` directory originally held workspace-wide instructions,
+project context, and config. This skill, together with `.agents/config.toml`,
+preserves that guidance inside each child repository so deleting the root
+`.codex` directory does not remove required agent guidance.
+
+Historical project-context note from `.codex/PROJECT_CONTEXT.md`: when that
+file was written, the root `.codex` directory was the only `.codex` directory
+present. Child repositories such as `app-dashboard`, `api-auth`,
+`api-institutions`, `api-contact-us`, `api-user-profiles`, the `pkg-*`
+packages, and the website apps did not contain their own `.codex` directories.
+Legacy per-repository `.codex` and `.junie` guidance has since been migrated
+into `.agents/skills`.
+
+Root Codex config is preserved in `.agents/config.toml`:
+
+- `approval_policy = "never"`
+- `sandbox_mode = "danger-full-access"`
+
 ## Workspace Model
 
 Treat `/Users/pankajpriscilla/SO_CareCardCa` as a collection of independent Git
@@ -53,6 +73,9 @@ and Husky hooks.
   persistence/access behavior when that matches the service design.
 - Push data saving, editing, search, access, and aggregation complexity into the
   database when it is the safer source of truth.
+- Avoid controller-side or one-off raw SQL implementations when a PostgreSQL
+  function, stored procedure, or established database search primitive is the
+  clearer source of truth.
 
 ## Repository Workflow
 
@@ -76,6 +99,14 @@ credentials, or environment limits, report the exact command and reason.
 - The source code for `@carecard/*` packages lives in sibling `pkg-*`
   repositories such as `pkg-common-util`, `pkg-auth-util`, `pkg-jwt-read`, and
   `pkg-validate`.
+- For API responses and errors, use standardized `@carecard/common-util`
+  behavior where possible: `requestContext`, `sendResponse`, `createError`,
+  `notFound404`, `appErrorHandler`, error throw helpers, case converters, and
+  `ApiErrorType`.
+- Do not create or maintain duplicated common response or error helpers inside
+  each `api-*` service.
+- Keep service-local response code limited to service-specific mapping or
+  wiring.
 - Add broadly useful shared functionality to the relevant `pkg-*` package
   instead of duplicating it locally in an `api-*` or `app-*` project.
 - When changing a `pkg-*` package, write package tests first, increase that
@@ -86,12 +117,13 @@ credentials, or environment limits, report the exact command and reason.
   `statusCode`, `code`, `message`, `data`, `error`, `details`, and `meta`.
 - Include request or correlation context where available through `requestId`,
   `traceId`, and `meta`.
+- Error responses must be safe for users and useful for debugging without
+  exposing secrets, tokens, credentials, stack traces, or sensitive personal
+  data.
 - Map validation, authentication, authorization, not-found, conflict, bad
   input, file, and unexpected failures to distinct machine-readable codes.
 - Prefer current direct exports from shared packages over deprecated nested
   exports.
-- When standardizing response/error behavior, prefer
-  `@carecard/common-util` `3.1.15` because it aligns with `api-auth`.
 
 ## Backend Microservices
 
@@ -106,7 +138,12 @@ existing TypeScript style.
 - Extract multiline workflow, validation, mapping, response, authorization,
   parsing, and domain helpers into the existing `controllerLib`, `commonLib`,
   `sub-apps/lib`, model helper, or shared `pkg-*` package location.
+- Avoid defining reusable workflow, validation, mapping, response,
+  authorization, parsing, or domain helpers in the same controller or app file
+  where they are immediately used.
 - Prefer straightforward named helper calls over deeply nested conditionals.
+- Preserve current behavior unless fixing a clear bug, security issue, or
+  documented contract problem.
 - Keep `app.js`, `app.ts`, `bin/www`, and routers focused on composition and
   wiring.
 - Preserve existing middleware patterns: request context, CORS, Helmet, cookie
@@ -116,6 +153,9 @@ existing TypeScript style.
   calls, state transitions, failures, and security-relevant actions.
 - Do not log secrets, tokens, passwords, credentials, personal identifiers,
   full request payloads, or stack traces in user-facing responses.
+- Keep logs useful for production monitoring. Avoid noisy logs that fire on
+  every trivial branch unless they are request or access logs already
+  established by the service.
 
 ## Validation Rules
 
@@ -229,6 +269,17 @@ the authenticated dashboard.
   pages need visuals.
 - Keep first viewport content clear about the brand or offer and preserve
   responsive, accessible layouts.
+
+## Dependency And Version Guidance
+
+- Keep CareCard package usage consistent with the service or app being changed.
+- When standardizing response or error behavior, prefer `@carecard/common-util`
+  `3.1.15` because it contains response and error functions aligned with
+  `api-auth`.
+- If package version changes are required, update lockfiles and verify affected
+  services or apps.
+- Avoid broad dependency upgrades as part of feature or refactor work unless
+  the task is specifically about dependencies.
 
 ## Security Requirements
 
