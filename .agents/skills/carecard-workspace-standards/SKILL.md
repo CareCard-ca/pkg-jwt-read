@@ -74,11 +74,14 @@ config.
 2. Run `git status --short` there before editing.
 3. Preserve user changes. Do not revert or overwrite changes you did not make.
 4. Read local repository guidance from `.agents/skills` before editing.
-5. When updating a repository, adding a feature, fixing a bug, or making any
+5. If a repository contains `.junie` guidance or validation scripts, read
+   applicable guidance and run every executable or directly documented
+   validation command before finishing.
+6. When updating a repository, adding a feature, fixing a bug, or making any
    other significant change, update the relevant `.agents` skill and
    documentation in the same change so repository guidance stays current.
-6. Run targeted tests first, then broader repository checks.
-7. Run every direct `.husky` script before finishing. Do not bypass hooks.
+7. Run targeted tests first, then broader repository checks.
+8. Run every direct `.husky` script before finishing. Do not bypass hooks.
 
 ## Shared Packages And API Contracts
 
