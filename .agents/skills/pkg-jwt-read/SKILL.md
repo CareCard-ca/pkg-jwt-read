@@ -142,3 +142,37 @@ npm run test:All
 
 If any validation command cannot run, report the exact command, failure reason,
 and remaining risk.
+
+## Agent Guidance Git Workflow
+
+When this skill or any repository-owned `.agents` guidance changes, use the
+repository's agents-only Git workflow:
+
+1. Work from the affected repository root and confirm only intended `.agents`
+   files changed.
+2. Use `development` as the base branch when `origin/development` exists;
+   otherwise use the repository's default base branch, usually `main`.
+3. Create or update `feature/codex` from the updated remote base branch and
+   commit only the intended `.agents` guidance files there.
+4. Push `feature/codex`, create or reuse a pull request into the base branch,
+   and mark the pull request ready for review with `gh pr ready <number>`.
+5. Squash-merge with administrator privileges and delete the remote branch:
+
+   ```sh
+   gh pr merge <number> --squash --admin --delete-branch
+   ```
+
+6. After merge, update the local base branch and remove the local feature
+   branch:
+
+   ```sh
+   git fetch origin <base> --prune
+   git switch <base>
+   git pull --ff-only origin <base>
+   git branch -d feature/codex
+   git ls-remote --heads origin feature/codex
+   ```
+
+Do not commit or push `.agents` guidance changes directly from `development`
+or `main`. Do not stage unrelated files, generated output, dependency folders,
+build artifacts, logs, or `.DS_Store`.
