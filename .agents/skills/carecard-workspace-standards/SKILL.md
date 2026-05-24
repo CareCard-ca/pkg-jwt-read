@@ -5,26 +5,6 @@ description: Follow the shared SO_CareCardCa/CareCard workspace coding, testing,
 
 # CareCard Workspace Standards
 
-## Migrated Root Codex Context
-
-The root `.codex` directory originally held workspace-wide instructions,
-project context, and config. This skill, together with `.agents/config.toml`,
-preserves that guidance inside each child repository so deleting the root
-`.codex` directory does not remove required agent guidance.
-
-Historical project-context note from `.codex/PROJECT_CONTEXT.md`: when that
-file was written, the root `.codex` directory was the only `.codex` directory
-present. Child repositories such as `app-dashboard`, `api-auth`,
-`api-institutions`, `api-contact-us`, `api-user-profiles`, the `pkg-*`
-packages, and the website apps did not contain their own `.codex` directories.
-Legacy per-repository `.codex` and `.junie` guidance has since been migrated
-into `.agents/skills`.
-
-Root Codex config is preserved in `.agents/config.toml`:
-
-- `approval_policy = "never"`
-- `sandbox_mode = "danger-full-access"`
-
 ## Workspace Model
 
 Treat `/Users/pankajpriscilla/SO_CareCardCa` as a collection of independent Git
@@ -32,6 +12,16 @@ repositories, not as one monorepo. Work from the specific child repository
 being changed. Each `api-*`, `pkg-*`, and `app-*` directory has its own package
 scripts, Git status, test commands, style, naming, structure, test framework,
 and Husky hooks.
+
+## Agent Configuration
+
+Keep agent runtime configuration in `.agents/config.toml`:
+
+- `approval_policy = "never"`
+- `sandbox_mode = "danger-full-access"`
+
+Follow the current session permissions when they differ from repository-stored
+config.
 
 ## Non-Negotiable Rules
 
@@ -82,15 +72,12 @@ and Husky hooks.
 1. Change into the affected child repository.
 2. Run `git status --short` there before editing.
 3. Preserve user changes. Do not revert or overwrite changes you did not make.
-4. Read local repository guidance from `.agents/skills`; legacy `.codex` and
-   `.junie` guidance may already have been migrated into skills.
-5. Run targeted tests first, then broader repository checks.
-6. Run every direct `.husky` script before finishing. Do not bypass hooks.
-
-If a repository has `.junie` guidance, read it before editing and run every
-executable `.junie` script plus every validation command documented there. If a
-command cannot run because of missing dependencies, unavailable services,
-credentials, or environment limits, report the exact command and reason.
+4. Read local repository guidance from `.agents/skills` before editing.
+5. When updating a repository, adding a feature, fixing a bug, or making any
+   other significant change, update the relevant `.agents` skill and
+   documentation in the same change so repository guidance stays current.
+6. Run targeted tests first, then broader repository checks.
+7. Run every direct `.husky` script before finishing. Do not bypass hooks.
 
 ## Shared Packages And API Contracts
 
@@ -187,9 +174,13 @@ existing TypeScript style.
 ## Tests
 
 - Testing is mandatory before finalizing code changes.
-- Coverage must never be lower than the previous commit. Add tests to maintain
-  or improve coverage and never reduce coverage thresholds to pass checks.
+- Code coverage percentage must not decrease from the previous commit; it can
+  stay the same or increase. When coverage tooling exists, compare against the
+  previous commit or recorded baseline, add tests to maintain or improve
+  coverage, and never reduce coverage thresholds to pass checks.
 - Keep tests readable and domain-specific.
+- Tests must cover desired or happy paths and prevention or rejection of
+  undesired behavior.
 - JavaScript `api-*` services usually use Mocha, Supertest,
   `test/index.test.js`, and Docker-backed PostgreSQL scripts.
 - TypeScript `api-*` services usually use Jest and `tests/index.test.ts`.
@@ -233,12 +224,10 @@ modules.
 - Use existing MUI and app component patterns. Do not introduce a new UI
   framework.
 
-Recent dashboard context preserved from the root project context:
+Dashboard service and test conventions:
 
-- `app-dashboard` branch `feature/rebased-on-dev` was rebased onto
-  `development` and pushed.
-- Profile address and phone-number UI work was reconciled with the development
-  branch while keeping development behavior authoritative.
+- When reconciling dashboard profile address and phone-number behavior,
+  preserve current development behavior unless the task explicitly changes it.
 - Service/API snackbar behavior is centralized in
   `src/hooks/useServiceSnackbar.hooks.ts`.
 - Query error snackbars delegate shared message normalization through
