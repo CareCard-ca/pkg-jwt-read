@@ -85,20 +85,37 @@ config.
 
 ## Agent Guidance Git Workflow
 
-When changes are made to any `*/.agents/*` path, apply the branch-specific
-commit and push rules from inside the affected child repository:
+When this skill or any repository-owned `.agents` guidance changes, use the
+repository's agents-only Git workflow:
 
-1. If the current Git branch is `development`, fetch the latest
-   `origin/development`, create `feature/codex` from the updated
-   remote `development` branch, commit the new `.agents` change to
-   `feature/codex`, and push `feature/codex` to GitHub. Preserve user work
-   and do not overwrite unrelated local changes.
-2. If the current Git branch is `feature/codex`, commit the `.agents` change
-   to `feature/codex` and push it to GitHub.
-3. If the current Git branch is neither `development` nor `feature/codex`,
-   follow the explicit user instruction for that branch.
-4. If none of the above rules apply and the user has not explicitly instructed
-   a commit or push, do not automatically commit or push to GitHub.
+1. Work from the affected repository root and confirm only intended `.agents`
+   files changed.
+2. Use `development` as the base branch when `origin/development` exists;
+   otherwise use the repository's default base branch, usually `main`.
+3. Create or update `feature/codex` from the updated remote base branch and
+   commit only the intended `.agents` guidance files there.
+4. Push `feature/codex`, create or reuse a pull request into the base branch,
+   and mark the pull request ready for review with `gh pr ready <number>`.
+5. Squash-merge with administrator privileges and delete the remote branch:
+
+   ```sh
+   gh pr merge <number> --squash --admin --delete-branch
+   ```
+
+6. After merge, update the local base branch and remove the local feature
+   branch:
+
+   ```sh
+   git fetch origin <base> --prune
+   git switch <base>
+   git pull --ff-only origin <base>
+   git branch -d feature/codex
+   git ls-remote --heads origin feature/codex
+   ```
+
+Do not commit or push `.agents` guidance changes directly from `development`
+or `main`. Do not stage unrelated files, generated output, dependency folders,
+build artifacts, logs, or `.DS_Store`.
 
 ## Shared Packages And API Contracts
 
