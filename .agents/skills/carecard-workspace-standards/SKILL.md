@@ -93,7 +93,7 @@ repository's agents-only Git workflow:
 2. Use `development` as the base branch when `origin/development` exists;
    otherwise use the repository's default base branch, usually `main`.
 3. Create or update `feature/codex` from the updated remote base branch and
-   commit only the intended `.agents` guidance files there.
+   commit all the changed `.agents` guidance files there.
 4. Push `feature/codex`, create or reuse a pull request into the base branch,
    and mark the pull request ready for review with `gh pr ready <number>`.
 5. Squash-merge with administrator privileges and delete the remote branch:
