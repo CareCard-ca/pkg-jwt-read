@@ -1,9 +1,45 @@
 ---
-name: pull-request-create
-description: Use when creating, updating, or marking ready a GitHub pull request from the current repository branch into origin/development. Fetch the latest development branch, verify mergeability, rebase only when needed to resolve development conflicts, push safely, reuse or create the PR with GitHub CLI, mark draft PRs ready, and remove draft wording from the title.
+name: github-pr-create-update
+description: Use when asked to create, update, push for, or mark ready a GitHub pull request from the current repository branch.
 ---
 
 # Pull Request Create
+
+## Purpose
+
+Create, update, verify, push, and mark ready a GitHub pull request from the current repository branch into origin/development.
+
+## When To Use
+
+- Use when asked to create, update, push for, or mark ready a GitHub pull request from the current repository branch.
+
+## When Not To Use
+
+- Do not use for merging or deleting an already-approved pull request; use the merge cleanup skill.
+- Do not use for ordinary local commits that do not involve GitHub PR work.
+
+## Relevant Files And Directories
+
+- Git branch state in this repository
+- GitHub pull requests viewed with `gh`
+- repository validation commands and `.husky` scripts
+
+## Coding Principles
+
+- Preserve the repository structure, naming style, module system, and local helper patterns.
+- Prefer readable, maintainable code with meaningful function, variable, file, and test names.
+- Avoid new dependencies unless the existing stack cannot reasonably solve the task and the user confirms the tradeoff.
+
+## Testing Expectations
+
+- Run repository validation before PR creation or merge when code behavior changed.
+- Confirm the branch is clean except intended changes before finishing.
+
+## Safety Constraints
+
+- Do not edit generated output, dependency folders, logs, coverage, dist, or build artifacts unless the task explicitly requires it.
+- Do not revert or overwrite user changes; stage only files related to the requested skill or instruction update.
+- Never suppress errors, lint failures, type failures, security failures, or failing tests; fix the underlying issue or report the blocker.
 
 ## Scope
 

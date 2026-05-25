@@ -1,5 +1,0 @@
-interface:
-  display_name: 'Pull Request Create'
-  short_description: 'Create or ready PRs into development'
-  brand_color: '#0F766E'
-  default_prompt: 'Use $pull-request-create to create or ready a pull request for the current branch.'
