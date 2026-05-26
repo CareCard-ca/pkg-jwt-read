@@ -1,0 +1,4 @@
+interface:
+  display_name: 'Package JWT Read Middleware Library'
+  short_description: 'Use when changing pkg-jwt-read JWT parsing, middleware, visitor tokens, role checks, auth context, package exports, or tests.'
+  default_prompt: 'Use $pkg-jwt-read-jwt-middleware-library when this task matches the skill scope.'

@@ -1,9 +1,45 @@
 ---
-name: pull-request-merge-close
-description: Use when reviewing, validating, merging, and closing a GitHub pull request branch into origin/development. Check mergeability with GitHub CLI and git, rebase the target branch on remote development only when needed, abort on rebase conflicts, apply repository skill guidance and validation before merging, merge the PR, delete the remote branch when it is not protected, then clean up the local branch and update development.
+name: github-pr-merge-cleanup
+description: Use when asked to review mergeability, validate, merge, close, or clean up a GitHub pull request branch.
 ---
 
 # Pull Request Merge Close
+
+## Purpose
+
+Review, validate, merge, close, delete branch, and clean local state for a GitHub pull request targeting origin/development.
+
+## When To Use
+
+- Use when asked to review mergeability, validate, merge, close, or clean up a GitHub pull request branch.
+
+## When Not To Use
+
+- Do not use for creating a new pull request; use the PR create/update skill.
+- Do not use when the user only asks for local code changes without PR merge work.
+
+## Relevant Files And Directories
+
+- Git branch state in this repository
+- GitHub pull requests viewed with `gh`
+- repository validation commands and `.husky` scripts
+
+## Coding Principles
+
+- Preserve the repository structure, naming style, module system, and local helper patterns.
+- Prefer readable, maintainable code with meaningful function, variable, file, and test names.
+- Avoid new dependencies unless the existing stack cannot reasonably solve the task and the user confirms the tradeoff.
+
+## Testing Expectations
+
+- Run repository validation before PR creation or merge when code behavior changed.
+- Confirm the branch is clean except intended changes before finishing.
+
+## Safety Constraints
+
+- Do not edit generated output, dependency folders, logs, coverage, dist, or build artifacts unless the task explicitly requires it.
+- Do not revert or overwrite user changes; stage only files related to the requested skill or instruction update.
+- Never suppress errors, lint failures, type failures, security failures, or failing tests; fix the underlying issue or report the blocker.
 
 ## Scope
 
