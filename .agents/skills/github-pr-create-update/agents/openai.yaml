@@ -1,0 +1,5 @@
+interface:
+  display_name: 'GitHub PR Create Or Update'
+  short_description: 'Use when asked to create, update, push for, or mark ready a GitHub pull request from the current repository branch.'
+  brand_color: '#0F766E'
+  default_prompt: 'Use $github-pr-create-update when this task matches the skill scope.'
