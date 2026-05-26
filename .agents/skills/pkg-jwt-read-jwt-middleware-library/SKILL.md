@@ -93,28 +93,14 @@ depend on those folders being present.
 
 - Signature verification using public keys.
 - Middleware-like functions for Express, such as `verifyJwtAndRole`.
-- Service-to-service JWT verification and extraction helpers:
-  `jwtValidateAndExtractService` and `jwtVerifyService`.
 - Extraction of `sub`/clientId and other claims from JWT objects.
 - Expiration checks and TTL calculations.
 - Request attachment behavior for authenticated JWT objects and visitor tokens.
 - Integration with `@carecard/common-util` for standardized login and
   authorization errors.
 
-Use `@carecard/auth-util` for JWT creation, decomposition, and signature
-verification. Do not duplicate cryptographic logic in this package.
-
-JWT creation functions do not belong in this package. Service-to-service token
-creation belongs in `@carecard/auth-util` via `jwtCreateServiceToken` and
-`jwtCreateServiceAuthorizationHeader`.
-
-Service JWTs must follow standard JWT claim semantics. They use `iss` for the
-sending service, `sub` for the sending service identity, `aud` for the
-receiving service, and NumericDate `iat`, `exp`, and optional `nbf` claims.
-Receivers must verify the signature with the sending service public key and
-must check expected issuer, audience, subject, and lifetime. Do not add
-CareCard-specific replacement claims when a registered JWT claim covers the
-same meaning.
+Use `@carecard/auth-util` for JWT decomposition and signature verification. Do
+not duplicate cryptographic logic in this package.
 
 ## Role Mapping Layer
 
@@ -199,10 +185,6 @@ npm run test:All
 
 If any validation command cannot run, report the exact command, failure reason,
 and remaining risk.
-
-## Remote Git Operations Guardrail
-
-Do not run remote Git or GitHub operations unless the current user request explicitly asks for that remote operation. This includes `git fetch`, `git pull`, `git push`, `git push --delete`, remote branch cleanup, GitHub API calls, and any `gh pr` command that creates, updates, readies, merges, closes, or cleans up a pull request. Do not infer permission from branch names, validation needs, prior workflow habits, or convenience; ask first when remote state would be useful but was not requested.
 
 ## Agent Guidance Git Workflow
 

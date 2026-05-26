@@ -5,6 +5,49 @@ description: Follow the shared SO_CareCardCa/CareCard workspace coding, testing,
 
 # CareCard Workspace Standards
 
+## Purpose
+
+Use before modifying, testing, reviewing, or debugging any CareCard workspace repository or cross-repository contract.
+
+## When To Use
+
+- Use before modifying, testing, reviewing, or debugging any CareCard workspace repository or cross-repository contract.
+- Use as the first shared context before selecting narrower repository-specific skills.
+
+## When Not To Use
+
+- Do not use for service-local behavior that should remain inside one API or app.
+- Do not change package public APIs without updating consumers and compatibility tests.
+
+## Relevant Files And Directories
+
+- `.agents/config.toml`
+- `.agents/skills`
+- `api-*` services
+- `pkg-*` packages
+- `app-*` frontends
+- `.husky` and `.junie` validation guidance
+
+## Coding Principles
+
+- Preserve the repository structure, naming style, module system, and local helper patterns.
+- Prefer readable, maintainable code with meaningful function, variable, file, and test names.
+- Avoid new dependencies unless the existing stack cannot reasonably solve the task and the user confirms the tradeoff.
+- Keep public exports stable and update CommonJS, ESM, TypeScript declaration, and compatibility surfaces together when present.
+
+## Testing Expectations
+
+- Write or update package tests before behavior or public API changes.
+- Include type/export compatibility tests where the package already has them.
+- Run package test, lint, type, and Husky validation commands required by the changed area.
+
+## Safety Constraints
+
+- Do not edit generated output, dependency folders, logs, coverage, dist, or build artifacts unless the task explicitly requires it.
+- Do not revert or overwrite user changes; stage only files related to the requested skill or instruction update.
+- Never suppress errors, lint failures, type failures, security failures, or failing tests; fix the underlying issue or report the blocker.
+- Do not log or expose secrets, JWTs, passwords, credentials, private keys, sensitive personal data, SQL internals, or stack traces.
+
 ## Workspace Model
 
 Treat `/Users/pankajpriscilla/SO_CareCardCa` as a collection of independent Git
