@@ -1,19 +1,17 @@
 ---
 name: pkg-jwt-read-jwt-middleware-library
-description: 'Use when changing pkg-jwt-read JWT parsing, middleware, visitor tokens, role checks, auth context, package exports, or tests.'
+description: Use when changing pkg-jwt-read JWT parsing, middleware, visitor tokens, role checks, auth context, package exports, or tests.
 ---
 
 # Package JWT Read
 
 ## Purpose
 
-CareCard JWT read package for parsing, request attachment, visitor tokens, role mapping, JWT-or-server-auth authorization middleware, exports, and tests.
+CareCard JWT read package for parsing, request attachment, visitor tokens, role mapping, authorization middleware, exports, and tests.
 
 ## When To Use
 
-- Use when changing pkg-jwt-read JWT parsing, server-auth introspection
-  middleware, visitor tokens, role checks, auth context, package exports, or
-  tests.
+- Use when changing pkg-jwt-read JWT parsing, middleware, visitor tokens, role checks, auth context, package exports, or tests.
 - Pair with `carecard-workspace-standards` when the task affects shared CareCard conventions or cross-repository contracts.
 
 ## When Not To Use
@@ -45,8 +43,8 @@ CareCard JWT read package for parsing, request attachment, visitor tokens, role 
 
 ## Safety Constraints
 
-- Do not edit generated output, dependency folders, logs, coverage, dist, or build artifacts unless the task requires it.
-- Do not revert or overwrite user changes; stage only requested skill or instruction files.
+- Do not edit generated output, dependency folders, logs, coverage, dist, or build artifacts unless the task explicitly requires it.
+- Do not revert or overwrite user changes; stage only files related to the requested skill or instruction update.
 - Never suppress errors, lint failures, type failures, security failures, or failing tests; fix the underlying issue or report the blocker.
 - Do not log or expose secrets, JWTs, passwords, credentials, private keys, sensitive personal data, SQL internals, or stack traces.
 
@@ -55,9 +53,7 @@ CareCard JWT read package for parsing, request attachment, visitor tokens, role 
 Use this skill when working inside `pkg-jwt-read`, the `@carecard/jwt-read`
 package. It provides utilities for reading, parsing, verifying, and attaching
 JWT data in the CareCard ecosystem. It depends on `@carecard/auth-util` for
-low-level cryptographic operations. It also exposes middleware helpers that
-allow `ms-*` services to accept either an `ms-auth` JWT or an opaque server-auth
-token introspected by `ms-auth`.
+low-level cryptographic operations.
 
 Use `$carecard-workspace-standards` for shared workspace, dependency, package,
 testing, and security rules. Legacy `pkg-jwt-read/.codex` and
@@ -97,38 +93,14 @@ depend on those folders being present.
 
 - Signature verification using public keys.
 - Middleware-like functions for Express, such as `verifyJwtAndRole`.
-- Service-to-service JWT verification and extraction helpers:
-  `jwtValidateAndExtractService` and `jwtVerifyService`.
-- JWT-or-server-auth helpers: `jwtValidateAndExtractOrServerAuth`,
-  `jwtVerifyOrServerAuth`, and `jwtVerifyOrServerAuthAndHasRole`.
 - Extraction of `sub`/clientId and other claims from JWT objects.
 - Expiration checks and TTL calculations.
 - Request attachment behavior for authenticated JWT objects and visitor tokens.
-- Server-auth request attachment behavior that normalizes introspected claims
-  into `req.jwt.payload` with `authMode: "server-auth"` and
-  `auth_mode: "server-auth"`.
 - Integration with `@carecard/common-util` for standardized login and
   authorization errors.
 
-Use `@carecard/auth-util` for JWT creation, decomposition, and signature
-verification. Do not duplicate cryptographic logic in this package.
-
-JWT creation functions do not belong in this package. Service-to-service token
-creation belongs in `@carecard/auth-util` via `jwtCreateServiceToken` and
-`jwtCreateServiceAuthorizationHeader`.
-
-Opaque server-auth token creation, hashing, persistence, and introspection
-belong in `ms-auth`. This package only accepts a caller-provided introspector
-function and normalizes valid introspection claims into the existing request
-JWT context.
-
-Service JWTs must follow standard JWT claim semantics. They use `iss` for the
-sending service, `sub` for the sending service identity, `aud` for the
-receiving service, and NumericDate `iat`, `exp`, and optional `nbf` claims.
-Receivers must verify the signature with the sending service public key and
-must check expected issuer, audience, subject, and lifetime. Do not add
-CareCard-specific replacement claims when a registered JWT claim covers the
-same meaning.
+Use `@carecard/auth-util` for JWT decomposition and signature verification. Do
+not duplicate cryptographic logic in this package.
 
 ## Role Mapping Layer
 
@@ -140,10 +112,6 @@ role names, such as `ad` and `admin`.
   by focused tests.
 - Preserve existing role semantics unless a task explicitly changes
   authorization behavior.
-- Preserve the original JWT `roles` array on request context. `ms-auth` RLS
-  treats a payload containing `ad` as the auth-service super-admin signal;
-  dashboard code may map that to `super_admin`, but middleware must not hide,
-  rename, or drop the raw role payload needed by backend database contexts.
 
 ## NoThrow And Error Behavior
 
@@ -159,20 +127,17 @@ role names, such as `ad` and `admin`.
 
 ## Security Rules
 
-- Treat JWT parsing, signature verification, server-auth introspection,
-  visitor tokens, authorization roles, and request context as
-  security-sensitive.
+- Treat JWT parsing, signature verification, visitor tokens, authorization
+  roles, and request context as security-sensitive.
 - Do not log JWTs, token fragments, public/private keys, decoded payloads,
   authorization headers, visitor headers, or sensitive request data.
-- Keep missing headers, invalid signatures, expired tokens, revoked or invalid
-  server-auth tokens, role failures, and used-token errors behaviorally
-  distinct where existing APIs do so.
+- Keep missing headers, invalid signatures, expired tokens, role failures, and
+  used-token errors behaviorally distinct where existing APIs do so.
 
 ## Types And API Contracts
 
-- Model JWT header, payload, server-auth introspection claims, request
-  attachment, visitor attachment, role, and context shapes explicitly in
-  `index.d.ts`.
+- Model JWT header, payload, request attachment, visitor attachment, role, and
+  context shapes explicitly in `index.d.ts`.
 - Prefer `AuthenticatedRequest`, `JwtHeader`, `JwtPayload`, `JwtParts`,
   `JwtRequestObject`, `VisitorRequestObject`, and `JwtContext` over loose
   request objects.
@@ -192,8 +157,7 @@ role names, such as `ad` and `admin`.
 - `test/types.test.ts` verifies TypeScript declarations with `tsc`.
 - Add focused tests for valid JWTs, invalid JWTs, missing headers, role checks,
   visitor token extraction, expiration behavior, request attachment behavior,
-  server-auth introspection success/failure, NoThrow behavior, and
-  context-bound helpers when those areas change.
+  NoThrow behavior, and context-bound helpers when those areas change.
 - Set `NODE_ENV=test` where tests or scripts require it.
 - Keep tests deterministic and avoid real external services.
 
@@ -221,10 +185,6 @@ npm run test:All
 
 If any validation command cannot run, report the exact command, failure reason,
 and remaining risk.
-
-## Remote Git Operations Guardrail
-
-Do not run remote Git or GitHub operations unless the current user request explicitly asks for them. This includes `git fetch`, `git pull`, `git push`, `git push --delete`, remote branch cleanup, GitHub API calls, and any `gh pr` command that creates, updates, readies, merges, closes, or cleans up a pull request. Do not infer permission from branch names, validation needs, prior workflow habits, or convenience; ask first when remote state would help but was not requested.
 
 ## Agent Guidance Git Workflow
 
