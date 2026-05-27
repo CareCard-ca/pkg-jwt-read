@@ -93,17 +93,20 @@ depend on those folders being present.
 
 - Signature verification using public keys.
 - Middleware-like functions for Express, such as `verifyJwtAndRole`.
-- Service-to-service JWT creation and verification helpers:
-  `jwtCreateServiceToken`, `jwtCreateServiceAuthorizationHeader`,
-  `jwtValidateAndExtractService`, and `jwtVerifyService`.
+- Service-to-service JWT verification and extraction helpers:
+  `jwtValidateAndExtractService` and `jwtVerifyService`.
 - Extraction of `sub`/clientId and other claims from JWT objects.
 - Expiration checks and TTL calculations.
 - Request attachment behavior for authenticated JWT objects and visitor tokens.
 - Integration with `@carecard/common-util` for standardized login and
   authorization errors.
 
-Use `@carecard/auth-util` for JWT decomposition and signature verification. Do
-not duplicate cryptographic logic in this package.
+Use `@carecard/auth-util` for JWT creation, decomposition, and signature
+verification. Do not duplicate cryptographic logic in this package.
+
+JWT creation functions do not belong in this package. Service-to-service token
+creation belongs in `@carecard/auth-util` via `jwtCreateServiceToken` and
+`jwtCreateServiceAuthorizationHeader`.
 
 Service JWTs must follow standard JWT claim semantics. They use `iss` for the
 sending service, `sub` for the sending service identity, `aud` for the

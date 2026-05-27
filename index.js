@@ -21,8 +21,6 @@ module.exports = {
   jwtValidateAndExtractNoThrow: jwtLib.validateAndExtractJwtObjectNoThrow,
   jwtValidateAndExtractWebTokenNoThrow: jwtLib.validateAndExtractWebTokenObjectNoThrow,
   jwtValidateAndExtractVisitorNoThrow: jwtLib.validateAndExtractVisitorObjectNoThrow,
-  jwtCreateServiceToken: jwtLib.createServiceJwt,
-  jwtCreateServiceAuthorizationHeader: jwtLib.createServiceAuthorizationHeader,
   jwtVerifyService: jwtLib.verifyServiceJwt,
 
   /** @deprecated use jwtVerify */

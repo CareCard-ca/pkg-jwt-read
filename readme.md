@@ -12,7 +12,7 @@ Utility package for reading, parsing, and verifying JWTs in the CareCard ecosyst
 - **Role Mapping**: Simple utility for translating internal role codes to human-readable names.
 - **Claims Extraction**: Easy extraction of `sub` (clientId) and other JWT payload claims.
 - **Expiration Management**: Helpers to check if a JWT is expired and calculate its remaining TTL.
-- **Service JWTs**: Helpers for creating and verifying microservice-to-microservice JWTs with standard `iss`, `sub`, `aud`, `iat`, and `exp` claims.
+- **Service JWTs**: Helpers for verifying and extracting microservice-to-microservice JWTs with standard `iss`, `sub`, `aud`, `iat`, and `exp` claims.
 
 ## Installation
 
@@ -62,12 +62,14 @@ console.log(getCodeOfRole('super_admin')); // Result: 'su'
 
 ### Service-To-Service JWTs
 
-Use service JWT helpers for backend service calls. The sending service signs
-the token with its private key. The receiving service verifies the token with
-the sending service public key and checks the expected issuer and audience.
+Use service JWT verification helpers for backend service calls. The sending
+service signs the token with `@carecard/auth-util`. The receiving service uses
+this package to verify the token with the sending service public key and check
+the expected issuer and audience.
 
 ```javascript
-const { jwtCreateServiceAuthorizationHeader, jwtVerifyService } = require('@carecard/jwt-read');
+const { jwtCreateServiceAuthorizationHeader } = require('@carecard/auth-util');
+const { jwtVerifyService } = require('@carecard/jwt-read');
 
 const authorization = jwtCreateServiceAuthorizationHeader({
   issuer: 'ms-institutions',

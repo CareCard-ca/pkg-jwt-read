@@ -160,77 +160,11 @@ describe('Lib jwtLib.js', function () {
     });
   });
 
-  describe('service JWT helpers', function () {
-    it('creates a signed service JWT with service identity claims', function () {
-      const token = jwtLib.createServiceJwt({
-        issuer: 'ms-institutions',
-        audience: 'ms-auth',
-        privateKey,
-        expiresInSeconds: 120,
-      });
-
-      assert.ok(token);
-      const tokenParts = jwtGetHeaderPayload(token);
-      assert.strictEqual(tokenParts.header.alg, 'EdDSA');
-      assert.strictEqual(tokenParts.payload.iss, 'ms-institutions');
-      assert.strictEqual(tokenParts.payload.aud, 'ms-auth');
-      assert.strictEqual(tokenParts.payload.sub, 'ms-institutions');
-      assert.strictEqual(tokenParts.payload.exp - tokenParts.payload.iat, 120);
-      assert.strictEqual(jwtLib._isServiceJwtFor(tokenParts.payload, 'ms-institutions', 'ms-auth'), true);
-    });
-
-    it('returns null when service JWT inputs are incomplete', function () {
-      assert.strictEqual(
-        jwtLib.createServiceJwt({
-          issuer: 'ms-institutions',
-          audience: 'ms-auth',
-          privateKey: '',
-        }),
-        null,
-      );
-      assert.strictEqual(
-        jwtLib.createServiceJwt({
-          issuer: '',
-          audience: 'ms-auth',
-          privateKey,
-        }),
-        null,
-      );
-      assert.strictEqual(
-        jwtLib.createServiceJwt({
-          issuer: 'ms-institutions',
-          audience: 'ms-auth',
-          privateKey,
-          subject: '',
-        }),
-        null,
-      );
-      assert.strictEqual(
-        jwtLib.createServiceJwt({
-          issuer: 'ms-institutions',
-          audience: 'ms-auth',
-          privateKey,
-          expiresInSeconds: 0,
-        }),
-        null,
-      );
-    });
-
-    it('creates a bearer Authorization header for service requests', function () {
-      const authorizationHeader = jwtLib.createServiceAuthorizationHeader({
-        issuer: 'ms-institutions',
-        audience: 'ms-auth',
-        privateKey,
-      });
-
-      assert.match(authorizationHeader, /^Bearer [^.]+\.[^.]+\.[^.]+$/);
-    });
-
+  describe('service JWT validation helpers', function () {
     it('verifies and extracts a service JWT for the expected sender and receiver', function () {
-      const token = jwtLib.createServiceJwt({
+      const token = buildSignedServiceTokenFixture({
         issuer: 'ms-institutions',
         audience: 'ms-auth',
-        privateKey,
       });
       const req = { get: h => (h === 'Authorization' ? `Bearer ${token}` : null) };
 
@@ -241,10 +175,9 @@ describe('Lib jwtLib.js', function () {
     });
 
     it('rejects a service JWT from a different sender', function () {
-      const token = jwtLib.createServiceJwt({
+      const token = buildSignedServiceTokenFixture({
         issuer: 'ms-contact-us',
         audience: 'ms-auth',
-        privateKey,
       });
       const req = { get: h => (h === 'Authorization' ? `Bearer ${token}` : null) };
 
@@ -255,10 +188,9 @@ describe('Lib jwtLib.js', function () {
     });
 
     it('rejects an expired service JWT', function () {
-      const token = jwtLib.createServiceJwt({
+      const token = buildSignedServiceTokenFixture({
         issuer: 'ms-institutions',
         audience: 'ms-auth',
-        privateKey,
         issuedAt: Math.floor(Date.now() / 1000) - 20,
         expiresInSeconds: 10,
       });
@@ -336,10 +268,9 @@ describe('Lib jwtLib.js', function () {
     });
 
     it('service JWT middleware passes errors through next', function () {
-      const token = jwtLib.createServiceJwt({
+      const token = buildSignedServiceTokenFixture({
         issuer: 'ms-institutions',
         audience: 'ms-auth',
-        privateKey,
       });
       const req = { get: h => (h === 'Authorization' ? `Bearer ${token}` : null) };
       const middleware = jwtLib.verifyServiceJwt(publicKey, 'ms-institutions', 'ms-auth');
@@ -905,3 +836,17 @@ describe('Lib jwtLib.js', function () {
     });
   });
 });
+
+function buildSignedServiceTokenFixture({ issuer, audience, issuedAt = Math.floor(Date.now() / 1000), expiresInSeconds = 60 }) {
+  return jwtCreateSignedToken(
+    { alg: 'EdDSA', typ: 'JWT' },
+    {
+      iss: issuer,
+      sub: issuer,
+      aud: audience,
+      iat: issuedAt,
+      exp: issuedAt + expiresInSeconds,
+    },
+    privateKey,
+  );
+}

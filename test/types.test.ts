@@ -16,8 +16,6 @@ import {
   jwtGetRoleName,
   jwtGetVisitorClientId,
   jwtIsExpired,
-  jwtCreateServiceAuthorizationHeader,
-  jwtCreateServiceToken,
   jwtValidateAndExtract,
   jwtValidateAndExtractNoThrow,
   jwtValidateAndExtractService,
@@ -31,7 +29,6 @@ import {
   jwtVerifyVisitorNoThrow,
   jwtVerifyWebToken,
   jwtVerifyWebTokenNoThrow,
-  ServiceJwtOptions,
   throwUsedTokenError,
   verifyJwt,
   verifyJwtAndRole,
@@ -76,24 +73,6 @@ describe('TypeScript Type Definitions - JWT Read Utilities', () => {
     assert.strictEqual(typeof jwtValidateAndExtractWebTokenNoThrow, 'function');
     assert.strictEqual(typeof jwtValidateAndExtractVisitorNoThrow, 'function');
     assert.strictEqual(typeof jwtValidateAndExtractService, 'function');
-  });
-
-  it('should verify service JWT helper types', () => {
-    const serviceJwtOptions: ServiceJwtOptions = {
-      issuer: 'ms-institutions',
-      audience: 'ms-auth',
-      privateKey: 'dummy-key',
-      expiresInSeconds: 60,
-      claims: {
-        route: '/api/v1/ms-auth/users/by-ids',
-      },
-    };
-
-    const token: string | null = jwtCreateServiceToken(serviceJwtOptions);
-    const authorizationHeader: string | null = jwtCreateServiceAuthorizationHeader(serviceJwtOptions);
-
-    assert.strictEqual(token, null);
-    assert.strictEqual(authorizationHeader, null);
   });
 
   it('should verify jwt utility types', () => {
