@@ -1,22 +1,26 @@
 ---
 name: github-pr-merge-cleanup
-description: Use when asked to review mergeability, validate, merge, close, or clean up a GitHub pull request branch.
+description: Use only when the user explicitly asks for remote Git or GitHub PR work: reviewing remote mergeability, validating, merging, closing, deleting, or cleaning up a pull request branch.
 ---
 
 # Pull Request Merge Close
 
 ## Purpose
 
-Review, validate, merge, close, delete branch, and clean local state for a GitHub pull request targeting origin/development.
+Only after the user explicitly asks for remote Git or GitHub PR work, review, validate, merge, close, delete branch, and clean local state for a GitHub pull request targeting origin/development.
 
 ## When To Use
 
-- Use when asked to review mergeability, validate, merge, close, or clean up a GitHub pull request branch.
+- Use only when the user explicitly asks to review mergeability, validate, merge, close, or clean up a GitHub pull request branch.
 
 ## When Not To Use
 
 - Do not use for creating a new pull request; use the PR create/update skill.
 - Do not use when the user only asks for local code changes without PR merge work.
+
+## Remote Git Operations Guardrail
+
+Do not run remote Git or GitHub operations unless the current user request explicitly asks for that remote operation. This includes `git fetch`, `git pull`, `git push`, `git push --delete`, remote branch cleanup, GitHub API calls, and any `gh pr` command that creates, updates, readies, merges, closes, or cleans up a pull request. Do not infer permission from branch names, validation needs, prior workflow habits, or convenience; ask first when remote state would be useful but was not requested.
 
 ## Relevant Files And Directories
 
