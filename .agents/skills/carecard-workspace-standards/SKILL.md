@@ -120,9 +120,9 @@ config.
 5. If a repository contains `.junie` guidance or validation scripts, read
    applicable guidance and run every executable or directly documented
    validation command before finishing.
-6. When updating a repository, adding a feature, fixing a bug, or making any
-   other significant change, update the relevant `.agents` skill and
-   documentation in the same change so repository guidance stays current.
+6. Audit and update the documentation and skill after every change in the code.
+   Keep the relevant `.agents` skill and documentation in the same change so
+   repository guidance stays current.
 7. Run targeted tests first, then broader repository checks.
 8. Run every direct `.husky` script before finishing. Do not bypass hooks.
 
