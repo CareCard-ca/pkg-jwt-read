@@ -45,6 +45,13 @@ Do not run remote Git or GitHub operations unless the current user request expli
 - Do not revert or overwrite user changes; stage only files related to the requested skill or instruction update.
 - Never suppress errors, lint failures, type failures, security failures, or failing tests; fix the underlying issue or report the blocker.
 
+## Commit Continuation Rule
+
+Do not amend existing commits unless the user explicitly asks for an amend. If
+hook, formatter, documentation, skill, validation, or review follow-up changes
+appear after a commit, stage only the intended files and make a new commit with
+a clear message.
+
 ## Scope
 
 Use this skill from the root of the repository whose current branch contains

@@ -130,6 +130,13 @@ config.
 
 Do not run remote Git or GitHub operations unless the current user request explicitly asks for that remote operation. This includes `git fetch`, `git pull`, `git push`, `git push --delete`, remote branch cleanup, GitHub API calls, and any `gh pr` command that creates, updates, readies, merges, closes, or cleans up a pull request. Do not infer permission from branch names, validation needs, prior workflow habits, or convenience; ask first when remote state would be useful but was not requested.
 
+## Commit Continuation Rule
+
+Do not amend existing commits unless the user explicitly asks for an amend. If
+hooks, formatters, tests, docs, skills, validation, or review follow-up create
+additional changes after a commit already exists, keep history additive by
+making a new commit in the affected repository.
+
 ## Agent Guidance Git Workflow
 
 When this skill or any repository-owned `.agents` guidance changes, use the
