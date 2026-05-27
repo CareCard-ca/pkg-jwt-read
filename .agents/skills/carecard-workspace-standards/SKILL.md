@@ -201,6 +201,16 @@ controller/router/model patterns. TypeScript services such as `api-contact-us`
 and `api-template-ts` use Jest or TypeScript tooling and should keep their
 existing TypeScript style.
 
+- Keep environment-specific files explicit: `.env.development`, `.env.test`,
+  and `.env.production`. Docker Compose database services must use the matching
+  env file for their environment, and containerized application services should
+  use `.env.production` unless a compose file intentionally defines a separate
+  development app service.
+- Keep Docker Compose service keys, explicit `container_name` values, host ports,
+  and service URLs unique and descriptive across the workspace. When a Docker
+  name or port changes, update the matching env files, scripts, README docs, and
+  repo-local skills in the same change.
+
 - Keep controllers thin: parse input, authorize, validate, call domain/model
   logic, build a response, and pass errors to `next`.
 - Extract multiline workflow, validation, mapping, response, authorization,
