@@ -1,22 +1,26 @@
 ---
 name: github-pr-create-update
-description: Use when asked to create, update, push for, or mark ready a GitHub pull request from the current repository branch.
+description: Use only when the user explicitly asks for remote Git or GitHub PR work: pushing a branch, creating or updating a PR, or marking a PR ready from the current repository branch.
 ---
 
 # Pull Request Create
 
 ## Purpose
 
-Create, update, verify, push, and mark ready a GitHub pull request from the current repository branch into origin/development.
+Only after the user explicitly asks for remote Git or GitHub PR work, create, update, verify, push, and mark ready a GitHub pull request from the current repository branch into origin/development.
 
 ## When To Use
 
-- Use when asked to create, update, push for, or mark ready a GitHub pull request from the current repository branch.
+- Use only when the user explicitly asks to create, update, push for, or mark ready a GitHub pull request from the current repository branch.
 
 ## When Not To Use
 
 - Do not use for merging or deleting an already-approved pull request; use the merge cleanup skill.
 - Do not use for ordinary local commits that do not involve GitHub PR work.
+
+## Remote Git Operations Guardrail
+
+Do not run remote Git or GitHub operations unless the current user request explicitly asks for that remote operation. This includes `git fetch`, `git pull`, `git push`, `git push --delete`, remote branch cleanup, GitHub API calls, and any `gh pr` command that creates, updates, readies, merges, closes, or cleans up a pull request. Do not infer permission from branch names, validation needs, prior workflow habits, or convenience; ask first when remote state would be useful but was not requested.
 
 ## Relevant Files And Directories
 
@@ -40,6 +44,13 @@ Create, update, verify, push, and mark ready a GitHub pull request from the curr
 - Do not edit generated output, dependency folders, logs, coverage, dist, or build artifacts unless the task explicitly requires it.
 - Do not revert or overwrite user changes; stage only files related to the requested skill or instruction update.
 - Never suppress errors, lint failures, type failures, security failures, or failing tests; fix the underlying issue or report the blocker.
+
+## Commit Continuation Rule
+
+Do not amend existing commits unless the user explicitly asks for an amend. If
+hook, formatter, documentation, skill, validation, or review follow-up changes
+appear after a commit, stage only the intended files and make a new commit with
+a clear message.
 
 ## Scope
 
