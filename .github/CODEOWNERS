@@ -1,0 +1,14 @@
+# Full repository owner
+* @singh-pankaj-k
+
+# Repository workflow and ownership metadata
+.github/ @singh-pankaj-k
+README.md @singh-pankaj-k
+package.json @singh-pankaj-k
+package-lock.json @singh-pankaj-k
+
+# Package source, declarations, and tests
+index.js @singh-pankaj-k
+index.d.ts @singh-pankaj-k
+lib/ @singh-pankaj-k
+test/ @singh-pankaj-k

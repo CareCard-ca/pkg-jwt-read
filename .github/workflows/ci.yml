@@ -2,16 +2,53 @@ name: CI
 
 on:
   push:
+    branches:
+      - main
+      - develop
+      - development
+      - dev*
+      - feature/**
+      - feat/**
+      - improvement/**
+      - releases/**
+      - release*
+      - hotfix/**
+      - iss/**
+      - fix/**
+      - data**
+      - data/**
+    paths-ignore:
+      - '**.md'
   pull_request:
+    types: [closed]
+    branches:
+      - main
+      - develop
+      - development
+      - dev*
+      - feature/**
+      - feat/**
+      - improvement/**
+      - releases/**
+      - release*
+      - hotfix/**
+      - iss/**
+      - fix/**
+      - data**
+      - data/**
+    paths-ignore:
+      - '**.md'
 
 jobs:
   test:
+    if: github.event_name == 'push' || github.event.pull_request.merged == true
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-      - name: Use Node.js
+      - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '25'
@@ -20,5 +57,8 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Run tests and coverage
+      - name: Run tests
+        run: npm run test:All
+
+      - name: Run tests with coverage
         run: npm run test:coverage

@@ -2,7 +2,7 @@
  * Utility functions for authentication and authorization in the CareCard ecosystem.
  */
 
-import {NextFunction, Request, Response} from 'express';
+import { NextFunction, Request, Response } from 'express';
 
 /**
  * Represents the standard JWT header structure.
@@ -179,6 +179,17 @@ export function jwtGetContext(req: any): JwtContext;
 export function jwtValidateAndExtract(req: AuthenticatedRequest, publicKey: string, customErrorFunction?: () => void): void;
 
 /**
+ * Validates a service-to-service JWT from the Authorization header and extracts it into req.jwt.
+ */
+export function jwtValidateAndExtractService(
+  req: AuthenticatedRequest,
+  publicKey: string,
+  expectedIssuer: string,
+  expectedAudience: string,
+  customErrorFunction?: () => void,
+): void;
+
+/**
  * Validates the JWT from a custom header and extracts it into req.jwt.
  */
 export function jwtValidateAndExtractWebToken(
@@ -202,6 +213,16 @@ export function jwtValidateAndExtractWebTokenNoThrow(req: AuthenticatedRequest, 
  * Validates the visitor token from the 'Visitor' header and extracts it into req.visitor (no-throw).
  */
 export function jwtValidateAndExtractVisitorNoThrow(req: AuthenticatedRequest, publicKey: string): void;
+
+/**
+ * Returns middleware that verifies a service-to-service JWT from one expected sender.
+ */
+export function jwtVerifyService(
+  publicKey: string,
+  expectedIssuer: string,
+  expectedAudience: string,
+  customErrorFunction?: () => void,
+): (req: AuthenticatedRequest, res: Response, next: NextFunction) => void;
 
 /**
  * Returns a middleware that verifies a JWT from the 'Authorization: Bearer <token>' header
