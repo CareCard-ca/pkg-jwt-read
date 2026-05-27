@@ -16,10 +16,12 @@ module.exports = {
   jwtGetRoleCode: jwtRoles.getCodeFromNameOfRole,
   jwtGetContext: jwtRoles.getContext,
   jwtValidateAndExtract: jwtLib.validateAndExtractJwtObject,
+  jwtValidateAndExtractService: jwtLib.validateAndExtractServiceJwtObject,
   jwtValidateAndExtractWebToken: jwtLib.validateAndExtractWebToken,
   jwtValidateAndExtractNoThrow: jwtLib.validateAndExtractJwtObjectNoThrow,
   jwtValidateAndExtractWebTokenNoThrow: jwtLib.validateAndExtractWebTokenObjectNoThrow,
   jwtValidateAndExtractVisitorNoThrow: jwtLib.validateAndExtractVisitorObjectNoThrow,
+  jwtVerifyService: jwtLib.verifyServiceJwt,
 
   /** @deprecated use jwtVerify */
   verifyJwt: jwtLib.verifyJwt,
