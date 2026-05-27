@@ -37,6 +37,40 @@ export interface JwtPayload {
 }
 
 /**
+ * Claims used by service-to-service JWTs.
+ */
+export interface ServiceJwtPayload extends JwtPayload {
+  /** Issuing microservice name, for example 'ms-institutions'. */
+  iss: string;
+  /** Receiving microservice name or names. */
+  aud: string | string[];
+  /** Subject. Defaults to the issuing microservice name. */
+  sub: string;
+}
+
+/**
+ * Options for creating a service-to-service JWT.
+ */
+export interface ServiceJwtOptions {
+  /** Issuing microservice name, for example 'ms-institutions'. */
+  issuer: string;
+  /** Receiving microservice name or names. */
+  audience: string | string[];
+  /** Private key owned by the issuing microservice. */
+  privateKey: string;
+  /** Subject claim. Defaults to issuer. */
+  subject?: string;
+  /** Issued-at timestamp in seconds or milliseconds. Defaults to now. */
+  issuedAt?: number;
+  /** Token lifetime in seconds. Defaults to 60. */
+  expiresInSeconds?: number;
+  /** JWT signing algorithm. Defaults to EdDSA. */
+  algorithm?: string;
+  /** Additional non-sensitive JWT claims. */
+  claims?: Record<string, unknown>;
+}
+
+/**
  * Container for the decoded header and payload of a JWT.
  */
 export interface JwtParts {
@@ -179,6 +213,17 @@ export function jwtGetContext(req: any): JwtContext;
 export function jwtValidateAndExtract(req: AuthenticatedRequest, publicKey: string, customErrorFunction?: () => void): void;
 
 /**
+ * Validates a service-to-service JWT from the Authorization header and extracts it into req.jwt.
+ */
+export function jwtValidateAndExtractService(
+  req: AuthenticatedRequest,
+  publicKey: string,
+  expectedIssuer: string,
+  expectedAudience: string,
+  customErrorFunction?: () => void,
+): void;
+
+/**
  * Validates the JWT from a custom header and extracts it into req.jwt.
  */
 export function jwtValidateAndExtractWebToken(
@@ -202,6 +247,26 @@ export function jwtValidateAndExtractWebTokenNoThrow(req: AuthenticatedRequest, 
  * Validates the visitor token from the 'Visitor' header and extracts it into req.visitor (no-throw).
  */
 export function jwtValidateAndExtractVisitorNoThrow(req: AuthenticatedRequest, publicKey: string): void;
+
+/**
+ * Creates a signed service-to-service JWT using the issuing service's private key.
+ */
+export function jwtCreateServiceToken(options: ServiceJwtOptions): string | null;
+
+/**
+ * Creates a Bearer Authorization header containing a signed service-to-service JWT.
+ */
+export function jwtCreateServiceAuthorizationHeader(options: ServiceJwtOptions): string | null;
+
+/**
+ * Returns middleware that verifies a service-to-service JWT from one expected sender.
+ */
+export function jwtVerifyService(
+  publicKey: string,
+  expectedIssuer: string,
+  expectedAudience: string,
+  customErrorFunction?: () => void,
+): (req: AuthenticatedRequest, res: Response, next: NextFunction) => void;
 
 /**
  * Returns a middleware that verifies a JWT from the 'Authorization: Bearer <token>' header
