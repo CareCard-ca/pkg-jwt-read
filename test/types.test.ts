@@ -18,12 +18,14 @@ import {
   jwtIsExpired,
   jwtValidateAndExtract,
   jwtValidateAndExtractNoThrow,
+  jwtValidateAndExtractService,
   jwtValidateAndExtractVisitorNoThrow,
   jwtValidateAndExtractWebToken,
   jwtValidateAndExtractWebTokenNoThrow,
   jwtVerify,
   jwtVerifyAndHasRole,
   jwtVerifyNoThrow,
+  jwtVerifyService,
   jwtVerifyVisitorNoThrow,
   jwtVerifyWebToken,
   jwtVerifyWebTokenNoThrow,
@@ -61,6 +63,7 @@ describe('TypeScript Type Definitions - JWT Read Utilities', () => {
     assert.strictEqual(typeof jwtVerifyWebTokenNoThrow(publicKey, 'X-Token'), 'function');
     assert.strictEqual(typeof jwtVerifyVisitorNoThrow(publicKey), 'function');
     assert.strictEqual(typeof jwtVerifyAndHasRole('admin', publicKey), 'function');
+    assert.strictEqual(typeof jwtVerifyService(publicKey, 'ms-auth', 'ms-institutions'), 'function');
   });
 
   it('should verify new validateAndExtract names', () => {
@@ -69,6 +72,7 @@ describe('TypeScript Type Definitions - JWT Read Utilities', () => {
     assert.strictEqual(typeof jwtValidateAndExtractNoThrow, 'function');
     assert.strictEqual(typeof jwtValidateAndExtractWebTokenNoThrow, 'function');
     assert.strictEqual(typeof jwtValidateAndExtractVisitorNoThrow, 'function');
+    assert.strictEqual(typeof jwtValidateAndExtractService, 'function');
   });
 
   it('should verify jwt utility types', () => {

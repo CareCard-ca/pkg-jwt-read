@@ -160,6 +160,132 @@ describe('Lib jwtLib.js', function () {
     });
   });
 
+  describe('service JWT validation helpers', function () {
+    it('verifies and extracts a service JWT for the expected sender and receiver', function () {
+      const token = buildSignedServiceTokenFixture({
+        issuer: 'ms-institutions',
+        audience: 'ms-auth',
+      });
+      const req = { get: h => (h === 'Authorization' ? `Bearer ${token}` : null) };
+
+      jwtLib.validateAndExtractServiceJwtObject(req, publicKey, 'ms-institutions', 'ms-auth');
+
+      assert.strictEqual(req.jwt.payload.iss, 'ms-institutions');
+      assert.strictEqual(req.jwt.payload.aud, 'ms-auth');
+    });
+
+    it('rejects a service JWT from a different sender', function () {
+      const token = buildSignedServiceTokenFixture({
+        issuer: 'ms-contact-us',
+        audience: 'ms-auth',
+      });
+      const req = { get: h => (h === 'Authorization' ? `Bearer ${token}` : null) };
+
+      assert.throws(() => {
+        jwtLib.validateAndExtractServiceJwtObject(req, publicKey, 'ms-institutions', 'ms-auth');
+      });
+      assert.strictEqual(req.jwt, null);
+    });
+
+    it('rejects an expired service JWT', function () {
+      const token = buildSignedServiceTokenFixture({
+        issuer: 'ms-institutions',
+        audience: 'ms-auth',
+        issuedAt: Math.floor(Date.now() / 1000) - 20,
+        expiresInSeconds: 10,
+      });
+      const req = { get: h => (h === 'Authorization' ? `Bearer ${token}` : null) };
+
+      assert.throws(() => {
+        jwtLib.validateAndExtractServiceJwtObject(req, publicKey, 'ms-institutions', 'ms-auth');
+      });
+      assert.strictEqual(req.jwt, null);
+    });
+
+    it('allows service JWT audiences to be an array', function () {
+      assert.strictEqual(
+        jwtLib._isServiceJwtFor(
+          {
+            iss: 'ms-institutions',
+            sub: 'ms-institutions',
+            aud: ['ms-auth', 'ms-user-profiles'],
+            iat: Math.floor(Date.now() / 1000),
+            exp: Math.floor(Date.now() / 1000) + 60,
+          },
+          'ms-institutions',
+          'ms-auth',
+        ),
+        true,
+      );
+    });
+
+    it('rejects a JWT whose subject does not match the issuing service', function () {
+      assert.strictEqual(
+        jwtLib._isServiceJwtFor(
+          {
+            iss: 'ms-institutions',
+            sub: 'user-123',
+            aud: 'ms-auth',
+            iat: Math.floor(Date.now() / 1000),
+            exp: Math.floor(Date.now() / 1000) + 60,
+          },
+          'ms-institutions',
+          'ms-auth',
+        ),
+        false,
+      );
+    });
+
+    it('rejects service JWT payloads with invalid NumericDate claims', function () {
+      assert.strictEqual(
+        jwtLib._isServiceJwtFor(
+          {
+            iss: 'ms-institutions',
+            sub: 'ms-institutions',
+            aud: 'ms-auth',
+            iat: 'now',
+            exp: Math.floor(Date.now() / 1000) + 60,
+          },
+          'ms-institutions',
+          'ms-auth',
+        ),
+        false,
+      );
+      assert.strictEqual(
+        jwtLib._isServiceJwtFor(
+          {
+            iss: 'ms-institutions',
+            sub: 'ms-institutions',
+            aud: 'ms-auth',
+            iat: Math.floor(Date.now() / 1000),
+            exp: 'later',
+          },
+          'ms-institutions',
+          'ms-auth',
+        ),
+        false,
+      );
+    });
+
+    it('service JWT middleware passes errors through next', function () {
+      const token = buildSignedServiceTokenFixture({
+        issuer: 'ms-institutions',
+        audience: 'ms-auth',
+      });
+      const req = { get: h => (h === 'Authorization' ? `Bearer ${token}` : null) };
+      const middleware = jwtLib.verifyServiceJwt(publicKey, 'ms-institutions', 'ms-auth');
+      let nextCalled = false;
+
+      middleware(req, {}, err => {
+        assert.ifError(err);
+        nextCalled = true;
+      });
+
+      assert.strictEqual(nextCalled, true);
+      assert.strictEqual(req.jwt.payload.iss, 'ms-institutions');
+    });
+  });
+
   describe('jwtAgeInSeconds', function () {
     it('should return age in seconds', function () {
       const req = { jwt: { payload: { iat: Math.floor(Date.now() / 1000) - 100 } } };
@@ -710,3 +836,17 @@ describe('Lib jwtLib.js', function () {
     });
   });
 });
+
+function buildSignedServiceTokenFixture({ issuer, audience, issuedAt = Math.floor(Date.now() / 1000), expiresInSeconds = 60 }) {
+  return jwtCreateSignedToken(
+    { alg: 'EdDSA', typ: 'JWT' },
+    {
+      iss: issuer,
+      sub: issuer,
+      aud: audience,
+      iat: issuedAt,
+      exp: issuedAt + expiresInSeconds,
+    },
+    privateKey,
+  );
+}
