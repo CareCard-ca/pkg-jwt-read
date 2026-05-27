@@ -120,9 +120,9 @@ config.
 5. If a repository contains `.junie` guidance or validation scripts, read
    applicable guidance and run every executable or directly documented
    validation command before finishing.
-6. When updating a repository, adding a feature, fixing a bug, or making any
-   other significant change, update the relevant `.agents` skill and
-   documentation in the same change so repository guidance stays current.
+6. Audit and update the documentation and skill after every change in the code.
+   Keep the relevant `.agents` skill and documentation in the same change so
+   repository guidance stays current.
 7. Run targeted tests first, then broader repository checks.
 8. Run every direct `.husky` script before finishing. Do not bypass hooks.
 
@@ -200,6 +200,16 @@ database tests, `@carecard/*` packages, and `sub-apps`
 controller/router/model patterns. TypeScript services such as `api-contact-us`
 and `api-template-ts` use Jest or TypeScript tooling and should keep their
 existing TypeScript style.
+
+- Keep environment-specific files explicit: `.env.development`, `.env.test`,
+  and `.env.production`. Docker Compose database services must use the matching
+  env file for their environment, and containerized application services should
+  use `.env.production` unless a compose file intentionally defines a separate
+  development app service.
+- Keep Docker Compose service keys, explicit `container_name` values, host ports,
+  and service URLs unique and descriptive across the workspace. When a Docker
+  name or port changes, update the matching env files, scripts, README docs, and
+  repo-local skills in the same change.
 
 - Keep controllers thin: parse input, authorize, validate, call domain/model
   logic, build a response, and pass errors to `next`.
