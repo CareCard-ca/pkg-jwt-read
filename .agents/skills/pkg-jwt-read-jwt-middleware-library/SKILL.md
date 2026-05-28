@@ -126,6 +126,10 @@ role names, such as `ad` and `admin`.
   by focused tests.
 - Preserve existing role semantics unless a task explicitly changes
   authorization behavior.
+- Preserve the original JWT `roles` array on request context. `ms-auth` RLS
+  treats a payload containing `ad` as the auth-service super-admin signal;
+  dashboard code may map that to `super_admin`, but middleware must not hide,
+  rename, or drop the raw role payload needed by backend database contexts.
 
 ## NoThrow And Error Behavior
 

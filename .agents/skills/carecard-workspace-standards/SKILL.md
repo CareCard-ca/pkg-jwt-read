@@ -1,6 +1,6 @@
 ---
 name: carecard-workspace-standards
-description: Follow the shared SO_CareCardCa/CareCard workspace coding, testing, repository, dependency, shared package, frontend, database, API response, and security standards. Use before modifying, testing, reviewing, or debugging any api-*, pkg-*, app-*, website, dashboard, or other CareCard repository in this workspace, especially when choosing validation commands, package boundaries, TypeScript types, dependencies, API contracts, database logic, service patterns, or frontend architecture.
+description: Follow the shared SO_CareCardCa/CareCard workspace coding, testing, repository, dependency, shared package, frontend, database, API response, and security standards. Use before modifying, testing, reviewing, or debugging any ms-*, pkg-*, app-*, website, dashboard, or other CareCard repository in this workspace, especially when choosing validation commands, package boundaries, TypeScript types, dependencies, API contracts, database logic, service patterns, or frontend architecture.
 ---
 
 # CareCard Workspace Standards
@@ -23,7 +23,7 @@ Use before modifying, testing, reviewing, or debugging any CareCard workspace re
 
 - `.agents/config.toml`
 - `.agents/skills`
-- `api-*` services
+- `ms-*` services
 - `pkg-*` packages
 - `app-*` frontends
 - `.husky` and `.junie` validation guidance
@@ -52,7 +52,7 @@ Use before modifying, testing, reviewing, or debugging any CareCard workspace re
 
 Treat `/Users/pankajpriscilla/SO_CareCardCa` as a collection of independent Git
 repositories, not as one monorepo. Work from the specific child repository
-being changed. Each `api-*`, `pkg-*`, and `app-*` directory has its own package
+being changed. Each `ms-*`, `pkg-*`, and `app-*` directory has its own package
 scripts, Git status, test commands, style, naming, structure, test framework,
 and Husky hooks.
 
@@ -183,11 +183,11 @@ build artifacts, logs, or `.DS_Store`.
   `notFound404`, `appErrorHandler`, error throw helpers, case converters, and
   `ApiErrorType`.
 - Do not create or maintain duplicated common response or error helpers inside
-  each `api-*` service.
+  each `ms-*` service.
 - Keep service-local response code limited to service-specific mapping or
   wiring.
 - Add broadly useful shared functionality to the relevant `pkg-*` package
-  instead of duplicating it locally in an `api-*` or `app-*` project.
+  instead of duplicating it locally in an `ms-*` or `app-*` project.
 - When changing a `pkg-*` package, write package tests first, increase that
   package's minor version in `package.json`, run `npm install` in the package,
   update consuming projects to the new package version, run `npm install` in
@@ -206,10 +206,10 @@ build artifacts, logs, or `.DS_Store`.
 
 ## Backend Microservices
 
-Most JavaScript `api-*` services use CommonJS, Mocha, Supertest, Docker Compose
+Most JavaScript `ms-*` services use CommonJS, Mocha, Supertest, Docker Compose
 database tests, `@carecard/*` packages, and `sub-apps`
-controller/router/model patterns. TypeScript services such as `api-contact-us`
-and `api-template-ts` use Jest or TypeScript tooling and should keep their
+controller/router/model patterns. TypeScript services such as `ms-contact-us`
+and `ms-template-ts` use Jest or TypeScript tooling and should keep their
 existing TypeScript style.
 
 - Keep environment-specific files explicit: `.env.development`, `.env.test`,
@@ -283,9 +283,9 @@ existing TypeScript style.
 - Keep tests readable and domain-specific.
 - Tests must cover desired or happy paths and prevention or rejection of
   undesired behavior.
-- JavaScript `api-*` services usually use Mocha, Supertest,
+- JavaScript `ms-*` services usually use Mocha, Supertest,
   `test/index.test.js`, and Docker-backed PostgreSQL scripts.
-- TypeScript `api-*` services usually use Jest and `tests/index.test.ts`.
+- TypeScript `ms-*` services usually use Jest and `tests/index.test.ts`.
 - `pkg-*` packages usually use Mocha plus TypeScript type tests where present.
 - `app-dashboard` uses Vitest, React Testing Library, mock API tests, and
   Selenium for end-to-end flows.
@@ -306,8 +306,8 @@ existing TypeScript style.
 ## Dashboard Frontend
 
 `app-dashboard` is a Next.js App Router TypeScript app using MUI, React Query,
-`next-intl`, and shared CareCard utilities. It consumes `api-auth`,
-`api-institutions`, `api-contact-us`, and `api-user-profiles` through service
+`next-intl`, and shared CareCard utilities. It consumes `ms-auth`,
+`ms-institutions`, `ms-contact-us`, and `ms-user-profiles` through service
 modules.
 
 - Keep backend URL definitions centralized in `src/services/api.routes.ts`.
@@ -366,11 +366,18 @@ the authenticated dashboard.
 - Keep CareCard package usage consistent with the service or app being changed.
 - When standardizing response or error behavior, prefer `@carecard/common-util`
   `3.1.15` because it contains response and error functions aligned with
-  `api-auth`.
+  `ms-auth`.
 - If package version changes are required, update lockfiles and verify affected
   services or apps.
 - Avoid broad dependency upgrades as part of feature or refactor work unless
   the task is specifically about dependencies.
+
+## Auth Service RLS Contract
+
+- `ms-auth` follows the shared PostgreSQL/RLS pattern from `ms-template-js`: auth tables live in the `carecard` schema, RLS is enabled and forced on every auth table, and application runtime queries use the unprivileged database role.
+- Auth table policies allow normal JWT users to access only self-owned rows. Do not add redundant `user_id = <jwt sub>` SQL predicates to duplicate self-row checks when RLS owns the authorization decision.
+- A JWT payload containing `roles: ["ad"]` is the auth-service super-admin signal and can perform any action on auth tables. Dashboard code may map that role to `super_admin`, but backend auth RLS must not require a separate database role row for that bypass.
+- Public auth flows such as registration, login, confirmation, recovery, visitor creation, and service user lookup must use narrow system contexts (`system_create`, `system_login`, `system_confirm`, `system_recovery`, `system_visitor`, `system_service`) instead of privileged runtime queries.
 
 ## Security Requirements
 

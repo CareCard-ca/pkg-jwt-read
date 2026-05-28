@@ -60,6 +60,14 @@ console.log(getNameOfRole('ad')); // Result: 'admin'
 console.log(getCodeOfRole('super_admin')); // Result: 'su'
 ```
 
+### Auth RLS Role Semantics
+
+`ms-auth` treats a JWT payload containing `roles: ["ad"]` as the auth-service
+super-admin signal for its RLS policies. Consumers may map `ad` to UI/domain
+names such as `super_admin`, but middleware should preserve the original JWT
+roles array on the request context so services can make database-context
+decisions consistently.
+
 ### Service-To-Service JWTs
 
 Use service JWT verification helpers for backend service calls. The sending
