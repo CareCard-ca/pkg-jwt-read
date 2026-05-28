@@ -68,6 +68,11 @@ names such as `super_admin`, but middleware should preserve the original JWT
 roles array on the request context so services can make database-context
 decisions consistently.
 
+Docs that mention `ms-auth` controller internals should use concise action
+names such as `loginUser`, `registerUser`, `getUserDetail`, and `renewJwt`.
+Access level is conveyed by route middleware and endpoint placement, not by
+`public`/`protected`/`admin`/`Handler` suffixes.
+
 ### Service-To-Service JWTs
 
 Use service JWT verification helpers for backend service calls. The sending

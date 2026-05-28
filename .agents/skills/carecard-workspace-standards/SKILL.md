@@ -379,6 +379,12 @@ the authenticated dashboard.
 - A JWT payload containing `roles: ["ad"]` is the auth-service super-admin signal and can perform any action on auth tables. Dashboard code may map that role to `super_admin`, but backend auth RLS must not require a separate database role row for that bypass.
 - Public auth flows such as registration, login, confirmation, recovery, visitor creation, and service user lookup must use narrow system contexts (`system_create`, `system_login`, `system_confirm`, `system_recovery`, `system_visitor`, `system_service`) instead of privileged runtime queries.
 
+- `ms-auth` controller exports use concise action names such as `loginUser`,
+  `registerUser`, `getUserDetail`, and `renewJwt`; route middleware and router
+  placement express whether a flow is public, authenticated, admin-only, or
+  service-only, so avoid `public`, `protected`, `admin`, or `Handler` suffixes
+  in new controller names.
+
 ## Security Requirements
 
 - Treat authentication, authorization, JWT, password, email confirmation,
