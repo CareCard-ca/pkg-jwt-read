@@ -1,6 +1,6 @@
 {
   "name": "@carecard/jwt-read",
-  "version": "3.1.15",
+  "version": "3.1.16",
   "repository": {
     "type": "git",
     "url": "https://github.com/CareCard-ca/pkg-jwt-read.git"

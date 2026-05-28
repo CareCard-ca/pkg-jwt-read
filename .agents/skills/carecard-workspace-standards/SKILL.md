@@ -375,9 +375,18 @@ the authenticated dashboard.
 ## Auth Service RLS Contract
 
 - `ms-auth` follows the shared PostgreSQL/RLS pattern from `ms-template-js`: auth tables live in the `carecard` schema, RLS is enabled and forced on every auth table, and application runtime queries use the unprivileged database role.
-- Auth table policies allow normal JWT users to access only self-owned rows. Do not add redundant `user_id = <jwt sub>` SQL predicates to duplicate self-row checks when RLS owns the authorization decision.
-- A JWT payload containing `roles: ["ad"]` is the auth-service super-admin signal and can perform any action on auth tables. Dashboard code may map that role to `super_admin`, but backend auth RLS must not require a separate database role row for that bypass.
-- Public auth flows such as registration, login, confirmation, recovery, visitor creation, and service user lookup must use narrow system contexts (`system_create`, `system_login`, `system_confirm`, `system_recovery`, `system_visitor`, `system_service`) instead of privileged runtime queries.
+- Auth table policies allow normal JWT or server-auth users to access only
+  self-owned rows. Do not add redundant `user_id = <jwt sub>` SQL predicates to
+  duplicate self-row checks when RLS owns the authorization decision.
+- A JWT or server-auth payload containing `roles: ["ad"]` is the auth-service
+  super-admin signal and can perform any action on auth tables. Dashboard code
+  may map that role to `super_admin`, but backend auth RLS must not require a
+  separate database role row for that bypass.
+- Public auth flows such as registration, login, server-auth session create and
+  introspection, confirmation, recovery, visitor creation, and service user
+  lookup must use narrow system contexts (`system_create`, `system_login`,
+  `system_confirm`, `system_recovery`, `system_visitor`, `system_service`)
+  instead of privileged runtime queries.
 
 - `ms-auth` controller exports use concise action names such as `loginUser`,
   `registerUser`, `getUserDetail`, and `renewJwt`; route middleware and router

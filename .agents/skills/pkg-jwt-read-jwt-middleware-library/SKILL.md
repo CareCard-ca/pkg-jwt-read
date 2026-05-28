@@ -7,11 +7,13 @@ description: Use when changing pkg-jwt-read JWT parsing, middleware, visitor tok
 
 ## Purpose
 
-CareCard JWT read package for parsing, request attachment, visitor tokens, role mapping, authorization middleware, exports, and tests.
+CareCard JWT read package for parsing, request attachment, visitor tokens, role mapping, JWT-or-server-auth authorization middleware, exports, and tests.
 
 ## When To Use
 
-- Use when changing pkg-jwt-read JWT parsing, middleware, visitor tokens, role checks, auth context, package exports, or tests.
+- Use when changing pkg-jwt-read JWT parsing, server-auth introspection
+  middleware, visitor tokens, role checks, auth context, package exports, or
+  tests.
 - Pair with `carecard-workspace-standards` when the task affects shared CareCard conventions or cross-repository contracts.
 
 ## When Not To Use
@@ -53,7 +55,9 @@ CareCard JWT read package for parsing, request attachment, visitor tokens, role 
 Use this skill when working inside `pkg-jwt-read`, the `@carecard/jwt-read`
 package. It provides utilities for reading, parsing, verifying, and attaching
 JWT data in the CareCard ecosystem. It depends on `@carecard/auth-util` for
-low-level cryptographic operations.
+low-level cryptographic operations. It also exposes middleware helpers that
+allow `ms-*` services to accept either an `ms-auth` JWT or an opaque server-auth
+token introspected by `ms-auth`.
 
 Use `$carecard-workspace-standards` for shared workspace, dependency, package,
 testing, and security rules. Legacy `pkg-jwt-read/.codex` and
@@ -95,9 +99,14 @@ depend on those folders being present.
 - Middleware-like functions for Express, such as `verifyJwtAndRole`.
 - Service-to-service JWT verification and extraction helpers:
   `jwtValidateAndExtractService` and `jwtVerifyService`.
+- JWT-or-server-auth helpers: `jwtValidateAndExtractOrServerAuth`,
+  `jwtVerifyOrServerAuth`, and `jwtVerifyOrServerAuthAndHasRole`.
 - Extraction of `sub`/clientId and other claims from JWT objects.
 - Expiration checks and TTL calculations.
 - Request attachment behavior for authenticated JWT objects and visitor tokens.
+- Server-auth request attachment behavior that normalizes introspected claims
+  into `req.jwt.payload` with `authMode: "server-auth"` and
+  `auth_mode: "server-auth"`.
 - Integration with `@carecard/common-util` for standardized login and
   authorization errors.
 
@@ -107,6 +116,11 @@ verification. Do not duplicate cryptographic logic in this package.
 JWT creation functions do not belong in this package. Service-to-service token
 creation belongs in `@carecard/auth-util` via `jwtCreateServiceToken` and
 `jwtCreateServiceAuthorizationHeader`.
+
+Opaque server-auth token creation, hashing, persistence, and introspection
+belong in `ms-auth`. This package only accepts a caller-provided introspector
+function and normalizes valid introspection claims into the existing request
+JWT context.
 
 Service JWTs must follow standard JWT claim semantics. They use `iss` for the
 sending service, `sub` for the sending service identity, `aud` for the
@@ -145,17 +159,20 @@ role names, such as `ad` and `admin`.
 
 ## Security Rules
 
-- Treat JWT parsing, signature verification, visitor tokens, authorization
-  roles, and request context as security-sensitive.
+- Treat JWT parsing, signature verification, server-auth introspection,
+  visitor tokens, authorization roles, and request context as
+  security-sensitive.
 - Do not log JWTs, token fragments, public/private keys, decoded payloads,
   authorization headers, visitor headers, or sensitive request data.
-- Keep missing headers, invalid signatures, expired tokens, role failures, and
-  used-token errors behaviorally distinct where existing APIs do so.
+- Keep missing headers, invalid signatures, expired tokens, revoked or invalid
+  server-auth tokens, role failures, and used-token errors behaviorally
+  distinct where existing APIs do so.
 
 ## Types And API Contracts
 
-- Model JWT header, payload, request attachment, visitor attachment, role, and
-  context shapes explicitly in `index.d.ts`.
+- Model JWT header, payload, server-auth introspection claims, request
+  attachment, visitor attachment, role, and context shapes explicitly in
+  `index.d.ts`.
 - Prefer `AuthenticatedRequest`, `JwtHeader`, `JwtPayload`, `JwtParts`,
   `JwtRequestObject`, `VisitorRequestObject`, and `JwtContext` over loose
   request objects.
@@ -175,7 +192,8 @@ role names, such as `ad` and `admin`.
 - `test/types.test.ts` verifies TypeScript declarations with `tsc`.
 - Add focused tests for valid JWTs, invalid JWTs, missing headers, role checks,
   visitor token extraction, expiration behavior, request attachment behavior,
-  NoThrow behavior, and context-bound helpers when those areas change.
+  server-auth introspection success/failure, NoThrow behavior, and
+  context-bound helpers when those areas change.
 - Set `NODE_ENV=test` where tests or scripts require it.
 - Keep tests deterministic and avoid real external services.
 
