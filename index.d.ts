@@ -32,6 +32,10 @@ export interface JwtPayload {
   sub?: string;
   /** Roles assigned to the user. */
   roles?: string[];
+  /** Authentication mode used by app-facing services. */
+  authMode?: 'jwt' | 'server-auth' | string;
+  /** Server-auth session identifier when an opaque server-auth token was used. */
+  sessionId?: string;
   /** Any other custom payload fields. */
   [key: string]: any;
 }
@@ -75,6 +79,30 @@ export interface AuthenticatedRequest extends Request {
   jwt?: JwtRequestObject | null;
   visitor?: VisitorRequestObject | null;
 }
+
+export interface ServerAuthIntrospectionClaims {
+  valid?: boolean;
+  sub?: string;
+  userId?: string;
+  user_id?: string;
+  email?: string;
+  emailVerified?: boolean;
+  email_verified?: boolean;
+  emailConfirmed?: boolean;
+  email_confirmed?: boolean;
+  roles?: string[];
+  sessionId?: string;
+  session_id?: string;
+  exp?: number | string;
+  expiresAt?: string;
+  expires_at?: string;
+  [key: string]: any;
+}
+
+export type ServerAuthIntrospector = (
+  token: string,
+  req: AuthenticatedRequest,
+) => Promise<ServerAuthIntrospectionClaims> | ServerAuthIntrospectionClaims;
 
 /**
  * Returns a middleware that verifies a JWT from the 'Authorization: Bearer <token>' header
@@ -148,6 +176,27 @@ export function jwtVerifyAndHasRole(
 ): (req: AuthenticatedRequest, res: Response, next: NextFunction) => void;
 
 /**
+ * Returns middleware that accepts either an ms-auth JWT or an opaque server-auth token.
+ * Server-auth tokens are validated by the supplied introspector on every request.
+ */
+export function jwtVerifyOrServerAuth(
+  publicKey: string,
+  serverAuthIntrospector: ServerAuthIntrospector,
+  customErrorFunction?: () => void,
+): (req: AuthenticatedRequest, res: Response, next: NextFunction) => void;
+
+/**
+ * Returns middleware that accepts either an ms-auth JWT or server-auth token and
+ * then checks that the authenticated user has the required role.
+ */
+export function jwtVerifyOrServerAuthAndHasRole(
+  userRole: string,
+  publicKey: string,
+  serverAuthIntrospector: ServerAuthIntrospector,
+  customErrorFunction?: () => void,
+): (req: AuthenticatedRequest, res: Response, next: NextFunction) => void;
+
+/**
  * Gets the full name of a role from its code (e.g., 'ad' -> 'admin').
  */
 export function jwtGetRoleName(roleCode: string): string;
@@ -188,6 +237,17 @@ export function jwtValidateAndExtractService(
   expectedAudience: string,
   customErrorFunction?: () => void,
 ): void;
+
+/**
+ * Validates the Authorization header as either an ms-auth JWT or an opaque
+ * server-auth token and extracts the result into req.jwt.
+ */
+export function jwtValidateAndExtractOrServerAuth(
+  req: AuthenticatedRequest,
+  publicKey: string,
+  serverAuthIntrospector: ServerAuthIntrospector,
+  customErrorFunction?: () => void,
+): Promise<void>;
 
 /**
  * Validates the JWT from a custom header and extracts it into req.jwt.
