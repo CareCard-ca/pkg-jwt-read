@@ -160,6 +160,49 @@ describe('Lib jwtLib.js', function () {
     });
   });
 
+  describe('validateAndExtractJwtOrServerAuthObject', function () {
+    it('uses a valid JWT without calling the server-auth introspector', async function () {
+      const req = { get: h => (h === 'Authorization' ? 'Bearer ' + jwtString : null) };
+      let introspectorCalled = false;
+
+      await jwtLib.validateAndExtractJwtOrServerAuthObject(req, publicKey, () => {
+        introspectorCalled = true;
+      });
+
+      assert.strictEqual(introspectorCalled, false);
+      assert.strictEqual(req.jwt.payload.sub, '8b0db877-a6b3-4a23-a493-e687915cdd87');
+      assert.strictEqual(req.jwt.payload.authMode, undefined);
+    });
+
+    it('introspects an opaque server-auth token and attaches it as req.jwt', async function () {
+      const req = { get: h => (h === 'Authorization' ? 'Bearer opaque-token' : null) };
+
+      await jwtLib.validateAndExtractJwtOrServerAuthObject(req, publicKey, token => {
+        assert.strictEqual(token, 'opaque-token');
+        return {
+          valid: true,
+          userId: 'user-123',
+          sessionId: 'session-123',
+          email: 'user@example.com',
+          roles: ['ad'],
+          expiresAt: new Date(Date.now() + 60000).toISOString(),
+        };
+      });
+
+      assert.strictEqual(req.jwt.header.typ, 'ServerAuth');
+      assert.strictEqual(req.jwt.payload.sub, 'user-123');
+      assert.strictEqual(req.jwt.payload.authMode, 'server-auth');
+      assert.strictEqual(req.jwt.payload.sessionId, 'session-123');
+      assert.strictEqual(req.jwt.doesJwtUserHasRole('ad'), true);
+    });
+
+    it('rejects an invalid server-auth introspection result', async function () {
+      const req = { get: h => (h === 'Authorization' ? 'Bearer opaque-token' : null) };
+
+      await assert.rejects(() => jwtLib.validateAndExtractJwtOrServerAuthObject(req, publicKey, () => ({ valid: false })));
+    });
+  });
+
   describe('service JWT validation helpers', function () {
     it('verifies and extracts a service JWT for the expected sender and receiver', function () {
       const token = buildSignedServiceTokenFixture({
