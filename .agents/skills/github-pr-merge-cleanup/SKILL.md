@@ -1,6 +1,6 @@
 ---
 name: github-pr-merge-cleanup
-description: "Use only when the user explicitly asks for remote Git or GitHub PR work: reviewing remote mergeability, validating, merging, closing, deleting, or cleaning up a pull request branch."
+description: 'Use only when the user explicitly asks for remote Git or GitHub PR work: reviewing remote mergeability, validating, merging, closing, deleting, or cleaning up a pull request branch.'
 ---
 
 # Pull Request Merge Close
