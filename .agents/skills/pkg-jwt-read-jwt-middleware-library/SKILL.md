@@ -1,6 +1,6 @@
 ---
 name: pkg-jwt-read-jwt-middleware-library
-description: Use when changing pkg-jwt-read JWT parsing, middleware, visitor tokens, role checks, auth context, package exports, or tests.
+description: 'Use when changing pkg-jwt-read JWT parsing, middleware, visitor tokens, role checks, auth context, package exports, or tests.'
 ---
 
 # Package JWT Read

@@ -1,6 +1,6 @@
 ---
 name: carecard-workspace-standards
-description: Follow the shared SO_CareCardCa/CareCard workspace coding, testing, repository, dependency, shared package, frontend, database, API response, and security standards. Use before modifying, testing, reviewing, or debugging any ms-*, pkg-*, app-*, website, dashboard, or other CareCard repository in this workspace, especially when choosing validation commands, package boundaries, TypeScript types, dependencies, API contracts, database logic, service patterns, or frontend architecture.
+description: 'Follow the shared SO_CareCardCa/CareCard workspace coding, testing, repository, dependency, shared package, frontend, database, API response, and security standards. Use before modifying, testing, reviewing, or debugging any ms-*, pkg-*, app-*, website, dashboard, or other CareCard repository in this workspace, especially when choosing validation commands, package boundaries, TypeScript types, dependencies, API contracts, database logic, service patterns, or frontend architecture.'
 ---
 
 # CareCard Workspace Standards
