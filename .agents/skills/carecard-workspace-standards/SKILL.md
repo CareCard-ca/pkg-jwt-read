@@ -1,6 +1,6 @@
 ---
 name: carecard-workspace-standards
-description: Follow the shared SO_CareCardCa/CareCard workspace coding, testing, repository, dependency, shared package, frontend, database, API response, and security standards. Use before modifying, testing, reviewing, or debugging any ms-*, pkg-*, app-*, website, dashboard, or other CareCard repository in this workspace, especially when choosing validation commands, package boundaries, TypeScript types, dependencies, API contracts, database logic, service patterns, or frontend architecture.
+description: 'Follow the shared SO_CareCardCa/CareCard workspace coding, testing, repository, dependency, shared package, frontend, database, API response, and security standards. Use before modifying, testing, reviewing, or debugging any ms-*, pkg-*, app-*, website, dashboard, or other CareCard repository in this workspace, especially when choosing validation commands, package boundaries, TypeScript types, dependencies, API contracts, database logic, service patterns, or frontend architecture.'
 ---
 
 # CareCard Workspace Standards
@@ -43,8 +43,8 @@ Use before modifying, testing, reviewing, or debugging any CareCard workspace re
 
 ## Safety Constraints
 
-- Do not edit generated output, dependency folders, logs, coverage, dist, or build artifacts unless the task explicitly requires it.
-- Do not revert or overwrite user changes; stage only files related to the requested skill or instruction update.
+- Do not edit generated output, dependency folders, logs, coverage, dist, or build artifacts unless the task requires it.
+- Do not revert or overwrite user changes; stage only requested skill or instruction files.
 - Never suppress errors, lint failures, type failures, security failures, or failing tests; fix the underlying issue or report the blocker.
 - Do not log or expose secrets, JWTs, passwords, credentials, private keys, sensitive personal data, SQL internals, or stack traces.
 
@@ -128,11 +128,11 @@ config.
 
 ## Remote Git Operations Guardrail
 
-Do not run remote Git or GitHub operations unless the current user request explicitly asks for that remote operation. This includes `git fetch`, `git pull`, `git push`, `git push --delete`, remote branch cleanup, GitHub API calls, and any `gh pr` command that creates, updates, readies, merges, closes, or cleans up a pull request. Do not infer permission from branch names, validation needs, prior workflow habits, or convenience; ask first when remote state would be useful but was not requested.
+Do not run remote Git or GitHub operations unless the current user request explicitly asks for them. This includes `git fetch`, `git pull`, `git push`, `git push --delete`, remote branch cleanup, GitHub API calls, and any `gh pr` command that creates, updates, readies, merges, closes, or cleans up a pull request. Do not infer permission from branch names, validation needs, prior workflow habits, or convenience; ask first when remote state would help but was not requested.
 
 ## Commit Continuation Rule
 
-Do not amend existing commits unless the user explicitly asks for an amend. If
+Do not amend commits unless the user explicitly asks. If
 hooks, formatters, tests, docs, skills, validation, or review follow-up create
 additional changes after a commit already exists, keep history additive by
 making a new commit in the affected repository.

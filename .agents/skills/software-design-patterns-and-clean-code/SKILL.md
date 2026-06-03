@@ -1,6 +1,6 @@
 ---
 name: software-design-patterns-and-clean-code
-description: Use every time before coding, refactoring, debugging, or reviewing in this repository, alongside all other applicable skills, to apply pragmatic software design patterns, SOLID, Clean Code, and testable architecture.
+description: 'Use every time before coding, refactoring, debugging, or reviewing in this repository, alongside all other applicable skills, to apply pragmatic software design patterns, SOLID, Clean Code, and testable architecture.'
 ---
 
 # Software Design Patterns And Clean Code
