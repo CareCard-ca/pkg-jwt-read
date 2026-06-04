@@ -23,6 +23,13 @@ jobs:
           node-version: '25'
           registry-url: 'https://registry.npmjs.org'
 
+      - name: Remove unsupported npm auth config
+        run: |
+          npm_config_file="${NPM_CONFIG_USERCONFIG:-$HOME/.npmrc}"
+          if [ -f "$npm_config_file" ]; then
+            sed -i '/^[[:space:]]*always-auth[[:space:]]*=.*/d' "$npm_config_file"
+          fi
+
       - name: Install dependencies
         # Added HUSKY=0 to prevent the husky error in logs
         run: npm ci
