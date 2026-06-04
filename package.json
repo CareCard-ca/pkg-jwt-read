@@ -44,5 +44,8 @@
     "@carecard/auth-util": "3.1.15",
     "@carecard/common-util": "3.1.15",
     "@carecard/validate": "3.1.27"
+  },
+  "overrides": {
+    "@carecard/validate": "3.1.27"
   }
 }
