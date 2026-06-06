@@ -1,6 +1,6 @@
 ---
 name: github-pr-create-update
-description: "Use only when the user explicitly asks for remote Git or GitHub PR work: pushing a branch, creating or updating a PR, or marking a PR ready from the current repository branch into development or main."
+description: 'Use only when the user explicitly asks for remote Git or GitHub PR work: pushing a branch, creating or updating a PR, or marking a PR ready from the current repository branch into development or main.'
 ---
 
 # Pull Request Create
