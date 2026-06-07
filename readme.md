@@ -18,6 +18,9 @@ introspected by `ms-auth`.
 - **Service JWTs**: Helpers for verifying and extracting microservice-to-microservice JWTs with standard `iss`, `sub`, `aud`, `iat`, and `exp` claims.
 - **JWT or Server Auth**: Middleware helpers that verify normal JWTs locally and
   call a service-provided introspector for opaque server-auth tokens.
+- **Scoped User Authorization**: Optional `X-Authorization-Context`
+  verification attaches compact scoped authorization claims to
+  `req.userAuthorization` without replacing `req.jwt`.
 
 ## Installation
 
@@ -132,6 +135,44 @@ The introspector must return claims for valid tokens. This package normalizes
 those claims onto `req.jwt.payload` with `authMode: "server-auth"` and
 `auth_mode: "server-auth"` so services can keep their existing JWT-backed
 database context and role checks.
+
+### Scoped User Authorization Context
+
+Use `jwtVerifyUserAuthorization` when a route needs to verify only the compact
+authorization-context token carried in `X-Authorization-Context`. The token is
+read as a raw JWT header value, not as `Bearer <token>`.
+
+```javascript
+const { jwtVerifyUserAuthorization } = require('@carecard/jwt-read');
+
+app.use(
+  jwtVerifyUserAuthorization(institutionsPublicKey, throwNotAuthorizedError, {
+    expectedType: 'carecard.authorization-context.scoped.v1',
+    expectedIssuer: 'ms-institutions',
+    expectedAudience: 'ms-documents',
+  }),
+);
+```
+
+Existing JWT verification helpers can also read the header by passing an
+optional trailing options object. This preserves current `req.jwt` behavior and
+adds decoded scoped claims to `req.userAuthorization`.
+
+```javascript
+const verifyUser = jwtVerifyOrServerAuth(msAuthPublicKey, token => introspectServerAuthTokenWithMsAuth(token), throwNotAuthorizedError, {
+  userAuthorization: {
+    publicKey: institutionsPublicKey,
+    expectedType: 'carecard.authorization-context.scoped.v1',
+    expectedIssuer: 'ms-institutions',
+    expectedAudience: 'ms-documents',
+  },
+});
+```
+
+When the optional reader is configured, a missing `X-Authorization-Context`
+leaves `req.userAuthorization` as `null`. If the header is present but invalid,
+throwing middleware fails closed. No-throw middleware clears
+`req.userAuthorization` and continues.
 
 ## Testing
 
