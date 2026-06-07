@@ -281,11 +281,16 @@ export interface JwtContext {
   user_id: string | undefined;
   /** The role of the user. Only set to 'super_admin' when roles contains 'ad'. */
   role?: string;
+  /** Decoded scoped authorization claims from X-Authorization-Context when verified and attached. */
+  authorizationContext?: UserAuthorizationPayload;
+  /** The verified scoped authorization object attached to the request. */
+  userAuthorization?: UserAuthorizationRequestObject;
 }
 
 /**
  * Returns the context derived from the JWT in req.jwt.
  * Always returns user_id. If the roles array contains 'ad', also returns role: 'super_admin'.
+ * If req.userAuthorization is present, also returns authorizationContext and userAuthorization.
  */
 export function jwtGetContext(req: any): JwtContext;
 

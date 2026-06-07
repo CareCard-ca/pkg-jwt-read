@@ -174,6 +174,12 @@ leaves `req.userAuthorization` as `null`. If the header is present but invalid,
 throwing middleware fails closed. No-throw middleware clears
 `req.userAuthorization` and continues.
 
+`jwtGetContext(req)` preserves the normal database caller shape of `user_id`
+and optional `role`. When a verified `req.userAuthorization.payload` is present,
+it also returns `authorizationContext` with those compact claims and the original
+`userAuthorization` object so service models can set `app.authz_context` for
+RLS without rebuilding the full authorization graph.
+
 ## Testing
 
 Run tests using:
