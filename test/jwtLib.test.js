@@ -1,5 +1,6 @@
 const { describe, it } = require('mocha');
 const assert = require('assert');
+const Module = require('module');
 const jwtLib = require('../lib/jwtLib');
 const { publicKey, privateKey } = require('./keys/keys');
 const { generateKeyPair, jwtCreateSignedToken, jwtGetHeaderPayload } = require('@carecard/auth-util');
@@ -158,6 +159,303 @@ describe('Lib jwtLib.js', function () {
         assert.ok(e);
       }
     });
+
+    it('optionally validates X-Authorization-Context without replacing req.jwt', function () {
+      const userAuthorizationToken = buildSignedUserAuthorizationTokenFixture();
+      const req = {
+        get: h => {
+          if (h === 'Authorization') return 'Bearer ' + jwtString;
+          if (h === 'X-Authorization-Context') return userAuthorizationToken;
+          return null;
+        },
+      };
+
+      jwtLib.validateAndExtractJwtObject(req, publicKey, undefined, {
+        userAuthorization: {
+          publicKey,
+          expectedType: 'carecard.authorization-context.scoped.v1',
+          expectedIssuer: 'ms-institutions',
+          expectedAudience: 'ms-documents',
+        },
+      });
+
+      assert.strictEqual(req.jwt.payload.sub, '8b0db877-a6b3-4a23-a493-e687915cdd87');
+      assert.strictEqual(req.userAuthorization.payload.sub, '6f4cb7f4-2c2a-4a91-9b56-3e5389703d42');
+      assert.strictEqual(req.userAuthorization.payload.table, 'documents');
+      assert.strictEqual(req.userAuthorization.token, undefined);
+    });
+
+    it('does not read X-Authorization-Context when userAuthorization options are not configured', function () {
+      const req = {
+        get: h => {
+          if (h === 'Authorization') return 'Bearer ' + jwtString;
+          if (h === 'X-Authorization-Context') return jwtStringBad;
+          return null;
+        },
+      };
+
+      jwtLib.validateAndExtractJwtObject(req, publicKey);
+
+      assert.ok(req.jwt);
+      assert.strictEqual(req.userAuthorization, undefined);
+    });
+
+    it('leaves req.userAuthorization null when optional X-Authorization-Context is missing', function () {
+      const req = { get: h => (h === 'Authorization' ? 'Bearer ' + jwtString : null) };
+
+      jwtLib.validateAndExtractJwtObject(req, publicKey, undefined, {
+        userAuthorization: { publicKey },
+      });
+
+      assert.ok(req.jwt);
+      assert.strictEqual(req.userAuthorization, null);
+    });
+
+    it('fails closed when optional X-Authorization-Context is present but invalid', function () {
+      const req = {
+        get: h => {
+          if (h === 'Authorization') return 'Bearer ' + jwtString;
+          if (h === 'X-Authorization-Context') return jwtStringBad;
+          return null;
+        },
+      };
+
+      assert.throws(() => {
+        jwtLib.validateAndExtractJwtObject(req, publicKey, undefined, {
+          userAuthorization: { publicKey },
+        });
+      });
+      assert.strictEqual(req.userAuthorization, null);
+    });
+  });
+
+  describe('validateAndExtractUserAuthorizationObject', function () {
+    it('validates and extracts a signed X-Authorization-Context token', function () {
+      const token = buildSignedUserAuthorizationTokenFixture();
+      const req = { get: h => (h === 'X-Authorization-Context' ? token : null) };
+
+      jwtLib.validateAndExtractUserAuthorizationObject(req, publicKey, undefined, {
+        expectedType: 'carecard.authorization-context.scoped.v1',
+        expectedIssuer: 'ms-institutions',
+        expectedAudience: 'ms-documents',
+      });
+
+      assert.strictEqual(req.userAuthorization.payload.typ, 'carecard.authorization-context.scoped.v1');
+      assert.strictEqual(req.userAuthorization.payload.iss, 'ms-institutions');
+      assert.strictEqual(req.userAuthorization.payload.aud, 'ms-documents');
+      assert.strictEqual(req.userAuthorization.payload.schema, 'carecard');
+    });
+
+    it('rejects missing X-Authorization-Context when called directly', function () {
+      const req = { get: () => null };
+
+      assert.throws(() => {
+        jwtLib.validateAndExtractUserAuthorizationObject(req, publicKey);
+      });
+      assert.strictEqual(req.userAuthorization, null);
+    });
+
+    it('rejects missing X-Authorization-Context with a null request', function () {
+      assert.throws(() => {
+        jwtLib.validateAndExtractUserAuthorizationObject(null, publicKey);
+      });
+    });
+
+    it('rejects oversized X-Authorization-Context tokens', function () {
+      const req = { get: h => (h === 'X-Authorization-Context' ? `${jwtString}${'.'.repeat(2050)}` : null) };
+
+      assert.throws(() => {
+        jwtLib.validateAndExtractUserAuthorizationObject(req, publicKey);
+      });
+      assert.strictEqual(req.userAuthorization, null);
+    });
+
+    it('rejects invalid user authorization claim variants', function () {
+      const invalidCases = [
+        {
+          name: 'expired',
+          token: buildSignedUserAuthorizationTokenFixture({
+            issuedAt: Math.floor(Date.now() / 1000) - 20,
+            expiresInSeconds: 10,
+          }),
+          options: {},
+        },
+        {
+          name: 'issued in future',
+          token: buildSignedUserAuthorizationTokenFixture({
+            issuedAt: Math.floor(Date.now() / 1000) + 60,
+            expiresInSeconds: 120,
+          }),
+          options: {},
+        },
+        {
+          name: 'not yet valid',
+          token: buildSignedUserAuthorizationTokenFixture({
+            notBefore: Math.floor(Date.now() / 1000) + 60,
+          }),
+          options: {},
+        },
+        {
+          name: 'wrong type',
+          token: buildSignedUserAuthorizationTokenFixture({ type: 'other-token' }),
+          options: { expectedType: 'carecard.authorization-context.scoped.v1' },
+        },
+        {
+          name: 'wrong issuer',
+          token: buildSignedUserAuthorizationTokenFixture({ issuer: 'ms-auth' }),
+          options: { expectedIssuer: 'ms-institutions' },
+        },
+        {
+          name: 'wrong audience',
+          token: buildSignedUserAuthorizationTokenFixture({ audience: 'ms-search' }),
+          options: { expectedAudience: 'ms-documents' },
+        },
+      ];
+
+      for (const invalidCase of invalidCases) {
+        const req = { get: h => (h === 'X-Authorization-Context' ? invalidCase.token : null) };
+        assert.throws(
+          () => {
+            jwtLib.validateAndExtractUserAuthorizationObject(req, publicKey, undefined, invalidCase.options);
+          },
+          undefined,
+          invalidCase.name,
+        );
+        assert.strictEqual(req.userAuthorization, null, invalidCase.name);
+      }
+    });
+
+    it('clears req.userAuthorization in no-throw mode for invalid tokens', function () {
+      const req = { get: h => (h === 'X-Authorization-Context' ? jwtStringBad : null) };
+
+      jwtLib.validateAndExtractUserAuthorizationObjectNoThrow(req, publicKey);
+
+      assert.strictEqual(req.userAuthorization, null);
+    });
+
+    it('leaves a null request unchanged in direct no-throw mode', function () {
+      assert.strictEqual(jwtLib.validateAndExtractUserAuthorizationObjectNoThrow(null, publicKey), null);
+    });
+
+    it('extracts req.userAuthorization in no-throw mode for valid tokens', function () {
+      const token = buildSignedUserAuthorizationTokenFixture();
+      const req = { get: h => (h === 'X-Authorization-Context' ? token : null) };
+
+      const result = jwtLib.validateAndExtractUserAuthorizationObjectNoThrow(req, publicKey);
+
+      assert.strictEqual(result, req);
+      assert.strictEqual(req.userAuthorization.payload.sub, '6f4cb7f4-2c2a-4a91-9b56-3e5389703d42');
+    });
+
+    it('extracts user authorization with direct middleware', function () {
+      const token = buildSignedUserAuthorizationTokenFixture();
+      const req = { get: h => (h === 'X-Authorization-Context' ? token : null) };
+      const middleware = jwtLib.verifyUserAuthorization(publicKey, undefined, {
+        expectedAudience: ['ms-search', 'ms-documents'],
+      });
+      let nextCalled = false;
+
+      middleware(req, {}, err => {
+        assert.ifError(err);
+        nextCalled = true;
+      });
+
+      assert.strictEqual(nextCalled, true);
+      assert.strictEqual(req.userAuthorization.payload.aud, 'ms-documents');
+    });
+
+    it('passes direct middleware errors to next', function () {
+      const req = { get: () => null };
+      const middleware = jwtLib.verifyUserAuthorization(publicKey);
+      let errorPassed = null;
+
+      middleware(req, {}, err => {
+        errorPassed = err;
+      });
+
+      assert.ok(errorPassed);
+      assert.strictEqual(req.userAuthorization, null);
+    });
+
+    it('clears user authorization with direct no-throw middleware for invalid tokens', function () {
+      const req = { get: h => (h === 'X-Authorization-Context' ? jwtStringBad : null) };
+      const middleware = jwtLib.verifyUserAuthorizationNoThrow(publicKey);
+      let nextCalled = false;
+
+      middleware(req, {}, err => {
+        assert.ifError(err);
+        nextCalled = true;
+      });
+
+      assert.strictEqual(nextCalled, true);
+      assert.strictEqual(req.userAuthorization, null);
+    });
+
+    it('passes direct no-throw middleware errors to next', function () {
+      const token = buildSignedUserAuthorizationTokenFixture();
+      const req = { get: h => (h === 'X-Authorization-Context' ? token : null) };
+      const middleware = jwtLib.verifyUserAuthorizationNoThrow(publicKey);
+      let calledCount = 0;
+
+      middleware(req, {}, err => {
+        calledCount++;
+        if (calledCount === 1) throw new Error('next_throws');
+        assert.ok(err);
+      });
+
+      assert.strictEqual(calledCount, 2);
+    });
+
+    it('uses lowercase X-Authorization-Context fallback for direct extraction', function () {
+      const token = buildSignedUserAuthorizationTokenFixture();
+      const req = { get: h => (h === 'x-authorization-context' ? token : null) };
+
+      jwtLib.validateAndExtractUserAuthorizationObject(req, publicKey);
+
+      assert.strictEqual(req.userAuthorization.payload.table, 'documents');
+    });
+
+    it('accepts custom user authorization length and lowercase missing-header configuration', function () {
+      const token = buildSignedUserAuthorizationTokenFixture();
+      const reqWithCustomLength = { get: h => (h === 'X-Authorization-Context' ? token : null) };
+      const reqWithMissingLowercaseHeader = { get: () => null };
+
+      jwtLib.validateAndExtractUserAuthorizationObject(reqWithCustomLength, publicKey, undefined, {
+        maxTokenLength: 4096,
+      });
+      jwtLib.validateAndExtractUserAuthorizationObjectNoThrow(reqWithMissingLowercaseHeader, publicKey, {
+        headerName: 'x-authorization-context',
+      });
+
+      assert.strictEqual(reqWithCustomLength.userAuthorization.payload.aud, 'ms-documents');
+      assert.strictEqual(reqWithMissingLowercaseHeader.userAuthorization, null);
+    });
+
+    it('rejects user authorization when payload decoding fails after signature validation', function () {
+      const mockedJwtLib = requireJwtLibWithAuthUtilMock({
+        jwtVerifySignedToken: () => true,
+        jwtGetHeaderPayload: () => {
+          throw new Error('decode failed');
+        },
+      });
+      const req = { get: h => (h === 'X-Authorization-Context' ? buildSignedUserAuthorizationTokenFixture() : null) };
+
+      mockedJwtLib.validateAndExtractUserAuthorizationObjectNoThrow(req, publicKey);
+
+      assert.strictEqual(req.userAuthorization, null);
+    });
+
+    it('rejects user authorization when decoded JWT has no payload after signature validation', function () {
+      const mockedJwtLib = requireJwtLibWithAuthUtilMock({
+        jwtVerifySignedToken: () => true,
+        jwtGetHeaderPayload: () => ({}),
+      });
+      const req = { get: h => (h === 'X-Authorization-Context' ? buildSignedUserAuthorizationTokenFixture() : null) };
+
+      mockedJwtLib.validateAndExtractUserAuthorizationObjectNoThrow(req, publicKey);
+
+      assert.strictEqual(req.userAuthorization, null);
+    });
   });
 
   describe('validateAndExtractJwtOrServerAuthObject', function () {
@@ -196,10 +494,141 @@ describe('Lib jwtLib.js', function () {
       assert.strictEqual(req.jwt.doesJwtUserHasRole('ad'), true);
     });
 
+    it('falls back to server-auth when Authorization contains an invalid JWT signature', async function () {
+      const req = { get: h => (h === 'Authorization' ? 'Bearer ' + jwtStringBad : null) };
+
+      await jwtLib.validateAndExtractJwtOrServerAuthObject(req, publicKey, token => {
+        assert.strictEqual(token, jwtStringBad);
+        return {
+          valid: true,
+          userId: 'user-456',
+          roles: [],
+        };
+      });
+
+      assert.strictEqual(req.jwt.payload.sub, 'user-456');
+      assert.strictEqual(req.jwt.payload.authMode, 'server-auth');
+    });
+
+    it('continues server-auth validation when a custom missing-token handler does not throw', async function () {
+      const req = { get: () => null };
+      let customErrorCalled = false;
+
+      await jwtLib.validateAndExtractJwtOrServerAuthObject(
+        req,
+        publicKey,
+        token => {
+          assert.strictEqual(token, null);
+          return {
+            valid: true,
+            userId: 'b7c7d232-d421-4e76-8794-578b868b1f56',
+            roles: [],
+          };
+        },
+        () => {
+          customErrorCalled = true;
+        },
+      );
+
+      assert.strictEqual(customErrorCalled, true);
+      assert.strictEqual(req.jwt.payload.sub, 'b7c7d232-d421-4e76-8794-578b868b1f56');
+    });
+
+    it('rejects server-auth when Authorization is missing', async function () {
+      const req = { get: () => null };
+
+      await assert.rejects(() => jwtLib.validateAndExtractJwtOrServerAuthObject(req, publicKey, () => ({ valid: true })));
+    });
+
+    it('rejects server-auth when the introspector is not a function', async function () {
+      const req = { get: h => (h === 'Authorization' ? 'Bearer opaque-token' : null) };
+
+      await assert.rejects(() => jwtLib.validateAndExtractJwtOrServerAuthObject(req, publicKey, null));
+    });
+
+    it('rejects valid server-auth claims without a subject', async function () {
+      const req = { get: h => (h === 'Authorization' ? 'Bearer opaque-token' : null) };
+
+      await assert.rejects(() =>
+        jwtLib.validateAndExtractJwtOrServerAuthObject(req, publicKey, () => ({
+          valid: true,
+          roles: ['ad'],
+        })),
+      );
+      assert.strictEqual(req.jwt, null);
+    });
+
     it('rejects an invalid server-auth introspection result', async function () {
       const req = { get: h => (h === 'Authorization' ? 'Bearer opaque-token' : null) };
 
       await assert.rejects(() => jwtLib.validateAndExtractJwtOrServerAuthObject(req, publicKey, () => ({ valid: false })));
+    });
+  });
+
+  describe('JWT or server-auth middleware', function () {
+    it('passes valid flexible auth through next', async function () {
+      const req = { get: h => (h === 'Authorization' ? 'Bearer ' + jwtString : null) };
+      const middleware = jwtLib.verifyJwtOrServerAuth(publicKey, () => {
+        throw new Error('introspector should not be called');
+      });
+      let nextCalled = false;
+
+      await middleware(req, {}, err => {
+        assert.ifError(err);
+        nextCalled = true;
+      });
+
+      assert.strictEqual(nextCalled, true);
+      assert.strictEqual(req.jwt.payload.sub, '8b0db877-a6b3-4a23-a493-e687915cdd87');
+    });
+
+    it('passes flexible auth errors through next', async function () {
+      const req = { get: () => null };
+      const middleware = jwtLib.verifyJwtOrServerAuth(publicKey, () => ({ valid: true }));
+      let errorPassed = null;
+
+      await middleware(req, {}, err => {
+        errorPassed = err;
+      });
+
+      assert.ok(errorPassed);
+    });
+
+    it('passes flexible auth role checks through next', async function () {
+      const payload = jwtGetHeaderPayload(jwtString).payload;
+      const jwtWithAdmin = jwtCreateSignedToken(
+        { alg: 'EdDSA' },
+        {
+          ...payload,
+          roles: ['admin'],
+        },
+        privateKey,
+      );
+      const req = { get: h => (h === 'Authorization' ? 'Bearer ' + jwtWithAdmin : null) };
+      const middleware = jwtLib.verifyJwtOrServerAuthAndHasRole('admin', publicKey, () => {
+        throw new Error('introspector should not be called');
+      });
+      let nextCalled = false;
+
+      await middleware(req, {}, err => {
+        assert.ifError(err);
+        nextCalled = true;
+      });
+
+      assert.strictEqual(nextCalled, true);
+      assert.strictEqual(req.jwt.payload.roles[0], 'admin');
+    });
+
+    it('passes flexible auth role errors through next', async function () {
+      const req = { get: h => (h === 'Authorization' ? 'Bearer ' + jwtString : null) };
+      const middleware = jwtLib.verifyJwtOrServerAuthAndHasRole('admin', publicKey, () => ({ valid: true }));
+      let errorPassed = null;
+
+      await middleware(req, {}, err => {
+        errorPassed = err;
+      });
+
+      assert.ok(errorPassed);
     });
   });
 
@@ -245,6 +674,15 @@ describe('Lib jwtLib.js', function () {
       assert.strictEqual(req.jwt, null);
     });
 
+    it('rejects a service JWT with an invalid signature', function () {
+      const req = { get: h => (h === 'Authorization' ? `Bearer ${jwtStringBad}` : null) };
+
+      assert.throws(() => {
+        jwtLib.validateAndExtractServiceJwtObject(req, publicKey, 'ms-institutions', 'ms-auth');
+      });
+      assert.strictEqual(req.jwt, null);
+    });
+
     it('allows service JWT audiences to be an array', function () {
       assert.strictEqual(
         jwtLib._isServiceJwtFor(
@@ -260,6 +698,119 @@ describe('Lib jwtLib.js', function () {
         ),
         true,
       );
+    });
+
+    it('covers service JWT guard variants', function () {
+      const nowSeconds = Math.floor(Date.now() / 1000);
+      const nowMillis = Date.now();
+
+      assert.strictEqual(jwtLib._isServiceJwtFor(null, 'ms-institutions', 'ms-auth'), false);
+      assert.strictEqual(
+        jwtLib._isServiceJwtFor(
+          {
+            iss: 'ms-institutions',
+            sub: 'ms-institutions',
+            aud: 'ms-search',
+            iat: nowSeconds,
+            exp: nowSeconds + 60,
+          },
+          'ms-institutions',
+          'ms-auth',
+        ),
+        false,
+      );
+      assert.strictEqual(
+        jwtLib._isServiceJwtFor(
+          {
+            iss: 'ms-institutions',
+            sub: 'ms-institutions',
+            aud: 'ms-auth',
+            exp: nowSeconds + 60,
+          },
+          'ms-institutions',
+          'ms-auth',
+        ),
+        false,
+      );
+      assert.strictEqual(
+        jwtLib._isServiceJwtFor(
+          {
+            iss: 'ms-institutions',
+            sub: 'ms-institutions',
+            aud: 'ms-auth',
+            iat: nowSeconds,
+          },
+          'ms-institutions',
+          'ms-auth',
+        ),
+        false,
+      );
+      assert.strictEqual(
+        jwtLib._isServiceJwtFor(
+          {
+            iss: 'ms-institutions',
+            sub: 'ms-institutions',
+            aud: 'ms-auth',
+            iat: nowSeconds,
+            exp: nowSeconds + 60,
+            nbf: 'not-a-number',
+          },
+          'ms-institutions',
+          'ms-auth',
+        ),
+        false,
+      );
+      assert.strictEqual(
+        jwtLib._isServiceJwtFor(
+          {
+            iss: 'ms-institutions',
+            sub: 'ms-institutions',
+            aud: 'ms-auth',
+            iat: nowSeconds,
+            exp: nowSeconds + 60,
+            nbf: nowSeconds + 60,
+          },
+          'ms-institutions',
+          'ms-auth',
+        ),
+        false,
+      );
+      assert.strictEqual(
+        jwtLib._isServiceJwtFor(
+          {
+            iss: 'ms-institutions',
+            sub: 'ms-institutions',
+            aud: 'ms-auth',
+            iat: nowMillis,
+            exp: nowMillis + 60000,
+          },
+          'ms-institutions',
+          'ms-auth',
+        ),
+        true,
+      );
+    });
+
+    it('normalizes server-auth payload edge cases', function () {
+      const payloadWithNonArrayRoles = jwtLib.createServerAuthPayload({
+        user_id: 'b7c7d232-d421-4e76-8794-578b868b1f56',
+        roles: 'admin',
+        expires_at: 'not-a-date',
+      });
+      const payloadWithNumericExpiration = jwtLib.createServerAuthPayload({
+        userId: '9f8baf8a-c2de-4e88-bf04-46773704ca9f',
+        exp: Math.floor(Date.now() / 1000) + 60,
+      });
+
+      assert.deepStrictEqual(payloadWithNonArrayRoles.roles, []);
+      assert.strictEqual(payloadWithNonArrayRoles.exp, undefined);
+      assert.strictEqual(typeof payloadWithNumericExpiration.exp, 'number');
+    });
+
+    it('rejects server-auth claims without a subject and a null request', function () {
+      assert.throws(() => {
+        jwtLib.attachServerAuthClaims(null, { valid: true });
+      });
     });
 
     it('rejects a JWT whose subject does not match the issuing service', function () {
@@ -326,6 +877,23 @@ describe('Lib jwtLib.js', function () {
 
       assert.strictEqual(nextCalled, true);
       assert.strictEqual(req.jwt.payload.iss, 'ms-institutions');
+    });
+
+    it('service JWT middleware forwards validation errors', function () {
+      const token = buildSignedServiceTokenFixture({
+        issuer: 'ms-search',
+        audience: 'ms-auth',
+      });
+      const req = { get: h => (h === 'Authorization' ? `Bearer ${token}` : null) };
+      const middleware = jwtLib.verifyServiceJwt(publicKey, 'ms-institutions', 'ms-auth');
+      let errorPassed = null;
+
+      middleware(req, {}, err => {
+        errorPassed = err;
+      });
+
+      assert.ok(errorPassed);
+      assert.strictEqual(req.jwt, null);
     });
   });
 
@@ -592,6 +1160,44 @@ describe('Lib jwtLib.js', function () {
       const middleware = jwtLib.verifyJwtNoThrow(publicKey);
       await middleware(req, {}, () => {});
       assert.strictEqual(req.jwt, null);
+    });
+
+    it('should clear missing optional user authorization in no-throw mode', async function () {
+      const req = { get: h => (h === 'Authorization' ? 'Bearer ' + jwtString : null) };
+      const result = jwtLib.validateAndExtractJwtObjectNoThrow(req, publicKey, {
+        userAuthorization: { publicKey },
+      });
+
+      assert.strictEqual(result, req);
+      assert.strictEqual(req.userAuthorization, null);
+    });
+
+    it('should treat null optional user authorization options as configured but missing', async function () {
+      const req = { get: h => (h === 'Authorization' ? 'Bearer ' + jwtString : null) };
+      const result = jwtLib.validateAndExtractJwtObject(req, publicKey, undefined, {
+        userAuthorization: null,
+      });
+
+      assert.strictEqual(result, req);
+      assert.strictEqual(req.userAuthorization, null);
+    });
+
+    it('should extract optional user authorization in no-throw mode', async function () {
+      const userAuthorizationToken = buildSignedUserAuthorizationTokenFixture();
+      const req = {
+        get: h => {
+          if (h === 'Authorization') return 'Bearer ' + jwtString;
+          if (h === 'X-Authorization-Context') return userAuthorizationToken;
+          return null;
+        },
+      };
+      const result = jwtLib.validateAndExtractJwtObjectNoThrow(req, publicKey, {
+        userAuthorization: { publicKey },
+      });
+
+      assert.strictEqual(result, req);
+      assert.strictEqual(req.jwt.payload.sub, '8b0db877-a6b3-4a23-a493-e687915cdd87');
+      assert.strictEqual(req.userAuthorization.payload.sub, '6f4cb7f4-2c2a-4a91-9b56-3e5389703d42');
     });
 
     it('should not throw and set req.jwt to null on failure (verifyWebTokenNoThrow)', async function () {
@@ -892,4 +1498,58 @@ function buildSignedServiceTokenFixture({ issuer, audience, issuedAt = Math.floo
     },
     privateKey,
   );
+}
+
+function buildSignedUserAuthorizationTokenFixture({
+  type = 'carecard.authorization-context.scoped.v1',
+  issuer = 'ms-institutions',
+  audience = 'ms-documents',
+  subject = '6f4cb7f4-2c2a-4a91-9b56-3e5389703d42',
+  issuedAt = Math.floor(Date.now() / 1000),
+  expiresInSeconds = 60,
+  notBefore,
+} = {}) {
+  const payload = {
+    typ: type,
+    iss: issuer,
+    aud: audience,
+    sub: subject,
+    schema: 'carecard',
+    table: 'documents',
+    actions: ['read'],
+    scopeType: 'self',
+    scopeId: subject,
+    authzVersion: '1',
+    iat: issuedAt,
+    exp: issuedAt + expiresInSeconds,
+    jti: '9c84c2e2-5b27-4c0d-bd1a-0fb56304a2b8',
+  };
+  if (notBefore !== undefined) payload.nbf = notBefore;
+
+  return jwtCreateSignedToken({ alg: 'EdDSA', typ: 'JWT' }, payload, privateKey);
+}
+
+function requireJwtLibWithAuthUtilMock(authUtilOverrides) {
+  const originalLoad = Module._load;
+  const jwtLibPath = require.resolve('../lib/jwtLib');
+
+  delete require.cache[jwtLibPath];
+  Module._load = function loadWithAuthUtilMock(request, parent, isMain) {
+    const loadedModule = originalLoad.call(this, request, parent, isMain);
+    if (request === '@carecard/auth-util') {
+      return {
+        ...loadedModule,
+        ...authUtilOverrides,
+      };
+    }
+    return loadedModule;
+  };
+
+  try {
+    return require('../lib/jwtLib');
+  } finally {
+    Module._load = originalLoad;
+    delete require.cache[jwtLibPath];
+    require('../lib/jwtLib');
+  }
 }
