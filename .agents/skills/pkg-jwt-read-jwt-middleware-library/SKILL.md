@@ -104,6 +104,8 @@ depend on those folders being present.
 - Extraction of `sub`/clientId and other claims from JWT objects.
 - Expiration checks and TTL calculations.
 - Request attachment behavior for authenticated JWT objects and visitor tokens.
+- Request attachment behavior for compact scoped authorization-context JWTs
+  from `X-Authorization-Context` as `req.userAuthorization`.
 - Server-auth request attachment behavior that normalizes introspected claims
   into `req.jwt.payload` with `authMode: "server-auth"` and
   `auth_mode: "server-auth"`.
@@ -129,6 +131,13 @@ Receivers must verify the signature with the sending service public key and
 must check expected issuer, audience, subject, and lifetime. Do not add
 CareCard-specific replacement claims when a registered JWT claim covers the
 same meaning.
+
+Scoped authorization-context JWTs from `X-Authorization-Context` are independent
+from the primary `Authorization` JWT. They must attach to
+`req.userAuthorization`, not `req.jwt`, and they should be read as raw JWT
+header values rather than `Bearer` tokens. Existing JWT and server-auth
+middleware may accept an optional trailing `userAuthorization` options object;
+preserve legacy behavior when that option is omitted.
 
 ## Role Mapping Layer
 
@@ -171,7 +180,8 @@ role names, such as `ad` and `admin`.
 ## Types And API Contracts
 
 - Model JWT header, payload, server-auth introspection claims, request
-  attachment, visitor attachment, role, and context shapes explicitly in
+  attachment, visitor attachment, user authorization attachment, role, and
+  context shapes explicitly in
   `index.d.ts`.
 - Prefer `AuthenticatedRequest`, `JwtHeader`, `JwtPayload`, `JwtParts`,
   `JwtRequestObject`, `VisitorRequestObject`, and `JwtContext` over loose

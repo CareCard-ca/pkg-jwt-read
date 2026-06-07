@@ -20,6 +20,8 @@ import {
   jwtValidateAndExtractNoThrow,
   jwtValidateAndExtractOrServerAuth,
   jwtValidateAndExtractService,
+  jwtValidateAndExtractUserAuthorization,
+  jwtValidateAndExtractUserAuthorizationNoThrow,
   jwtValidateAndExtractVisitorNoThrow,
   jwtValidateAndExtractWebToken,
   jwtValidateAndExtractWebTokenNoThrow,
@@ -29,10 +31,14 @@ import {
   jwtVerifyOrServerAuth,
   jwtVerifyOrServerAuthAndHasRole,
   jwtVerifyService,
+  jwtVerifyUserAuthorization,
+  jwtVerifyUserAuthorizationNoThrow,
   jwtVerifyVisitorNoThrow,
   jwtVerifyWebToken,
   jwtVerifyWebTokenNoThrow,
   throwUsedTokenError,
+  UserAuthorizationPayload,
+  UserAuthorizationReadOptions,
   verifyJwt,
   verifyJwtAndRole,
   verifyJwtNoThrow,
@@ -69,6 +75,8 @@ describe('TypeScript Type Definitions - JWT Read Utilities', () => {
     assert.strictEqual(typeof jwtVerifyOrServerAuth(publicKey, () => ({ userId: '123' })), 'function');
     assert.strictEqual(typeof jwtVerifyOrServerAuthAndHasRole('admin', publicKey, () => ({ userId: '123' })), 'function');
     assert.strictEqual(typeof jwtVerifyService(publicKey, 'ms-auth', 'ms-institutions'), 'function');
+    assert.strictEqual(typeof jwtVerifyUserAuthorization(publicKey), 'function');
+    assert.strictEqual(typeof jwtVerifyUserAuthorizationNoThrow(publicKey), 'function');
   });
 
   it('should verify new validateAndExtract names', () => {
@@ -79,6 +87,8 @@ describe('TypeScript Type Definitions - JWT Read Utilities', () => {
     assert.strictEqual(typeof jwtValidateAndExtractVisitorNoThrow, 'function');
     assert.strictEqual(typeof jwtValidateAndExtractService, 'function');
     assert.strictEqual(typeof jwtValidateAndExtractOrServerAuth, 'function');
+    assert.strictEqual(typeof jwtValidateAndExtractUserAuthorization, 'function');
+    assert.strictEqual(typeof jwtValidateAndExtractUserAuthorizationNoThrow, 'function');
   });
 
   it('should verify jwt utility types', () => {
@@ -124,6 +134,41 @@ describe('TypeScript Type Definitions - JWT Read Utilities', () => {
     } as any;
 
     assert.strictEqual(visitorClientId(dummyReq), 'visitor-123');
+  });
+
+  it('should verify user authorization request types', () => {
+    const userAuthorizationPayload: UserAuthorizationPayload = {
+      typ: 'carecard.authorization-context.scoped.v1',
+      iss: 'ms-institutions',
+      aud: 'ms-documents',
+      sub: '6f4cb7f4-2c2a-4a91-9b56-3e5389703d42',
+      schema: 'carecard',
+      table: 'documents',
+      actions: ['read'],
+      scopeType: 'self',
+      scopeId: '6f4cb7f4-2c2a-4a91-9b56-3e5389703d42',
+      authzVersion: '1',
+      iat: Math.floor(Date.now() / 1000),
+      exp: Math.floor(Date.now() / 1000) + 300,
+      jti: '9c84c2e2-5b27-4c0d-bd1a-0fb56304a2b8',
+    };
+    const options: UserAuthorizationReadOptions = {
+      userAuthorization: {
+        publicKey: 'public-key',
+        expectedType: 'carecard.authorization-context.scoped.v1',
+        expectedIssuer: 'ms-institutions',
+        expectedAudience: 'ms-documents',
+      },
+    };
+    const dummyReq: AuthenticatedRequest = {
+      userAuthorization: {
+        header: {},
+        payload: userAuthorizationPayload,
+      },
+    } as unknown as AuthenticatedRequest;
+
+    assert.strictEqual(dummyReq.userAuthorization?.payload.table, 'documents');
+    assert.strictEqual(options.userAuthorization?.headerName, undefined);
   });
 
   it('should verify middleware creator types', () => {
