@@ -183,20 +183,43 @@ describe('TypeScript Type Definitions - JWT Read Utilities', () => {
 
   it('should verify jwtGetContext types and behavior', () => {
     assert.strictEqual(typeof jwtGetContext, 'function');
+    const adminUserId = '85b3560f-2f26-4371-9f13-e4d8ba1ea581';
+    const regularUserId = '6f4cb7f4-2c2a-4a91-9b56-3e5389703d42';
+    const scopedUserId = '7a97e8e1-f2f3-4074-a182-12a64c5d4f79';
 
     const adminReq: AuthenticatedRequest = {
-      jwt: { payload: { sub: 'user-1', roles: ['ad'] } },
+      jwt: { payload: { sub: adminUserId, roles: ['ad'] } },
     } as any;
     const adminContext: JwtContext = jwtGetContext(adminReq);
-    assert.strictEqual(adminContext.user_id, 'user-1');
+    assert.strictEqual(adminContext.user_id, adminUserId);
     assert.strictEqual(adminContext.role, 'super_admin');
 
     const userReq: AuthenticatedRequest = {
-      jwt: { payload: { sub: 'user-2', roles: ['provider'] } },
+      jwt: { payload: { sub: regularUserId, roles: ['provider'] } },
     } as any;
     const userContext: JwtContext = jwtGetContext(userReq);
-    assert.strictEqual(userContext.user_id, 'user-2');
+    assert.strictEqual(userContext.user_id, regularUserId);
     assert.strictEqual(userContext.role, undefined);
+
+    const scopedReq: AuthenticatedRequest = {
+      jwt: { payload: { sub: scopedUserId, roles: ['provider'] } },
+      userAuthorization: {
+        header: {},
+        payload: {
+          typ: 'carecard.authorization-context.scoped.v1',
+          sub: '6f4cb7f4-2c2a-4a91-9b56-3e5389703d42',
+          schema: 'carecard',
+          table: 'documents',
+          actions: ['read'],
+          scopeType: 'self',
+          scopeId: '6f4cb7f4-2c2a-4a91-9b56-3e5389703d42',
+        },
+      },
+    } as unknown as AuthenticatedRequest;
+    const scopedContext: JwtContext = jwtGetContext(scopedReq);
+    assert.strictEqual(scopedContext.user_id, scopedUserId);
+    assert.strictEqual(scopedContext.authorizationContext?.table, 'documents');
+    assert.strictEqual(scopedContext.userAuthorization?.payload.scopeType, 'self');
   });
 
   it('should verify throwUsedTokenError', () => {
