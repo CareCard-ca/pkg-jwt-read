@@ -41,6 +41,22 @@ export interface JwtPayload {
 }
 
 /**
+ * Represents the compact authorization-context JWT claims issued for scoped resource access.
+ */
+export interface UserAuthorizationPayload extends JwtPayload {
+  typ?: string;
+  iss?: string;
+  aud?: string | string[];
+  schema?: string;
+  table?: string;
+  actions?: string[];
+  scopeType?: string;
+  scopeId?: string | null;
+  authzVersion?: string;
+  jti?: string;
+}
+
+/**
  * Container for the decoded header and payload of a JWT.
  */
 export interface JwtParts {
@@ -73,11 +89,33 @@ export interface VisitorRequestObject {
 }
 
 /**
- * Extended Express Request to include jwt and visitor objects.
+ * Structure of the scoped authorization object attached to the request.
+ */
+export interface UserAuthorizationRequestObject {
+  header: JwtHeader;
+  payload: UserAuthorizationPayload;
+}
+
+export interface UserAuthorizationTokenOptions {
+  publicKey?: string;
+  headerName?: string;
+  maxTokenLength?: number;
+  expectedType?: string;
+  expectedIssuer?: string;
+  expectedAudience?: string | string[];
+}
+
+export interface UserAuthorizationReadOptions {
+  userAuthorization?: UserAuthorizationTokenOptions;
+}
+
+/**
+ * Extended Express Request to include jwt, visitor, and userAuthorization objects.
  */
 export interface AuthenticatedRequest extends Request {
   jwt?: JwtRequestObject | null;
   visitor?: VisitorRequestObject | null;
+  userAuthorization?: UserAuthorizationRequestObject | null;
 }
 
 export interface ServerAuthIntrospectionClaims {
@@ -111,6 +149,7 @@ export type ServerAuthIntrospector = (
 export function jwtVerify(
   publicKey: string,
   customErrorFunction?: () => void,
+  options?: UserAuthorizationReadOptions,
 ): (req: AuthenticatedRequest, res: Response, next: NextFunction) => void;
 
 /**
@@ -121,13 +160,17 @@ export function jwtVerifyWebToken(
   publicKey: string,
   headerName: string,
   customErrorFunction?: () => void,
+  options?: UserAuthorizationReadOptions,
 ): (req: AuthenticatedRequest, res: Response, next: NextFunction) => void;
 
 /**
  * Returns a middleware that verifies a JWT from the 'Authorization: Bearer <token>' header
  * and extracts it into req.jwt. Returns false instead of throwing if invalid.
  */
-export function jwtVerifyNoThrow(publicKey: string): (req: AuthenticatedRequest, res: Response, next: NextFunction) => void;
+export function jwtVerifyNoThrow(
+  publicKey: string,
+  options?: UserAuthorizationReadOptions,
+): (req: AuthenticatedRequest, res: Response, next: NextFunction) => void;
 
 /**
  * Returns a middleware that verifies a JWT from a custom header and extracts it into req.jwt.
@@ -136,13 +179,34 @@ export function jwtVerifyNoThrow(publicKey: string): (req: AuthenticatedRequest,
 export function jwtVerifyWebTokenNoThrow(
   publicKey: string,
   headerName: string,
+  options?: UserAuthorizationReadOptions,
+): (req: AuthenticatedRequest, res: Response, next: NextFunction) => void;
+
+/**
+ * Returns middleware that verifies X-Authorization-Context and extracts it into req.userAuthorization.
+ */
+export function jwtVerifyUserAuthorization(
+  publicKey: string,
+  customErrorFunction?: () => void,
+  options?: UserAuthorizationTokenOptions,
+): (req: AuthenticatedRequest, res: Response, next: NextFunction) => void;
+
+/**
+ * Returns middleware that verifies X-Authorization-Context into req.userAuthorization without throwing for invalid tokens.
+ */
+export function jwtVerifyUserAuthorizationNoThrow(
+  publicKey: string,
+  options?: UserAuthorizationTokenOptions,
 ): (req: AuthenticatedRequest, res: Response, next: NextFunction) => void;
 
 /**
  * Returns a middleware that verifies a visitor token from the 'Visitor' header
  * and extracts it into req.visitor. Returns false instead of throwing if invalid.
  */
-export function jwtVerifyVisitorNoThrow(publicKey: string): (req: AuthenticatedRequest, res: Response, next: NextFunction) => void;
+export function jwtVerifyVisitorNoThrow(
+  publicKey: string,
+  options?: UserAuthorizationReadOptions,
+): (req: AuthenticatedRequest, res: Response, next: NextFunction) => void;
 
 /**
  * Returns the sub from the extracted JWT in req.jwt.
@@ -173,6 +237,7 @@ export function jwtVerifyAndHasRole(
   userRole: string,
   publicKey: string,
   customErrorFunction?: () => void,
+  options?: UserAuthorizationReadOptions,
 ): (req: AuthenticatedRequest, res: Response, next: NextFunction) => void;
 
 /**
@@ -183,6 +248,7 @@ export function jwtVerifyOrServerAuth(
   publicKey: string,
   serverAuthIntrospector: ServerAuthIntrospector,
   customErrorFunction?: () => void,
+  options?: UserAuthorizationReadOptions,
 ): (req: AuthenticatedRequest, res: Response, next: NextFunction) => void;
 
 /**
@@ -194,6 +260,7 @@ export function jwtVerifyOrServerAuthAndHasRole(
   publicKey: string,
   serverAuthIntrospector: ServerAuthIntrospector,
   customErrorFunction?: () => void,
+  options?: UserAuthorizationReadOptions,
 ): (req: AuthenticatedRequest, res: Response, next: NextFunction) => void;
 
 /**
@@ -225,7 +292,31 @@ export function jwtGetContext(req: any): JwtContext;
 /**
  * Validates the JWT from the Authorization header and extracts it into req.jwt.
  */
-export function jwtValidateAndExtract(req: AuthenticatedRequest, publicKey: string, customErrorFunction?: () => void): void;
+export function jwtValidateAndExtract(
+  req: AuthenticatedRequest,
+  publicKey: string,
+  customErrorFunction?: () => void,
+  options?: UserAuthorizationReadOptions,
+): void;
+
+/**
+ * Validates X-Authorization-Context and extracts it into req.userAuthorization.
+ */
+export function jwtValidateAndExtractUserAuthorization(
+  req: AuthenticatedRequest,
+  publicKey: string,
+  customErrorFunction?: () => void,
+  options?: UserAuthorizationTokenOptions,
+): void;
+
+/**
+ * Validates X-Authorization-Context and extracts it into req.userAuthorization (no-throw).
+ */
+export function jwtValidateAndExtractUserAuthorizationNoThrow(
+  req: AuthenticatedRequest,
+  publicKey: string,
+  options?: UserAuthorizationTokenOptions,
+): void;
 
 /**
  * Validates a service-to-service JWT from the Authorization header and extracts it into req.jwt.
@@ -236,6 +327,7 @@ export function jwtValidateAndExtractService(
   expectedIssuer: string,
   expectedAudience: string,
   customErrorFunction?: () => void,
+  options?: UserAuthorizationReadOptions,
 ): void;
 
 /**
@@ -247,6 +339,7 @@ export function jwtValidateAndExtractOrServerAuth(
   publicKey: string,
   serverAuthIntrospector: ServerAuthIntrospector,
   customErrorFunction?: () => void,
+  options?: UserAuthorizationReadOptions,
 ): Promise<void>;
 
 /**
@@ -257,22 +350,32 @@ export function jwtValidateAndExtractWebToken(
   publicKey: string,
   headerName: string,
   customErrorFunction?: () => void,
+  options?: UserAuthorizationReadOptions,
 ): void;
 
 /**
  * Validates the JWT from the Authorization header and extracts it into req.jwt (no-throw).
  */
-export function jwtValidateAndExtractNoThrow(req: AuthenticatedRequest, publicKey: string): void;
+export function jwtValidateAndExtractNoThrow(req: AuthenticatedRequest, publicKey: string, options?: UserAuthorizationReadOptions): void;
 
 /**
  * Validates the JWT from a custom header and extracts it into req.jwt (no-throw).
  */
-export function jwtValidateAndExtractWebTokenNoThrow(req: AuthenticatedRequest, publicKey: string, headerName: string): void;
+export function jwtValidateAndExtractWebTokenNoThrow(
+  req: AuthenticatedRequest,
+  publicKey: string,
+  headerName: string,
+  options?: UserAuthorizationReadOptions,
+): void;
 
 /**
  * Validates the visitor token from the 'Visitor' header and extracts it into req.visitor (no-throw).
  */
-export function jwtValidateAndExtractVisitorNoThrow(req: AuthenticatedRequest, publicKey: string): void;
+export function jwtValidateAndExtractVisitorNoThrow(
+  req: AuthenticatedRequest,
+  publicKey: string,
+  options?: UserAuthorizationReadOptions,
+): void;
 
 /**
  * Returns middleware that verifies a service-to-service JWT from one expected sender.
@@ -282,6 +385,7 @@ export function jwtVerifyService(
   expectedIssuer: string,
   expectedAudience: string,
   customErrorFunction?: () => void,
+  options?: UserAuthorizationReadOptions,
 ): (req: AuthenticatedRequest, res: Response, next: NextFunction) => void;
 
 /**
@@ -292,6 +396,7 @@ export function jwtVerifyService(
 export function verifyJwt(
   publicKey: string,
   customErrorFunction?: () => void,
+  options?: UserAuthorizationReadOptions,
 ): (req: AuthenticatedRequest, res: Response, next: NextFunction) => void;
 
 /**
@@ -303,6 +408,7 @@ export function verifyWebToken(
   publicKey: string,
   headerName: string,
   customErrorFunction?: () => void,
+  options?: UserAuthorizationReadOptions,
 ): (req: AuthenticatedRequest, res: Response, next: NextFunction) => void;
 
 /**
@@ -310,7 +416,10 @@ export function verifyWebToken(
  * and extracts it into req.jwt. Returns false instead of throwing if invalid.
  * @deprecated use jwtVerifyNoThrow
  */
-export function verifyJwtNoThrow(publicKey: string): (req: AuthenticatedRequest, res: Response, next: NextFunction) => void;
+export function verifyJwtNoThrow(
+  publicKey: string,
+  options?: UserAuthorizationReadOptions,
+): (req: AuthenticatedRequest, res: Response, next: NextFunction) => void;
 
 /**
  * Returns a middleware that verifies a JWT from a custom header and extracts it into req.jwt.
@@ -320,6 +429,7 @@ export function verifyJwtNoThrow(publicKey: string): (req: AuthenticatedRequest,
 export function verifyWebTokenNoThrow(
   publicKey: string,
   headerName: string,
+  options?: UserAuthorizationReadOptions,
 ): (req: AuthenticatedRequest, res: Response, next: NextFunction) => void;
 
 /**
@@ -327,7 +437,10 @@ export function verifyWebTokenNoThrow(
  * and extracts it into req.visitor. Returns false instead of throwing if invalid.
  * @deprecated use jwtVerifyVisitorNoThrow
  */
-export function verifyVisitorNoThrow(publicKey: string): (req: AuthenticatedRequest, res: Response, next: NextFunction) => void;
+export function verifyVisitorNoThrow(
+  publicKey: string,
+  options?: UserAuthorizationReadOptions,
+): (req: AuthenticatedRequest, res: Response, next: NextFunction) => void;
 
 /**
  * Returns the sub from the extracted JWT in req.jwt.
@@ -365,6 +478,7 @@ export function verifyJwtAndRole(
   userRole: string,
   publicKey: string,
   customErrorFunction?: () => void,
+  options?: UserAuthorizationReadOptions,
 ): (req: AuthenticatedRequest, res: Response, next: NextFunction) => void;
 
 /**
