@@ -141,6 +141,9 @@ database context and role checks.
 Use `jwtVerifyUserAuthorization` when a route needs to verify only the compact
 authorization-context token carried in `X-Authorization-Context`. The token is
 read as a raw JWT header value, not as `Bearer <token>`.
+The exported `DEFAULT_USER_AUTHORIZATION_MAX_TOKEN_LENGTH` is `2048`; token
+issuers and consumers should use that shared constant instead of duplicating a
+local limit.
 
 ```javascript
 const { jwtVerifyUserAuthorization } = require('@carecard/jwt-read');

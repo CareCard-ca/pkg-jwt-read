@@ -106,6 +106,11 @@ depend on those folders being present.
 - Request attachment behavior for authenticated JWT objects and visitor tokens.
 - Request attachment behavior for compact scoped authorization-context JWTs
   from `X-Authorization-Context` as `req.userAuthorization`.
+- Shared header defaults for scoped authorization context:
+  `DEFAULT_USER_AUTHORIZATION_HEADER_NAME` and
+  `DEFAULT_USER_AUTHORIZATION_MAX_TOKEN_LENGTH`. Token issuers and consuming
+  services should import these constants instead of duplicating the header name
+  or 2048-character limit.
 - Server-auth request attachment behavior that normalizes introspected claims
   into `req.jwt.payload` with `authMode: "server-auth"` and
   `auth_mode: "server-auth"`.
