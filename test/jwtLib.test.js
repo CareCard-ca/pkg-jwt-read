@@ -1,6 +1,7 @@
 const { describe, it } = require('mocha');
 const assert = require('assert');
 const Module = require('module');
+const jwtRead = require('../index');
 const jwtLib = require('../lib/jwtLib');
 const { publicKey, privateKey } = require('./keys/keys');
 const { generateKeyPair, jwtCreateSignedToken, jwtGetHeaderPayload } = require('@carecard/auth-util');
@@ -262,12 +263,20 @@ describe('Lib jwtLib.js', function () {
     });
 
     it('rejects oversized X-Authorization-Context tokens', function () {
-      const req = { get: h => (h === 'X-Authorization-Context' ? `${jwtString}${'.'.repeat(2050)}` : null) };
+      const oversizePadding = '.'.repeat(jwtRead.DEFAULT_USER_AUTHORIZATION_MAX_TOKEN_LENGTH + 1);
+      const req = { get: h => (h === jwtRead.DEFAULT_USER_AUTHORIZATION_HEADER_NAME ? `${jwtString}${oversizePadding}` : null) };
 
       assert.throws(() => {
         jwtLib.validateAndExtractUserAuthorizationObject(req, publicKey);
       });
       assert.strictEqual(req.userAuthorization, null);
+    });
+
+    it('exports the default X-Authorization-Context header settings', function () {
+      assert.strictEqual(jwtRead.DEFAULT_USER_AUTHORIZATION_HEADER_NAME, 'X-Authorization-Context');
+      assert.strictEqual(jwtRead.DEFAULT_USER_AUTHORIZATION_MAX_TOKEN_LENGTH, 2048);
+      assert.strictEqual(jwtLib.DEFAULT_USER_AUTHORIZATION_HEADER_NAME, jwtRead.DEFAULT_USER_AUTHORIZATION_HEADER_NAME);
+      assert.strictEqual(jwtLib.DEFAULT_USER_AUTHORIZATION_MAX_TOKEN_LENGTH, jwtRead.DEFAULT_USER_AUTHORIZATION_MAX_TOKEN_LENGTH);
     });
 
     it('rejects invalid user authorization claim variants', function () {
