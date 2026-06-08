@@ -4,6 +4,9 @@
 
 import { NextFunction, Request, Response } from 'express';
 
+export const DEFAULT_USER_AUTHORIZATION_HEADER_NAME: 'X-Authorization-Context';
+export const DEFAULT_USER_AUTHORIZATION_MAX_TOKEN_LENGTH: 2048;
+
 /**
  * Represents the standard JWT header structure.
  */

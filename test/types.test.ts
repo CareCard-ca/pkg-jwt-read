@@ -2,6 +2,8 @@ import assert from 'assert';
 import { describe, it } from 'mocha';
 import {
   AuthenticatedRequest,
+  DEFAULT_USER_AUTHORIZATION_HEADER_NAME,
+  DEFAULT_USER_AUTHORIZATION_MAX_TOKEN_LENGTH,
   doesJwtUserHasRole,
   getCodeOfRole,
   getNameOfRole,
@@ -52,6 +54,14 @@ describe('TypeScript Type Definitions - JWT Read Utilities', () => {
   it('should verify role mapping functions', () => {
     assert.strictEqual(getNameOfRole('ad'), 'admin');
     assert.strictEqual(getCodeOfRole('admin'), 'ad');
+  });
+
+  it('should verify exported user authorization header defaults', () => {
+    const headerName: 'X-Authorization-Context' = DEFAULT_USER_AUTHORIZATION_HEADER_NAME;
+    const maxTokenLength: 2048 = DEFAULT_USER_AUTHORIZATION_MAX_TOKEN_LENGTH;
+
+    assert.strictEqual(headerName, 'X-Authorization-Context');
+    assert.strictEqual(maxTokenLength, 2048);
   });
 
   it('should verify new jwt utility names', () => {
