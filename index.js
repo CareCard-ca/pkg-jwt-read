@@ -2,6 +2,8 @@ const jwtLib = require('./lib/jwtLib');
 const jwtRoles = require('./lib/jwtRoles');
 
 module.exports = {
+  DEFAULT_USER_AUTHORIZATION_HEADER_NAME: jwtLib.DEFAULT_USER_AUTHORIZATION_HEADER_NAME,
+  DEFAULT_USER_AUTHORIZATION_MAX_TOKEN_LENGTH: jwtLib.DEFAULT_USER_AUTHORIZATION_MAX_TOKEN_LENGTH,
   jwtVerify: jwtLib.verifyJwt,
   jwtVerifyWebToken: jwtLib.verifyWebToken,
   jwtVerifyNoThrow: jwtLib.verifyJwtNoThrow,
