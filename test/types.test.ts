@@ -152,7 +152,7 @@ describe('TypeScript Type Definitions - JWT Read Utilities', () => {
       iss: 'ms-institutions',
       aud: 'ms-documents',
       sub: '6f4cb7f4-2c2a-4a91-9b56-3e5389703d42',
-      schema: 'carecard',
+      schema: 'documents',
       table: 'documents',
       actions: ['read'],
       scopeType: 'self',
@@ -218,7 +218,7 @@ describe('TypeScript Type Definitions - JWT Read Utilities', () => {
         payload: {
           typ: 'carecard.authorization-context.scoped.v1',
           sub: '6f4cb7f4-2c2a-4a91-9b56-3e5389703d42',
-          schema: 'carecard',
+          schema: 'documents',
           table: 'documents',
           actions: ['read'],
           scopeType: 'self',
