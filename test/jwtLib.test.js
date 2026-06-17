@@ -244,7 +244,7 @@ describe('Lib jwtLib.js', function () {
       assert.strictEqual(req.userAuthorization.payload.typ, 'carecard.authorization-context.scoped.v1');
       assert.strictEqual(req.userAuthorization.payload.iss, 'ms-institutions');
       assert.strictEqual(req.userAuthorization.payload.aud, 'ms-documents');
-      assert.strictEqual(req.userAuthorization.payload.schema, 'carecard');
+      assert.strictEqual(req.userAuthorization.payload.schema, 'documents');
     });
 
     it('rejects missing X-Authorization-Context when called directly', function () {
@@ -1523,7 +1523,7 @@ function buildSignedUserAuthorizationTokenFixture({
     iss: issuer,
     aud: audience,
     sub: subject,
-    schema: 'carecard',
+    schema: 'documents',
     table: 'documents',
     actions: ['read'],
     scopeType: 'self',
