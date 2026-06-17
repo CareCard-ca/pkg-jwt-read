@@ -7,6 +7,4 @@ module.exports = {
   printWidth: 140,
   useTabs: false,
   endOfLine: 'auto',
-  importOrderSeparation: true,
-  importOrderSortSpecifiers: true,
 };
