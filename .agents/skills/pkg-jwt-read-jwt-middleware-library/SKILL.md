@@ -5,6 +5,8 @@ description: 'Use when changing pkg-jwt-read JWT parsing, middleware, visitor to
 
 # Package JWT Read
 
+Non-negotiable TDD rule: Always write the failing test first, run it to confirm it fails for the intended reason, then implement the code and rerun the test until it passes. Test Driven Development is required for all coding work and must not be skipped. For documentation- or skill-only edits, add or update the relevant validation check before changing the prose.
+
 ## Purpose
 
 CareCard JWT read package for parsing, request attachment, visitor tokens, role mapping, JWT-or-server-auth authorization middleware, exports, and tests.

@@ -5,6 +5,8 @@ description: 'Use only when the user explicitly asks for remote Git or GitHub PR
 
 # Pull Request Create
 
+Non-negotiable TDD rule: Always write the failing test first, run it to confirm it fails for the intended reason, then implement the code and rerun the test until it passes. Test Driven Development is required for all coding work and must not be skipped. For documentation- or skill-only edits, add or update the relevant validation check before changing the prose.
+
 ## Purpose
 
 After the user explicitly asks for remote Git or GitHub PR work, create,
