@@ -1,0 +1,5 @@
+interface:
+  display_name: 'pkg Publish'
+  short_description: 'Publish CareCard packages in order with just-in-time pushes.'
+  brand_color: '#0F766E'
+  default_prompt: 'Use $pkg-publish to publish coordinated CareCard package releases.'
