@@ -8,6 +8,12 @@ ecosystem. It also provides the shared request middleware used by `ms-*`
 services to accept either an `ms-auth` JWT or an opaque server-auth token
 introspected by `ms-auth`.
 
+## Development Rule
+
+Non-negotiable TDD rule: Always write the failing test first, run it to confirm it fails for the intended reason, then implement the code and rerun the test until it passes. Test Driven Development is required for all coding work and must not be skipped. For documentation- or skill-only edits, add or update the relevant validation check before changing the prose.
+
+Non-negotiable code organization rule: Functions with the same or equivalent behavior must use the same or clearly corresponding descriptive names across CareCard repositories, and equivalent functionality must live in files with the same names within each repository's established architecture. No backward compatibility names, aliases, or duplicate locations are allowed.
+
 ## Features
 
 - **JWT Verification**: Middleware-like utilities for signature and role verification.
