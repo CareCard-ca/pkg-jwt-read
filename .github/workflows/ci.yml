@@ -1,64 +1,58 @@
 name: CI
 
 on:
+  workflow_dispatch:
   push:
-    branches:
-      - main
-      - develop
-      - development
-      - dev*
-      - feature/**
-      - feat/**
-      - improvement/**
-      - releases/**
-      - release*
-      - hotfix/**
-      - iss/**
-      - fix/**
-      - data**
-      - data/**
-    paths-ignore:
-      - '**.md'
   pull_request:
-    types: [closed]
-    branches:
-      - main
-      - develop
-      - development
-      - dev*
-      - feature/**
-      - feat/**
-      - improvement/**
-      - releases/**
-      - release*
-      - hotfix/**
-      - iss/**
-      - fix/**
-      - data**
-      - data/**
-    paths-ignore:
-      - '**.md'
+    types:
+      - opened
+      - synchronize
+      - reopened
+      - ready_for_review
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event_name }}-${{ github.head_ref || github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+
+env:
+  CI: true
 
 jobs:
-  test:
-    if: github.event_name == 'push' || github.event.pull_request.merged == true
+  validate:
+    name: Validate
     runs-on: ubuntu-latest
-
+    timeout-minutes: 30
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v5
-
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
+        uses: actions/checkout@v7
         with:
-          node-version: '25'
-          cache: 'npm'
-
+          persist-credentials: false
+      - name: Set up Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: 24.18.0
+          cache: npm
+          cache-dependency-path: package-lock.json
+      - name: Check whitespace
+        run: git diff --check
       - name: Install dependencies
         run: npm ci
-
-      - name: Run tests
-        run: npm run test:All
-
-      - name: Run tests with coverage
+      - name: Run lint
+        run: npm run lint
+      - name: Check formatting
+        run: npm run format:check
+      - name: Run lightweight package tests
+        if: ${{ github.event_name == 'push' && github.ref != 'refs/heads/main' }}
+        run: npm test
+      - name: Run package type tests
+        if: ${{ github.event_name == 'pull_request' || github.ref == 'refs/heads/main' }}
+        run: npm run test:types
+      - name: Run package coverage tests
+        if: ${{ github.event_name == 'pull_request' || github.ref == 'refs/heads/main' }}
         run: npm run test:coverage
+      - name: Validate package tarball
+        if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
+        run: npm pack --dry-run
