@@ -1,47 +1,20 @@
 name: CI
 
 on:
-  push:
-    branches:
-      - main
-      - develop
-      - development
-      - dev*
-      - feature/**
-      - feat/**
-      - improvement/**
-      - releases/**
-      - release*
-      - hotfix/**
-      - iss/**
-      - fix/**
-      - data**
-      - data/**
-    paths-ignore:
-      - '**.md'
   pull_request:
-    types: [closed]
+    types:
+      - opened
+      - synchronize
+      - reopened
+      - ready_for_review
     branches:
-      - main
-      - develop
       - development
-      - dev*
-      - feature/**
-      - feat/**
-      - improvement/**
-      - releases/**
-      - release*
-      - hotfix/**
-      - iss/**
-      - fix/**
-      - data**
-      - data/**
+      - main
     paths-ignore:
       - '**.md'
 
 jobs:
   test:
-    if: github.event_name == 'push' || github.event.pull_request.merged == true
     runs-on: ubuntu-latest
 
     steps:
