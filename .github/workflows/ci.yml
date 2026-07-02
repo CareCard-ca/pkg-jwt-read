@@ -1,20 +1,21 @@
-name: CI
+name: CI_Tests
 
 on:
   pull_request:
-    types:
-      - opened
-      - synchronize
-      - reopened
-      - ready_for_review
     branches:
       - development
       - main
+    types:
+      - opened
+      - reopened
+      - synchronize
+      - ready_for_review
     paths-ignore:
       - '**.md'
 
 jobs:
   test:
+    name: CI_Tests
     runs-on: ubuntu-latest
 
     steps:
