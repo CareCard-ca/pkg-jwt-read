@@ -1,57 +1,31 @@
-name: CI
+name: CI_Tests
 
 on:
-  push:
-    branches:
-      - main
-      - develop
-      - development
-      - dev*
-      - feature/**
-      - feat/**
-      - improvement/**
-      - releases/**
-      - release*
-      - hotfix/**
-      - iss/**
-      - fix/**
-      - data**
-      - data/**
-    paths-ignore:
-      - '**.md'
   pull_request:
-    types: [closed]
     branches:
-      - main
-      - develop
       - development
-      - dev*
-      - feature/**
-      - feat/**
-      - improvement/**
-      - releases/**
-      - release*
-      - hotfix/**
-      - iss/**
-      - fix/**
-      - data**
-      - data/**
+      - main
+    types:
+      - opened
+      - reopened
+      - synchronize
+      - ready_for_review
     paths-ignore:
       - '**.md'
 
 jobs:
   test:
-    if: github.event_name == 'push' || github.event.pull_request.merged == true
+    name: CI_Tests
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v5
+        uses: actions/checkout@v7
 
       - name: Set up Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
-          node-version: '25'
+          node-version: 24.18.0
           cache: 'npm'
 
       - name: Install dependencies
