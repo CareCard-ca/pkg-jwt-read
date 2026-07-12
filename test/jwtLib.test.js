@@ -816,6 +816,39 @@ describe('Lib jwtLib.js', function () {
       assert.strictEqual(typeof payloadWithNumericExpiration.exp, 'number');
     });
 
+    it('preserves exact server-auth email confirmation claim names and values', function () {
+      const emailConfirmationClaims = {
+        emailVerified: false,
+        email_verified: true,
+        emailConfirmed: false,
+        email_confirmed: true,
+      };
+      const emailConfirmationClaimNames = Object.keys(emailConfirmationClaims);
+
+      for (const [claimName, claimValue] of Object.entries(emailConfirmationClaims)) {
+        const payload = jwtLib.createServerAuthPayload({
+          userId: '9f8baf8a-c2de-4e88-bf04-46773704ca9f',
+          [claimName]: claimValue,
+        });
+        const attachedConfirmationClaimNames = emailConfirmationClaimNames.filter(name =>
+          Object.prototype.hasOwnProperty.call(payload, name),
+        );
+
+        assert.deepStrictEqual(attachedConfirmationClaimNames, [claimName]);
+        assert.strictEqual(payload[claimName], claimValue);
+      }
+    });
+
+    it('preserves omitted server-auth email confirmation claims without inventing a value', function () {
+      const payload = jwtLib.createServerAuthPayload({
+        userId: '9f8baf8a-c2de-4e88-bf04-46773704ca9f',
+      });
+
+      for (const claimName of ['emailVerified', 'email_verified', 'emailConfirmed', 'email_confirmed']) {
+        assert.strictEqual(Object.prototype.hasOwnProperty.call(payload, claimName), false);
+      }
+    });
+
     it('rejects server-auth claims without a subject and a null request', function () {
       assert.throws(() => {
         jwtLib.attachServerAuthClaims(null, { valid: true });

@@ -7,6 +7,8 @@ description: 'Use when changing pkg-jwt-read JWT parsing, middleware, visitor to
 
 Non-negotiable TDD rule: Always write the failing test first, run it to confirm it fails for the intended reason, then implement the code and rerun the test until it passes. Test Driven Development is required for all coding work and must not be skipped. For documentation- or skill-only edits, add or update the relevant validation check before changing the prose.
 
+Non-negotiable repository isolation rule: Every repository must run its Husky hooks and tests using only files, code, fixtures, dependencies, and services contained within that repository. Tests and Husky scripts must not import, require, read, execute, or otherwise depend on sibling repositories or paths outside the repository root. app-e2e-tests is the only exception because cross-repository end-to-end testing is its explicit responsibility.
+
 Non-negotiable code organization rule: Functions with the same or equivalent behavior must use the same or clearly corresponding descriptive names across CareCard repositories, and equivalent functionality must live in files with the same names within each repository's established architecture. No backward compatibility names, aliases, or duplicate locations are allowed.
 
 ## Purpose
@@ -118,6 +120,9 @@ depend on those folders being present.
 - Server-auth request attachment behavior that normalizes introspected claims
   into `req.jwt.payload` with `authMode: "server-auth"` and
   `auth_mode: "server-auth"`.
+- Server-auth email confirmation claims are copied only when present. The
+  `emailVerified`, `email_verified`, `emailConfirmed`, and `email_confirmed`
+  aliases retain their exact names and values, and omission remains omission.
 - Integration with `@carecard/common-util` for standardized login and
   authorization errors.
 
