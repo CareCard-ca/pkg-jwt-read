@@ -41,7 +41,7 @@
     "typescript": "6.0.3"
   },
   "dependencies": {
-    "@carecard/auth-util": "3.9.0",
+    "@carecard/auth-util": "3.10.0",
     "@carecard/common-util": "3.10.0",
     "@carecard/validate": "3.10.0"
   },
