@@ -212,7 +212,7 @@ build artifacts, logs, or `.DS_Store`.
 
 Most JavaScript `ms-*` services use CommonJS, Mocha, Supertest, Docker Compose
 database tests, `@carecard/*` packages, and `sub-apps`
-controller/router/model patterns. TypeScript services such as `ms-contact-us`
+controller/router/model patterns. TypeScript services such as `ms-messages`
 and `ms-template-ts` use Jest or TypeScript tooling and should keep their
 existing TypeScript style.
 
@@ -311,7 +311,7 @@ existing TypeScript style.
 
 `app-dashboard` is a Next.js App Router TypeScript app using MUI, React Query,
 `next-intl`, and shared CareCard utilities. It consumes `ms-auth`,
-`ms-institutions`, `ms-contact-us`, and `ms-user-profiles` through service
+`ms-institutions`, `ms-messages`, and `ms-user-profiles` through service
 modules.
 
 - Keep backend URL definitions centralized in `src/services/api.routes.ts`.
