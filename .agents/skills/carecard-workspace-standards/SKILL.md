@@ -215,7 +215,7 @@ build artifacts, logs, or `.DS_Store`.
 Most JavaScript `ms-*` services use CommonJS, Mocha, Supertest, Docker Compose
 database tests, `@carecard/*` packages, and `sub-apps`
 controller/router/model patterns. TypeScript services such as `ms-messages`
-and `ms-template-ts` use Jest or TypeScript tooling and should keep their
+use Jest or TypeScript tooling and should keep their
 existing TypeScript style.
 
 - Keep environment-specific files explicit: `.env.development`, `.env.test`,
@@ -380,7 +380,7 @@ the authenticated dashboard.
 
 ## Auth Service RLS Contract
 
-- `ms-auth` follows the shared PostgreSQL/RLS pattern from `ms-template-js`: auth tables live in the `carecard` schema, RLS is enabled and forced on every auth table, and application runtime queries use the unprivileged database role.
+- `ms-auth` follows the shared PostgreSQL/RLS pattern: auth tables live in the `carecard` schema, RLS is enabled and forced on every auth table, and application runtime queries use the unprivileged database role.
 - Auth table policies allow normal JWT or server-auth users to access only
   self-owned rows. Do not add redundant `user_id = <jwt sub>` SQL predicates to
   duplicate self-row checks when RLS owns the authorization decision.
