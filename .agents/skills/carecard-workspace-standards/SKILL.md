@@ -7,6 +7,8 @@ description: 'Follow the shared SO_CareCardCa/CareCard workspace coding, testing
 
 Non-negotiable TDD rule: Always write the failing test first, run it to confirm it fails for the intended reason, then implement the code and rerun the test until it passes. Test Driven Development is required for all coding work and must not be skipped. For documentation- or skill-only edits, add or update the relevant validation check before changing the prose.
 
+Non-negotiable repository isolation rule: Every repository must run its Husky hooks and tests using only files, code, fixtures, dependencies, and services contained within that repository. Tests and Husky scripts must not import, require, read, execute, or otherwise depend on sibling repositories or paths outside the repository root. app-e2e-tests is the only exception because cross-repository end-to-end testing is its explicit responsibility.
+
 Non-negotiable code organization rule: Functions with the same or equivalent behavior must use the same or clearly corresponding descriptive names across CareCard repositories, and equivalent functionality must live in files with the same names within each repository's established architecture. No backward compatibility names, aliases, or duplicate locations are allowed.
 
 ## Purpose
@@ -213,7 +215,7 @@ build artifacts, logs, or `.DS_Store`.
 Most JavaScript `ms-*` services use CommonJS, Mocha, Supertest, Docker Compose
 database tests, `@carecard/*` packages, and `sub-apps`
 controller/router/model patterns. TypeScript services such as `ms-messages`
-and `ms-template-ts` use Jest or TypeScript tooling and should keep their
+use Jest or TypeScript tooling and should keep their
 existing TypeScript style.
 
 - Keep environment-specific files explicit: `.env.development`, `.env.test`,
@@ -378,7 +380,7 @@ the authenticated dashboard.
 
 ## Auth Service RLS Contract
 
-- `ms-auth` follows the shared PostgreSQL/RLS pattern from `ms-template-js`: auth tables live in the `carecard` schema, RLS is enabled and forced on every auth table, and application runtime queries use the unprivileged database role.
+- `ms-auth` follows the shared PostgreSQL/RLS pattern: auth tables live in the `carecard` schema, RLS is enabled and forced on every auth table, and application runtime queries use the unprivileged database role.
 - Auth table policies allow normal JWT or server-auth users to access only
   self-owned rows. Do not add redundant `user_id = <jwt sub>` SQL predicates to
   duplicate self-row checks when RLS owns the authorization decision.
