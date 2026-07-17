@@ -45,7 +45,8 @@ jobs:
           echo "package_name=${package_name}" >> "$GITHUB_OUTPUT"
           echo "package_version=${package_version}" >> "$GITHUB_OUTPUT"
 
-          if npm view "${package_name}@${package_version}" version >/dev/null 2>&1; then
+          published_versions="$(npm view "${package_name}" versions --json)"
+          if node -e 'const value=JSON.parse(process.argv[1]); const versions=Array.isArray(value) ? value : [value]; process.exit(versions.includes(process.argv[2]) ? 0 : 1);' "$published_versions" "$package_version"; then
             echo "${package_name}@${package_version} is already published."
             echo "should_publish=false" >> "$GITHUB_OUTPUT"
           else

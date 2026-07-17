@@ -21,18 +21,15 @@ describe('Lib jwtLib.js', function () {
       assert.strictEqual(result, jwtString);
     });
 
-    it('should return null if not Bearer', function () {
-      assert.strictEqual(
-        jwtLib._extractJwt('NotBearer token', () => {}),
-        null,
+    it('should fail closed if a non-Bearer token handler returns normally', function () {
+      assert.throws(
+        () => jwtLib._extractJwt('NotBearer token', () => {}),
+        /Custom authentication error function returned without throwing/,
       );
     });
 
-    it('should return null if input is null', function () {
-      assert.strictEqual(
-        jwtLib._extractJwt(null, () => {}),
-        null,
-      );
+    it('should fail closed if a null-token handler returns normally', function () {
+      assert.throws(() => jwtLib._extractJwt(null, () => {}), /Custom authentication error function returned without throwing/);
     });
   });
 
@@ -42,11 +39,8 @@ describe('Lib jwtLib.js', function () {
       assert.strictEqual(result, jwtString);
     });
 
-    it('should return null if input is null', function () {
-      assert.strictEqual(
-        jwtLib._extractWebToken(null, () => {}),
-        null,
-      );
+    it('should fail closed if a null web-token handler returns normally', function () {
+      assert.throws(() => jwtLib._extractWebToken(null, () => {}), /Custom authentication error function returned without throwing/);
     });
   });
 
@@ -67,13 +61,9 @@ describe('Lib jwtLib.js', function () {
       assert.throws(() => jwtLib._validateJwt(req));
     });
 
-    it('should handle invalid input in _validateJwt', function () {
+    it('should fail closed when a custom handler returns for invalid input', function () {
       const req = { get: () => 'not-a-jwt' };
-      try {
-        jwtLib._validateJwt(req, () => {});
-      } catch (e) {
-        assert.ok(e);
-      }
+      assert.throws(() => jwtLib._validateJwt(req, () => {}), /Custom authentication error function returned without throwing/);
     });
   });
 
@@ -105,12 +95,11 @@ describe('Lib jwtLib.js', function () {
       assert.strictEqual(isValid, false);
     });
 
-    it('should handle null in _isJwtSignatureValid', async function () {
-      try {
-        await jwtLib._isJwtSignatureValid(null, publicKey, () => {});
-      } catch (e) {
-        assert.ok(e);
-      }
+    it('should fail closed when a custom handler returns for a null JWT', async function () {
+      await assert.rejects(
+        () => jwtLib._isJwtSignatureValid(null, publicKey, () => {}),
+        /Custom authentication error function returned without throwing/,
+      );
     });
   });
 
@@ -134,12 +123,11 @@ describe('Lib jwtLib.js', function () {
       assert.strictEqual(req.jwt, null);
     });
 
-    it('should handle non-string in _extractJwtObject', function () {
-      try {
-        jwtLib._extractJwtObject({}, 123, () => {});
-      } catch (e) {
-        assert.ok(e);
-      }
+    it('should clear the JWT and fail closed when a custom handler returns for non-string input', function () {
+      const req = {};
+
+      assert.throws(() => jwtLib._extractJwtObject(req, 123, () => {}), /Custom authentication error function returned without throwing/);
+      assert.strictEqual(req.jwt, null);
     });
   });
 
@@ -151,14 +139,14 @@ describe('Lib jwtLib.js', function () {
       assert.strictEqual(req.jwt.payload.sub, '8b0db877-a6b3-4a23-a493-e687915cdd87');
     });
 
-    it('should throw error for invalid signature', async function () {
+    it('should clear the JWT and fail closed when a custom handler returns for an invalid signature', async function () {
       const req = { get: h => (h === 'Authorization' ? 'Bearer ' + jwtStringBad : null) };
-      try {
-        await jwtLib.validateAndExtractJwtObject(req, publicKey, () => {});
-        assert.fail('Should have thrown');
-      } catch (e) {
-        assert.ok(e);
-      }
+
+      assert.throws(
+        () => jwtLib.validateAndExtractJwtObject(req, publicKey, () => {}),
+        /Custom authentication error function returned without throwing/,
+      );
+      assert.strictEqual(req.jwt, null);
     });
 
     it('optionally validates X-Authorization-Context without replacing req.jwt', function () {
@@ -440,7 +428,7 @@ describe('Lib jwtLib.js', function () {
       assert.strictEqual(reqWithMissingLowercaseHeader.userAuthorization, null);
     });
 
-    it('rejects user authorization when payload decoding fails after signature validation', function () {
+    it('propagates unexpected payload decoding failures after signature validation', function () {
       const mockedJwtLib = requireJwtLibWithAuthUtilMock({
         jwtVerifySignedToken: () => true,
         jwtGetHeaderPayload: () => {
@@ -449,9 +437,7 @@ describe('Lib jwtLib.js', function () {
       });
       const req = { get: h => (h === 'X-Authorization-Context' ? buildSignedUserAuthorizationTokenFixture() : null) };
 
-      mockedJwtLib.validateAndExtractUserAuthorizationObjectNoThrow(req, publicKey);
-
-      assert.strictEqual(req.userAuthorization, null);
+      assert.throws(() => mockedJwtLib.validateAndExtractUserAuthorizationObjectNoThrow(req, publicKey), /decode failed/);
     });
 
     it('rejects user authorization when decoded JWT has no payload after signature validation', function () {
@@ -468,6 +454,16 @@ describe('Lib jwtLib.js', function () {
   });
 
   describe('validateAndExtractJwtOrServerAuthObject', function () {
+    // Pattern: State Verification - confirms invalid JWT cleanup before server-auth fallback.
+    it('clears a JWT with an invalid signature before server-auth fallback', function () {
+      const req = { get: h => (h === 'Authorization' ? 'Bearer ' + jwtStringBad : null) };
+
+      const wasJwtExtracted = jwtLib.tryValidateAndExtractJwtObject(req, publicKey);
+
+      assert.strictEqual(wasJwtExtracted, false);
+      assert.strictEqual(req.jwt, null);
+    });
+
     it('uses a valid JWT without calling the server-auth introspector', async function () {
       const req = { get: h => (h === 'Authorization' ? 'Bearer ' + jwtString : null) };
       let introspectorCalled = false;
@@ -519,28 +515,32 @@ describe('Lib jwtLib.js', function () {
       assert.strictEqual(req.jwt.payload.authMode, 'server-auth');
     });
 
-    it('continues server-auth validation when a custom missing-token handler does not throw', async function () {
+    it('fails closed when a custom missing-token handler returns normally', async function () {
       const req = { get: () => null };
       let customErrorCalled = false;
 
-      await jwtLib.validateAndExtractJwtOrServerAuthObject(
-        req,
-        publicKey,
-        token => {
-          assert.strictEqual(token, null);
-          return {
-            valid: true,
-            userId: 'b7c7d232-d421-4e76-8794-578b868b1f56',
-            roles: [],
-          };
-        },
-        () => {
-          customErrorCalled = true;
-        },
+      await assert.rejects(
+        () =>
+          jwtLib.validateAndExtractJwtOrServerAuthObject(
+            req,
+            publicKey,
+            token => {
+              assert.strictEqual(token, null);
+              return {
+                valid: true,
+                userId: 'b7c7d232-d421-4e76-8794-578b868b1f56',
+                roles: [],
+              };
+            },
+            () => {
+              customErrorCalled = true;
+            },
+          ),
+        /Custom authentication error function returned without throwing/,
       );
 
       assert.strictEqual(customErrorCalled, true);
-      assert.strictEqual(req.jwt.payload.sub, 'b7c7d232-d421-4e76-8794-578b868b1f56');
+      assert.strictEqual(req.jwt, undefined);
     });
 
     it('rejects server-auth when Authorization is missing', async function () {
@@ -1048,15 +1048,16 @@ describe('Lib jwtLib.js', function () {
       assert.strictEqual(req.jwt.payload.roles[0], 'admin');
     });
 
-    it('should throw error if user does not have the role', async function () {
+    it('should pass an error to next if user does not have the role', async function () {
       const req = { get: h => (h === 'Authorization' ? 'Bearer ' + jwtString : null) };
       const middleware = jwtLib.verifyJwtAndRole('admin', publicKey);
-      try {
-        await middleware(req, {}, () => {});
-        assert.fail('Should have thrown');
-      } catch (e) {
-        assert.ok(e);
-      }
+      let errorPassed = null;
+
+      await middleware(req, {}, error => {
+        errorPassed = error;
+      });
+
+      assert.ok(errorPassed instanceof Error);
     });
 
     it('should call next with error if req.get throws', async function () {
@@ -1360,20 +1361,29 @@ describe('Lib jwtLib.js', function () {
       assert.throws(() => jwtLib.throwError(), Error);
     });
 
-    it('should call error function if provided', function () {
+    it('should fail closed if a custom error function returns normally', function () {
       let called = false;
-      jwtLib.throwError(() => {
-        called = true;
-      });
+      assert.throws(
+        () =>
+          jwtLib.throwError(() => {
+            called = true;
+          }),
+        /Custom authentication error function returned without throwing/,
+      );
       assert.ok(called);
     });
 
+    it('should throw an Error returned by a custom error function', function () {
+      const returnedError = new Error('custom authorization failure');
+
+      assert.throws(
+        () => jwtLib.throwError(() => returnedError),
+        error => error === returnedError,
+      );
+    });
+
     it('should cover throwError without function', function () {
-      try {
-        jwtLib.throwError();
-      } catch (e) {
-        assert.ok(e);
-      }
+      assert.throws(() => jwtLib.throwError(), Error);
     });
   });
 
@@ -1420,10 +1430,10 @@ describe('Lib jwtLib.js', function () {
       assert.strictEqual(jwtLib._extractJwtNoThrow(null), null);
     });
 
-    it('should handle non-bearer in _extractJwt', function () {
-      assert.strictEqual(
-        jwtLib._extractJwt('NotBearer token', () => {}),
-        null,
+    it('should fail closed for a non-Bearer token when a custom handler returns', function () {
+      assert.throws(
+        () => jwtLib._extractJwt('NotBearer token', () => {}),
+        /Custom authentication error function returned without throwing/,
       );
     });
 
@@ -1457,28 +1467,21 @@ describe('Lib jwtLib.js', function () {
       assert.strictEqual(result, null);
     });
 
-    it('should handle non-jwt string in _validateWebToken', function () {
+    it('should fail closed for a non-JWT web token when a custom handler returns', function () {
       const req = { get: () => 'not-a-jwt' };
-      const result = jwtLib._validateWebToken(req, 'X', () => {});
-      assert.strictEqual(result, null);
+      assert.throws(() => jwtLib._validateWebToken(req, 'X', () => {}), /Custom authentication error function returned without throwing/);
     });
 
-    it('should handle invalid jwtRaw in _extractJwt', function () {
-      const result = jwtLib._extractJwt(123, () => {});
-      assert.strictEqual(result, null);
+    it('should fail closed for an invalid raw JWT when a custom handler returns', function () {
+      assert.throws(() => jwtLib._extractJwt(123, () => {}), /Custom authentication error function returned without throwing/);
     });
 
-    it('should handle non-bearer in _extractJwt', function () {
-      const result = jwtLib._extractJwt('Basic token', () => {});
-      assert.strictEqual(result, null);
+    it('should fail closed for a Basic token when a custom handler returns', function () {
+      assert.throws(() => jwtLib._extractJwt('Basic token', () => {}), /Custom authentication error function returned without throwing/);
     });
 
     it('_isLoginRequired should handle missing role', function () {
-      try {
-        jwtLib._isLoginRequired(false);
-      } catch (e) {
-        assert.ok(e);
-      }
+      assert.throws(() => jwtLib._isLoginRequired(false));
     });
 
     it('should handle errors in middlewares (no-throw versions)', async function () {
@@ -1506,12 +1509,11 @@ describe('Lib jwtLib.js', function () {
       assert.throws(() => jwtLib.validateAndExtractWebTokenObjectNoThrow(null, publicKey, 'X'));
     });
 
-    it('should handle non-string in _extractJwtObject', function () {
-      try {
-        jwtLib._extractJwtObject({}, 123, () => {});
-      } catch (e) {
-        assert.ok(e);
-      }
+    it('should clear the JWT and fail closed for non-string input when a custom handler returns', function () {
+      const req = {};
+
+      assert.throws(() => jwtLib._extractJwtObject(req, 123, () => {}), /Custom authentication error function returned without throwing/);
+      assert.strictEqual(req.jwt, null);
     });
 
     it('should handle null in _extractJwtObjectNoThrow and _extractVisitorObjectNoThrow', function () {

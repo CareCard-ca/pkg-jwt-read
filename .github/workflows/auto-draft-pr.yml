@@ -102,7 +102,7 @@ jobs:
             --head "$HEAD" \
             --base "$BASE" \
             --json number \
-            --jq '.[0].number' || true)
+            --jq '.[0].number')
 
           if [[ -n "${EXISTING:-}" ]]; then
             echo "An open PR already exists for $HEAD -> $BASE (#$EXISTING). Updating PR metadata."
@@ -165,7 +165,7 @@ jobs:
             exit 0
           fi
 
-          if ! gh issue view "$TICKET_NUMBER" --repo "$REPO" --json number >/dev/null 2>&1; then
+          if ! gh issue view "$TICKET_NUMBER" --repo "$REPO" --json number; then
             echo "GitHub issue #$TICKET_NUMBER was not found. Skipping ticket assignment."
             exit 0
           fi

@@ -9,6 +9,8 @@ Non-negotiable TDD rule: Always write the failing test first, run it to confirm 
 
 Non-negotiable repository isolation rule: Every repository must run its Husky hooks and tests using only files, code, fixtures, dependencies, and services contained within that repository. Tests and Husky scripts must not import, require, read, execute, or otherwise depend on sibling repositories or paths outside the repository root. app-e2e-tests is the only exception because cross-repository end-to-end testing is its explicit responsibility.
 
+Non-negotiable error and warning rule: Never suppress, silence, hide, downgrade, filter, ignore, skip, or bypass errors or warnings from code, tests, tools, compilers, linters, or validation. Fix the root cause, then rerun the affected check and require a clean result. Expected error-path tests may assert errors, but must not conceal unexpected failures.
+
 Non-negotiable code organization rule: Functions with the same or equivalent behavior must use the same or clearly corresponding descriptive names across CareCard repositories, and equivalent functionality must live in files with the same names within each repository's established architecture. No backward compatibility names, aliases, or duplicate locations are allowed.
 
 ## Purpose
@@ -85,7 +87,7 @@ config.
 - Never suppress errors, TypeScript errors, linter warnings, authorization
   failures, RLS failures, build failures, hydration issues, or failing tests.
   Do not add `eslint-disable`, `@ts-ignore`, broad catches, empty catches, or
-  similar suppression unless explicitly requested.
+  similar suppression. Fix the root cause.
 - Do not add dependencies unless clearly necessary. If one might be needed, ask
   first with the reason, tradeoff, and why existing code cannot solve it.
 - Before finalizing repository work, run the affected repository's relevant
