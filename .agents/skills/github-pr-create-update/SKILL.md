@@ -9,6 +9,8 @@ Non-negotiable TDD rule: Always write the failing test first, run it to confirm 
 
 Non-negotiable repository isolation rule: Every repository must run its Husky hooks and tests using only files, code, fixtures, dependencies, and services contained within that repository. Tests and Husky scripts must not import, require, read, execute, or otherwise depend on sibling repositories or paths outside the repository root. app-e2e-tests is the only exception because cross-repository end-to-end testing is its explicit responsibility.
 
+Non-negotiable error and warning rule: Never suppress, silence, hide, downgrade, filter, ignore, skip, or bypass errors or warnings from code, tests, tools, compilers, linters, or validation. Fix the root cause, then rerun the affected check and require a clean result. Expected error-path tests may assert errors, but must not conceal unexpected failures.
+
 Non-negotiable code organization rule: Functions with the same or equivalent behavior must use the same or clearly corresponding descriptive names across CareCard repositories, and equivalent functionality must live in files with the same names within each repository's established architecture. No backward compatibility names, aliases, or duplicate locations are allowed.
 
 ## Purpose
@@ -77,14 +79,20 @@ Do not continue automatically when:
    when `origin/development` is absent:
 
    ```sh
-   if git ls-remote --exit-code --heads origin development >/dev/null 2>&1; then
-     base="development"
-   elif git ls-remote --exit-code --heads origin main >/dev/null 2>&1; then
-     base="main"
-   else
-     echo "No origin/development or origin/main branch exists."
-     exit 1
+   remote_base_refs="$(git ls-remote --heads origin development main)"
+   remote_query_status=$?
+   if [ "$remote_query_status" -ne 0 ]; then
+     printf 'Unable to inspect origin base branches (exit %s).\n' "$remote_query_status" >&2
+     exit "$remote_query_status"
    fi
+   case "$remote_base_refs" in
+     *"refs/heads/development") base="development" ;;
+     *"refs/heads/main") base="main" ;;
+     *)
+       printf '%s\n' "No origin/development or origin/main branch exists." >&2
+       exit 1
+       ;;
+   esac
    git fetch origin "$base" --prune
    ```
 

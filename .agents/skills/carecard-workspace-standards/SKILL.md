@@ -7,7 +7,22 @@ description: 'Follow the shared SO_CareCardCa/CareCard workspace coding, testing
 
 Non-negotiable TDD rule: Always write the failing test first, run it to confirm it fails for the intended reason, then implement the code and rerun the test until it passes. Test Driven Development is required for all coding work and must not be skipped. For documentation- or skill-only edits, add or update the relevant validation check before changing the prose.
 
+This requirement is non-negotiable and may be overridden only with the user's
+explicit, direct approval.
+
+A pre-existing test—defined as any test present before work on the current task
+begins—must not be deleted, disabled, skipped, weakened, excluded from execution,
+or otherwise removed. A pre-existing test must not be modified without the
+user's explicit approval for the exact proposed change. If changing a
+pre-existing test is believed necessary, stop before making the change and
+request approval. The request must identify every affected test, describe the
+precise proposed modification, provide detailed technical justification, and
+explain all known or reasonably foreseeable regression risks. Until approval is
+granted, leave every pre-existing test unchanged.
+
 Non-negotiable repository isolation rule: Every repository must run its Husky hooks and tests using only files, code, fixtures, dependencies, and services contained within that repository. Tests and Husky scripts must not import, require, read, execute, or otherwise depend on sibling repositories or paths outside the repository root. app-e2e-tests is the only exception because cross-repository end-to-end testing is its explicit responsibility.
+
+Non-negotiable error and warning rule: Never suppress, silence, hide, downgrade, filter, ignore, skip, or bypass errors or warnings from code, tests, tools, compilers, linters, or validation. Fix the root cause, then rerun the affected check and require a clean result. Expected error-path tests may assert errors, but must not conceal unexpected failures.
 
 Non-negotiable code organization rule: Functions with the same or equivalent behavior must use the same or clearly corresponding descriptive names across CareCard repositories, and equivalent functionality must live in files with the same names within each repository's established architecture. No backward compatibility names, aliases, or duplicate locations are allowed.
 
@@ -85,7 +100,7 @@ config.
 - Never suppress errors, TypeScript errors, linter warnings, authorization
   failures, RLS failures, build failures, hydration issues, or failing tests.
   Do not add `eslint-disable`, `@ts-ignore`, broad catches, empty catches, or
-  similar suppression unless explicitly requested.
+  similar suppression. Fix the root cause.
 - Do not add dependencies unless clearly necessary. If one might be needed, ask
   first with the reason, tradeoff, and why existing code cannot solve it.
 - Before finalizing repository work, run the affected repository's relevant
