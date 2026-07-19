@@ -3,6 +3,8 @@ name: github-pr-merge-cleanup
 description: 'Use only when the user explicitly asks for remote Git or GitHub PR work: pushing a branch, creating a missing PR, reviewing mergeability, validating, merging, deleting, or cleaning up a pull request branch.'
 ---
 
+Non-negotiable root-cause solution rule: Always identify and solve the verified root cause with a correct, durable, production-quality solution. Never treat a temporary workaround, resource increase, retry, suppression, bypass, or symptom-only patch as completion. Validate the root-cause fix against the real failing workflow and prove the end state.
+
 # Pull Request Merge Close
 
 Non-negotiable TDD rule: Always write the failing test first, run it to confirm it fails for the intended reason, then implement the code and rerun the test until it passes. Test Driven Development is required for all coding work and must not be skipped. For documentation- or skill-only edits, add or update the relevant validation check before changing the prose.
