@@ -3,7 +3,7 @@ name: pkg-publish
 description: 'Use when any pkg-* repository has non-Markdown package changes, including source code, public types, tests, scripts, package metadata, lockfiles, dependency behavior, or validation config, and the CareCard packages must be versioned, published in order with just-in-time package pushes, and propagated to pkg-*, ms-*, and app-dashboard consumers. Do not use for Markdown-only changes.'
 ---
 
-Non-negotiable root-cause solution rule: Always identify and solve the verified root cause with a correct, durable, production-quality solution. Never treat a temporary workaround, resource increase, retry, suppression, bypass, or symptom-only patch as completion. Validate the root-cause fix against the real failing workflow and prove the end state.
+Non-negotiable root-cause solution rule: Always identify and solve the verified root cause, use the stronger solution, and deliver a correct, durable, production-quality result. Never treat a temporary workaround, resource increase, retry, suppression, bypass, or symptom-only patch as completion. Validate the root-cause fix against the real failing workflow and prove the end state.
 
 # pkg Publish
 
