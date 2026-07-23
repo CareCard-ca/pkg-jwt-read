@@ -227,3 +227,21 @@ The package is organized into several modules:
 - `jwtRoles`: Role mapping between internal codes and names.
 
 All modules are exported through the main `index.js`.
+
+## Fail-Closed Test Lifecycle Audit
+
+The current package tests own no HTTP listener, database pool, Kafka client,
+background timer, or child process after completion. Mocha's test timeout fails
+a stalled async test, the suites run without bail or forced exit, and npm
+preserves each command's nonzero status. Keep natural process exit as the open
+handle regression check; validation must not hide failures with retries, forced
+success, skipped tests, or output suppression.
+
+Do not add unpublished executable validation code to a `pkg-*` repository. If a
+future test owns a long-lived resource or demonstrates a post-suite hang, add a
+contract-tested process watchdog through the coordinated package version,
+publish, and consumer propagation workflow. That watchdog must return
+immediately when no helper remains, allow only a bounded 250 ms settlement
+window for already-stopping helpers, fail persistent descendants, preserve
+failures and output, use exit code `124` only for a real outer deadline, and
+remain a final guard rather than a substitute for explicit cleanup.
