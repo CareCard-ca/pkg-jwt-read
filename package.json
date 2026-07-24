@@ -42,9 +42,9 @@
     "typescript": "6.0.3"
   },
   "dependencies": {
-    "@carecard/auth-util": "3.12.0",
+    "@carecard/auth-util": "3.13.0",
     "@carecard/common-util": "3.13.0",
-    "@carecard/validate": "3.12.0"
+    "@carecard/validate": "3.13.0"
   },
   "overrides": {
     "diff": "8.0.4",
