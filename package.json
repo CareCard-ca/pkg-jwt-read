@@ -43,12 +43,13 @@
   },
   "dependencies": {
     "@carecard/auth-util": "3.12.0",
-    "@carecard/common-util": "3.12.0",
+    "@carecard/common-util": "3.13.0",
     "@carecard/validate": "3.12.0"
   },
   "overrides": {
     "diff": "8.0.4",
+    "minimatch": "10.2.5",
     "serialize-javascript": "7.0.5",
-    "js-yaml": "4.2.0"
+    "js-yaml": "4.3.0"
   }
 }
