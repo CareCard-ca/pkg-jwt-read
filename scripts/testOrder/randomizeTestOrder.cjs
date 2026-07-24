@@ -1,13 +1,9 @@
 'use strict';
 
-const { randomInt } = require('node:crypto');
 const MAX_TEST_ORDER_SEED = 2_147_483_647;
 
-function createRandomTestOrderSeed() {
-  return randomInt(1, MAX_TEST_ORDER_SEED + 1);
-}
-function resolveTestOrderSeed(configuredSeed, randomSeedFactory = createRandomTestOrderSeed) {
-  if (configuredSeed === undefined) return randomSeedFactory();
+function resolveTestOrderSeed(configuredSeed) {
+  if (configuredSeed === undefined) return undefined;
   if (!/^[1-9]\d*$/.test(configuredSeed)) throw new Error('TEST_ORDER_SEED must be a positive 32-bit integer.');
   const seed = Number(configuredSeed);
   if (!Number.isSafeInteger(seed) || seed > MAX_TEST_ORDER_SEED) throw new Error('TEST_ORDER_SEED must be a positive 32-bit integer.');
@@ -36,6 +32,7 @@ function shuffleSuiteTree(suite, random) {
 const mochaHooks = {
   beforeAll() {
     const seed = resolveTestOrderSeed(process.env.TEST_ORDER_SEED);
+    if (seed === undefined) return;
     console.log(`Test order seed: ${seed} (reproduce with TEST_ORDER_SEED=${seed})`);
     shuffleSuiteTree(this.test.parent, createSeededRandom(seed));
   },

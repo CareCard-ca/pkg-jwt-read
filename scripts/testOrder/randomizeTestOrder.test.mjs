@@ -16,12 +16,9 @@ function createSuiteTree() {
   };
 }
 
-test('uses a supplied seed and rejects invalid TEST_ORDER_SEED values', () => {
+test('uses ordinary ordering unless TEST_ORDER_SEED is explicitly supplied', () => {
+  assert.strictEqual(resolveTestOrderSeed(undefined), undefined);
   assert.strictEqual(resolveTestOrderSeed('314159'), 314159);
-  assert.strictEqual(
-    resolveTestOrderSeed(undefined, () => 271828),
-    271828,
-  );
   for (const invalidSeed of ['', '0', '-1', '1.5', 'seed', '2147483648']) {
     assert.throws(() => resolveTestOrderSeed(invalidSeed), /TEST_ORDER_SEED/);
   }
