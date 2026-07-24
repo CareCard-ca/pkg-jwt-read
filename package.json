@@ -1,6 +1,6 @@
 {
   "name": "@carecard/jwt-read",
-  "version": "3.12.0",
+  "version": "3.13.0",
   "repository": {
     "type": "git",
     "url": "https://github.com/CareCard-ca/pkg-jwt-read.git"
@@ -9,9 +9,10 @@
   "main": "index.js",
   "types": "index.d.ts",
   "scripts": {
-    "test": "mocha --recursive",
-    "test:types": "tsc --noEmit && mocha -r ts-node/register test/types.test.ts",
-    "test:coverage": "tsc --noEmit && nyc mocha --recursive -r ts-node/register 'test/**/*.{js,ts}'",
+    "test": "npm run test:order && node test/index.test.js",
+    "test:order": "node --test scripts/testOrder/randomizeTestOrder.test.mjs scripts/testOrder/testOrderPolicy.test.mjs scripts/testParallel/runIndexedMochaTests.test.mjs scripts/testParallel/parallelTestPolicy.test.mjs",
+    "test:types": "npm run test:order && tsc --noEmit && mocha --require ./scripts/testOrder/randomizeTestOrder.cjs -r ts-node/register test/types.test.ts",
+    "test:coverage": "npm run test:order && tsc --noEmit && nyc node test/index.test.js",
     "test:All": "npm run test && npm run test:types",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
@@ -41,13 +42,14 @@
     "typescript": "6.0.3"
   },
   "dependencies": {
-    "@carecard/auth-util": "3.12.0",
-    "@carecard/common-util": "3.12.0",
-    "@carecard/validate": "3.12.0"
+    "@carecard/auth-util": "3.13.0",
+    "@carecard/common-util": "3.13.0",
+    "@carecard/validate": "3.13.0"
   },
   "overrides": {
     "diff": "8.0.4",
+    "minimatch": "10.2.5",
     "serialize-javascript": "7.0.5",
-    "js-yaml": "4.2.0"
+    "js-yaml": "4.3.0"
   }
 }
