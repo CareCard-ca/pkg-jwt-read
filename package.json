@@ -9,10 +9,10 @@
   "main": "index.js",
   "types": "index.d.ts",
   "scripts": {
-    "test": "npm run test:order && mocha --require ./scripts/testOrder/randomizeTestOrder.cjs --recursive",
-    "test:order": "node --test scripts/testOrder/randomizeTestOrder.test.mjs scripts/testOrder/testOrderPolicy.test.mjs",
+    "test": "npm run test:order && node test/index.test.js",
+    "test:order": "node --test scripts/testOrder/randomizeTestOrder.test.mjs scripts/testOrder/testOrderPolicy.test.mjs scripts/testParallel/runIndexedMochaTests.test.mjs scripts/testParallel/parallelTestPolicy.test.mjs",
     "test:types": "npm run test:order && tsc --noEmit && mocha --require ./scripts/testOrder/randomizeTestOrder.cjs -r ts-node/register test/types.test.ts",
-    "test:coverage": "npm run test:order && tsc --noEmit && nyc mocha --require ./scripts/testOrder/randomizeTestOrder.cjs --recursive -r ts-node/register 'test/**/*.{js,ts}'",
+    "test:coverage": "npm run test:order && tsc --noEmit && nyc node test/index.test.js",
     "test:All": "npm run test && npm run test:types",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
