@@ -2,7 +2,7 @@
  * Utility functions for authentication and authorization in the CareCard ecosystem.
  */
 
-import { NextFunction, Request, Response } from 'express';
+import type { NextFunction, Request, Response } from 'express';
 
 export const DEFAULT_USER_AUTHORIZATION_HEADER_NAME: 'X-Authorization-Context';
 export const DEFAULT_USER_AUTHORIZATION_MAX_TOKEN_LENGTH: 2048;
@@ -16,7 +16,7 @@ export interface JwtHeader {
   /** The media type of the JWT. Defaults to 'JWT'. */
   typ?: string;
   /** Any other custom header fields. */
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 /**
@@ -40,7 +40,7 @@ export interface JwtPayload {
   /** Server-auth session identifier when an opaque server-auth token was used. */
   sessionId?: string;
   /** Any other custom payload fields. */
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 /**
@@ -76,10 +76,10 @@ export interface JwtRequestObject {
   header: JwtHeader;
   payload: JwtPayload;
   age?: number;
-  jwtClientId: (req?: any) => string | undefined;
+  jwtClientId: (req?: JwtRequestContext) => string | undefined;
   doesJwtUserHasRole: (role: string) => boolean;
   isJwtExpired: (jwtValiditySeconds?: number) => boolean;
-  jwtAgeInSeconds: (req?: any) => number;
+  jwtAgeInSeconds: (req?: JwtRequestContext) => number;
 }
 
 /**
@@ -88,7 +88,7 @@ export interface JwtRequestObject {
 export interface VisitorRequestObject {
   header: JwtHeader;
   payload: JwtPayload;
-  visitorClientId: (req?: any) => string | undefined;
+  visitorClientId: (req?: JwtRequestContext) => string | undefined;
 }
 
 /**
@@ -97,6 +97,24 @@ export interface VisitorRequestObject {
 export interface UserAuthorizationRequestObject {
   header: JwtHeader;
   payload: UserAuthorizationPayload;
+}
+
+export interface JwtRequestContext {
+  jwt?: {
+    header?: JwtHeader;
+    payload: JwtPayload;
+    age?: number;
+    jwtClientId?: JwtRequestObject['jwtClientId'];
+    doesJwtUserHasRole?: JwtRequestObject['doesJwtUserHasRole'];
+    isJwtExpired?: JwtRequestObject['isJwtExpired'];
+    jwtAgeInSeconds?: JwtRequestObject['jwtAgeInSeconds'];
+  } | null;
+  visitor?: {
+    header?: JwtHeader;
+    payload: JwtPayload;
+    visitorClientId?: VisitorRequestObject['visitorClientId'];
+  } | null;
+  userAuthorization?: UserAuthorizationRequestObject | null;
 }
 
 export interface UserAuthorizationTokenOptions {
@@ -115,7 +133,7 @@ export interface UserAuthorizationReadOptions {
 /**
  * Extended Express Request to include jwt, visitor, and userAuthorization objects.
  */
-export interface AuthenticatedRequest extends Request {
+export interface AuthenticatedRequest extends Request, JwtRequestContext {
   jwt?: JwtRequestObject | null;
   visitor?: VisitorRequestObject | null;
   userAuthorization?: UserAuthorizationRequestObject | null;
@@ -137,7 +155,7 @@ export interface ServerAuthIntrospectionClaims {
   exp?: number | string;
   expiresAt?: string;
   expires_at?: string;
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 export type ServerAuthIntrospector = (
@@ -214,24 +232,24 @@ export function jwtVerifyVisitorNoThrow(
 /**
  * Returns the sub from the extracted JWT in req.jwt.
  */
-export function jwtGetClientId(req?: any): string | undefined;
+export function jwtGetClientId(req?: JwtRequestContext): string | undefined;
 
 /**
  * Returns the sub from the extracted visitor token in req.visitor.
  */
-export function jwtGetVisitorClientId(req?: any): string | undefined;
+export function jwtGetVisitorClientId(req?: JwtRequestContext): string | undefined;
 
 /**
  * Checks if the extracted JWT in req.jwt has expired.
  */
-export function jwtIsExpired(req: any, jwtValiditySeconds?: number): boolean;
+export function jwtIsExpired(req: JwtRequestContext, jwtValiditySeconds?: number): boolean;
 export function jwtIsExpired(jwtValiditySeconds: number): boolean;
 export function jwtIsExpired(): boolean;
 
 /**
  * Returns the age of the extracted JWT in seconds.
  */
-export function jwtGetAgeInSeconds(req?: any): number;
+export function jwtGetAgeInSeconds(req?: JwtRequestContext): number;
 
 /**
  * Returns a middleware that verifies the JWT and checks if the user has the required role.
@@ -295,7 +313,7 @@ export interface JwtContext {
  * Always returns user_id. If the roles array contains 'ad', also returns role: 'super_admin'.
  * If req.userAuthorization is present, also returns authorizationContext and userAuthorization.
  */
-export function jwtGetContext(req: any): JwtContext;
+export function jwtGetContext(req: JwtRequestContext): JwtContext;
 
 /**
  * Validates the JWT from the Authorization header and extracts it into req.jwt.
@@ -454,19 +472,19 @@ export function verifyVisitorNoThrow(
  * Returns the sub from the extracted JWT in req.jwt.
  * @deprecated use jwtGetClientId
  */
-export function jwtClientId(req?: any): string | undefined;
+export function jwtClientId(req?: JwtRequestContext): string | undefined;
 
 /**
  * Returns the sub from the extracted visitor token in req.visitor.
  * @deprecated use jwtGetVisitorClientId
  */
-export function visitorClientId(req?: any): string | undefined;
+export function visitorClientId(req?: JwtRequestContext): string | undefined;
 
 /**
  * Checks if the extracted JWT in req.jwt has expired.
  * @deprecated use jwtIsExpired
  */
-export function isJwtExpired(req: any, jwtValiditySeconds?: number): boolean;
+export function isJwtExpired(req: JwtRequestContext, jwtValiditySeconds?: number): boolean;
 /** @deprecated use jwtIsExpired */
 export function isJwtExpired(jwtValiditySeconds: number): boolean;
 /** @deprecated use jwtIsExpired */
@@ -476,7 +494,7 @@ export function isJwtExpired(): boolean;
  * Returns the age of the extracted JWT in seconds.
  * @deprecated use jwtGetAgeInSeconds
  */
-export function jwtAgeInSeconds(req?: any): number;
+export function jwtAgeInSeconds(req?: JwtRequestContext): number;
 
 /**
  * Returns a middleware that verifies the JWT and checks if the user has the required role.
@@ -499,7 +517,7 @@ export function throwUsedTokenError(): never;
  * Checks if the user in the extracted JWT has the specified role.
  * @deprecated use jwtDoesJwtUserHasRole
  */
-export function doesJwtUserHasRole(req: any, userRole: string): boolean;
+export function doesJwtUserHasRole(req: JwtRequestContext, userRole: string): boolean;
 /** @deprecated use jwtDoesJwtUserHasRole */
 export function doesJwtUserHasRole(userRole: string): boolean;
 
