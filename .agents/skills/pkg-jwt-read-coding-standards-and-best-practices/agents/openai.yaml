@@ -1,0 +1,4 @@
+interface:
+  display_name: 'Pkg JWT Read Coding Standards'
+  short_description: 'Apply mandatory JWT package standards'
+  default_prompt: 'Use $pkg-jwt-read-coding-standards-and-best-practices before every pkg-jwt-read task and apply all narrower skills that the task requires.'
