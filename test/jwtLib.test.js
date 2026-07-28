@@ -816,35 +816,42 @@ describe('Lib jwtLib.js', function () {
       assert.strictEqual(typeof payloadWithNumericExpiration.exp, 'number');
     });
 
-    it('preserves exact server-auth email confirmation claim names and values', function () {
-      const emailConfirmationClaims = {
+    it('preserves exact server-auth email verification claim names and values', function () {
+      const emailVerificationClaims = {
         emailVerified: false,
         email_verified: true,
-        emailConfirmed: false,
-        email_confirmed: true,
       };
-      const emailConfirmationClaimNames = Object.keys(emailConfirmationClaims);
+      const emailVerificationClaimNames = Object.keys(emailVerificationClaims);
 
-      for (const [claimName, claimValue] of Object.entries(emailConfirmationClaims)) {
+      for (const [claimName, claimValue] of Object.entries(emailVerificationClaims)) {
         const payload = jwtLib.createServerAuthPayload({
           userId: '9f8baf8a-c2de-4e88-bf04-46773704ca9f',
           [claimName]: claimValue,
         });
-        const attachedConfirmationClaimNames = emailConfirmationClaimNames.filter(name =>
+        const attachedVerificationClaimNames = emailVerificationClaimNames.filter(name =>
           Object.prototype.hasOwnProperty.call(payload, name),
         );
 
-        assert.deepStrictEqual(attachedConfirmationClaimNames, [claimName]);
+        assert.deepStrictEqual(attachedVerificationClaimNames, [claimName]);
         assert.strictEqual(payload[claimName], claimValue);
       }
     });
 
-    it('preserves omitted server-auth email confirmation claims without inventing a value', function () {
+    it('does not preserve unrelated server-auth email state', function () {
+      const payload = jwtLib.createServerAuthPayload({
+        userId: '9f8baf8a-c2de-4e88-bf04-46773704ca9f',
+        emailState: false,
+      });
+
+      assert.strictEqual(Object.prototype.hasOwnProperty.call(payload, 'emailState'), false);
+    });
+
+    it('preserves omitted server-auth email verification claims without inventing a value', function () {
       const payload = jwtLib.createServerAuthPayload({
         userId: '9f8baf8a-c2de-4e88-bf04-46773704ca9f',
       });
 
-      for (const claimName of ['emailVerified', 'email_verified', 'emailConfirmed', 'email_confirmed']) {
+      for (const claimName of ['emailVerified', 'email_verified']) {
         assert.strictEqual(Object.prototype.hasOwnProperty.call(payload, claimName), false);
       }
     });

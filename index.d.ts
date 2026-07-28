@@ -147,8 +147,6 @@ export interface ServerAuthIntrospectionClaims {
   email?: string;
   emailVerified?: boolean;
   email_verified?: boolean;
-  emailConfirmed?: boolean;
-  email_confirmed?: boolean;
   roles?: string[];
   sessionId?: string;
   session_id?: string;

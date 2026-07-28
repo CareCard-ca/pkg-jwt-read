@@ -126,9 +126,9 @@ depend on those folders being present.
 - Server-auth request attachment behavior that normalizes introspected claims
   into `req.jwt.payload` with `authMode: "server-auth"` and
   `auth_mode: "server-auth"`.
-- Server-auth email confirmation claims are copied only when present. The
-  `emailVerified`, `email_verified`, `emailConfirmed`, and `email_confirmed`
-  aliases retain their exact names and values, and omission remains omission.
+- Server-auth email verification claims are copied only when present. The
+  `emailVerified` and `email_verified` names retain their exact values, and
+  omission remains omission.
 - Integration with `@carecard/common-util` for standardized login and
   authorization errors.
 

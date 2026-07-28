@@ -152,9 +152,9 @@ those claims onto `req.jwt.payload` with `authMode: "server-auth"` and
 `auth_mode: "server-auth"` so services can keep their existing JWT-backed
 database context and role checks.
 
-Server-auth email confirmation claims are copied only when present. The
-`emailVerified`, `email_verified`, `emailConfirmed`, and `email_confirmed`
-aliases retain their exact names and values, and omission remains omission.
+Server-auth email verification claims are copied only when present. The
+`emailVerified` and `email_verified` names retain their exact values, and
+omission remains omission.
 
 ### Scoped User Authorization Context
 
