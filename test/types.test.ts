@@ -1,7 +1,6 @@
 import assert from 'assert';
 import { describe, it } from 'mocha';
 import {
-  AuthenticatedRequest,
   DEFAULT_USER_AUTHORIZATION_HEADER_NAME,
   DEFAULT_USER_AUTHORIZATION_MAX_TOKEN_LENGTH,
   doesJwtUserHasRole,
@@ -11,6 +10,7 @@ import {
   jwtAgeInSeconds,
   jwtClientId,
   JwtContext,
+  JwtRequestContext,
   jwtGetAgeInSeconds,
   jwtGetClientId,
   jwtGetContext,
@@ -109,7 +109,7 @@ describe('TypeScript Type Definitions - JWT Read Utilities', () => {
   });
 
   it('should verify that functions return expected types', () => {
-    const dummyReq: AuthenticatedRequest = {
+    const dummyReq: JwtRequestContext = {
       jwt: {
         header: {},
         payload: {
@@ -123,7 +123,7 @@ describe('TypeScript Type Definitions - JWT Read Utilities', () => {
         isJwtExpired: () => false,
         jwtAgeInSeconds: () => 3600,
       },
-    } as any;
+    };
 
     assert.strictEqual(jwtClientId(dummyReq), '123');
     assert.strictEqual(isJwtExpired(dummyReq), false);
@@ -133,7 +133,7 @@ describe('TypeScript Type Definitions - JWT Read Utilities', () => {
   });
 
   it('should verify visitor functions', () => {
-    const dummyReq: AuthenticatedRequest = {
+    const dummyReq: JwtRequestContext = {
       visitor: {
         header: {},
         payload: {
@@ -141,7 +141,7 @@ describe('TypeScript Type Definitions - JWT Read Utilities', () => {
         },
         visitorClientId: () => 'visitor-123',
       },
-    } as any;
+    };
 
     assert.strictEqual(visitorClientId(dummyReq), 'visitor-123');
   });
@@ -170,12 +170,12 @@ describe('TypeScript Type Definitions - JWT Read Utilities', () => {
         expectedAudience: 'ms-documents',
       },
     };
-    const dummyReq: AuthenticatedRequest = {
+    const dummyReq: JwtRequestContext = {
       userAuthorization: {
         header: {},
         payload: userAuthorizationPayload,
       },
-    } as unknown as AuthenticatedRequest;
+    };
 
     assert.strictEqual(dummyReq.userAuthorization?.payload.table, 'documents');
     assert.strictEqual(options.userAuthorization?.headerName, undefined);
@@ -197,21 +197,21 @@ describe('TypeScript Type Definitions - JWT Read Utilities', () => {
     const regularUserId = '6f4cb7f4-2c2a-4a91-9b56-3e5389703d42';
     const scopedUserId = '7a97e8e1-f2f3-4074-a182-12a64c5d4f79';
 
-    const adminReq: AuthenticatedRequest = {
+    const adminReq: JwtRequestContext = {
       jwt: { payload: { sub: adminUserId, roles: ['ad'] } },
-    } as any;
+    };
     const adminContext: JwtContext = jwtGetContext(adminReq);
     assert.strictEqual(adminContext.user_id, adminUserId);
     assert.strictEqual(adminContext.role, 'super_admin');
 
-    const userReq: AuthenticatedRequest = {
+    const userReq: JwtRequestContext = {
       jwt: { payload: { sub: regularUserId, roles: ['provider'] } },
-    } as any;
+    };
     const userContext: JwtContext = jwtGetContext(userReq);
     assert.strictEqual(userContext.user_id, regularUserId);
     assert.strictEqual(userContext.role, undefined);
 
-    const scopedReq: AuthenticatedRequest = {
+    const scopedReq: JwtRequestContext = {
       jwt: { payload: { sub: scopedUserId, roles: ['provider'] } },
       userAuthorization: {
         header: {},
@@ -225,7 +225,7 @@ describe('TypeScript Type Definitions - JWT Read Utilities', () => {
           scopeId: '6f4cb7f4-2c2a-4a91-9b56-3e5389703d42',
         },
       },
-    } as unknown as AuthenticatedRequest;
+    };
     const scopedContext: JwtContext = jwtGetContext(scopedReq);
     assert.strictEqual(scopedContext.user_id, scopedUserId);
     assert.strictEqual(scopedContext.authorizationContext?.table, 'documents');

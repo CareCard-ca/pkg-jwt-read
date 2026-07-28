@@ -1,5 +1,9 @@
 # @carecard/jwt-read
 
+Non-negotiable test order invariance rule: Every test must pass independently of which tests run before or after it, and the suite must pass in every execution order. Each test must establish the state it needs, isolate mutable state, and clean up state it owns; it must never rely on another test's setup, mutations, or cleanup. Default test, CI, and Husky commands must use the test framework's ordinary ordering and must not force randomized ordering. Random-order execution is an explicit diagnostic only, and every failure it exposes must be fixed at the root cause.
+
+Non-negotiable root-cause solution rule: Always identify and solve the verified root cause, use the stronger solution, and deliver a correct, durable, production-quality result. Never treat a temporary workaround, resource increase, retry, suppression, bypass, or symptom-only patch as completion. Validate the root-cause fix against the real failing workflow and prove the end state.
+
 ![Tests Passing](https://github.com/CareCard-ca/pkg-jwt-read/actions/workflows/ci.yml/badge.svg)
 ![Coverage](https://img.shields.io/badge/Coverage-80%25-orange)
 
@@ -15,6 +19,8 @@ Non-negotiable TDD rule: Always write the failing test first, run it to confirm 
 Non-negotiable repository isolation rule: Every repository must run its Husky hooks and tests using only files, code, fixtures, dependencies, and services contained within that repository. Tests and Husky scripts must not import, require, read, execute, or otherwise depend on sibling repositories or paths outside the repository root. app-e2e-tests is the only exception because cross-repository end-to-end testing is its explicit responsibility.
 
 Non-negotiable error and warning rule: Never suppress, silence, hide, downgrade, filter, ignore, skip, or bypass errors or warnings from code, tests, tools, compilers, linters, or validation. Fix the root cause, then rerun the affected check and require a clean result. Expected error-path tests may assert errors, but must not conceal unexpected failures.
+
+Non-negotiable TypeScript type rule: Never use the TypeScript type `any`; always use specific domain types, generics, existing project types, or `unknown` with explicit narrowing in all TypeScript-family files (`.ts`, `.tsx`, `.mts`, `.cts`, and `.d.ts`).
 
 Non-negotiable code organization rule: Functions with the same or equivalent behavior must use the same or clearly corresponding descriptive names across CareCard repositories, and equivalent functionality must live in files with the same names within each repository's established architecture. No backward compatibility names, aliases, or duplicate locations are allowed.
 
@@ -146,9 +152,9 @@ those claims onto `req.jwt.payload` with `authMode: "server-auth"` and
 `auth_mode: "server-auth"` so services can keep their existing JWT-backed
 database context and role checks.
 
-Server-auth email confirmation claims are copied only when present. The
-`emailVerified`, `email_verified`, `emailConfirmed`, and `email_confirmed`
-aliases retain their exact names and values, and omission remains omission.
+Server-auth email verification claims are copied only when present. The
+`emailVerified` and `email_verified` names retain their exact values, and
+omission remains omission.
 
 ### Scoped User Authorization Context
 
@@ -225,3 +231,21 @@ The package is organized into several modules:
 - `jwtRoles`: Role mapping between internal codes and names.
 
 All modules are exported through the main `index.js`.
+
+## Fail-Closed Test Lifecycle Audit
+
+The current package tests own no HTTP listener, database pool, Kafka client,
+background timer, or child process after completion. Mocha's test timeout fails
+a stalled async test, the suites run without bail or forced exit, and npm
+preserves each command's nonzero status. Keep natural process exit as the open
+handle regression check; validation must not hide failures with retries, forced
+success, skipped tests, or output suppression.
+
+Do not add unpublished executable validation code to a `pkg-*` repository. If a
+future test owns a long-lived resource or demonstrates a post-suite hang, add a
+contract-tested process watchdog through the coordinated package version,
+publish, and consumer propagation workflow. That watchdog must return
+immediately when no helper remains, allow only a bounded 250 ms settlement
+window for already-stopping helpers, fail persistent descendants, preserve
+failures and output, use exit code `124` only for a real outer deadline, and
+remain a final guard rather than a substitute for explicit cleanup.
