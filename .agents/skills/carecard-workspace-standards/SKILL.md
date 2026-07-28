@@ -3,7 +3,17 @@ name: carecard-workspace-standards
 description: 'Follow the shared SO_CareCardCa/CareCard workspace coding, testing, repository, dependency, shared package, frontend, database, API response, and security standards. Use before modifying, testing, reviewing, or debugging any ms-*, pkg-*, app-*, website, dashboard, or other CareCard repository in this workspace, especially when choosing validation commands, package boundaries, TypeScript types, dependencies, API contracts, database logic, service patterns, or frontend architecture.'
 ---
 
+Non-negotiable root-cause solution rule: Always identify and solve the verified root cause, use the stronger solution, and deliver a correct, durable, production-quality result. Never treat a temporary workaround, resource increase, retry, suppression, bypass, or symptom-only patch as completion. Validate the root-cause fix against the real failing workflow and prove the end state.
+
 # CareCard Workspace Standards
+
+Mandatory companion: load
+`$pkg-jwt-read-coding-standards-and-best-practices` before this skill for every
+task in this repository.
+
+Non-negotiable test order invariance rule: Every test must pass independently of which tests run before or after it, and the suite must pass in every execution order. Each test must establish the state it needs, isolate mutable state, and clean up state it owns; it must never rely on another test's setup, mutations, or cleanup. Default test, CI, and Husky commands must use the test framework's ordinary ordering and must not force randomized ordering. Random-order execution is an explicit diagnostic only, and every failure it exposes must be fixed at the root cause.
+
+Non-negotiable parallel test execution rule: Run independent test files in parallel with repository-native worker support wherever resource isolation makes parallel execution safe. Tests that share a mutable database, application server, browser state, filesystem fixture, port, or cluster resource must remain in an explicitly isolated serial group until every worker owns a separate resource. Parallel execution must preserve ordinary test selection and must never use randomized ordering, retries, locks, or error suppression to conceal coupling.
 
 Non-negotiable TDD rule: Always write the failing test first, run it to confirm it fails for the intended reason, then implement the code and rerun the test until it passes. Test Driven Development is required for all coding work and must not be skipped. For documentation- or skill-only edits, add or update the relevant validation check before changing the prose.
 
@@ -23,6 +33,8 @@ granted, leave every pre-existing test unchanged.
 Non-negotiable repository isolation rule: Every repository must run its Husky hooks and tests using only files, code, fixtures, dependencies, and services contained within that repository. Tests and Husky scripts must not import, require, read, execute, or otherwise depend on sibling repositories or paths outside the repository root. app-e2e-tests is the only exception because cross-repository end-to-end testing is its explicit responsibility.
 
 Non-negotiable error and warning rule: Never suppress, silence, hide, downgrade, filter, ignore, skip, or bypass errors or warnings from code, tests, tools, compilers, linters, or validation. Fix the root cause, then rerun the affected check and require a clean result. Expected error-path tests may assert errors, but must not conceal unexpected failures.
+
+Non-negotiable TypeScript type rule: Never use the TypeScript type `any`; always use specific domain types, generics, existing project types, or `unknown` with explicit narrowing in all TypeScript-family files (`.ts`, `.tsx`, `.mts`, `.cts`, and `.d.ts`).
 
 Non-negotiable code organization rule: Functions with the same or equivalent behavior must use the same or clearly corresponding descriptive names across CareCard repositories, and equivalent functionality must live in files with the same names within each repository's established architecture. No backward compatibility names, aliases, or duplicate locations are allowed.
 
@@ -404,9 +416,9 @@ the authenticated dashboard.
   may map that role to `super_admin`, but backend auth RLS must not require a
   separate database role row for that bypass.
 - Public auth flows such as registration, login, server-auth session create and
-  introspection, confirmation, recovery, visitor creation, and service user
+  introspection, recovery, visitor creation, and service user
   lookup must use narrow system contexts (`system_create`, `system_login`,
-  `system_confirm`, `system_recovery`, `system_visitor`, `system_service`)
+  `system_recovery`, `system_visitor`, `system_service`)
   instead of privileged runtime queries.
 
 - `ms-auth` controller exports use concise action names such as `loginUser`,
@@ -417,7 +429,7 @@ the authenticated dashboard.
 
 ## Security Requirements
 
-- Treat authentication, authorization, JWT, password, email confirmation,
+- Treat authentication, authorization, JWT, password, email verification,
   recovery, file upload, CORS, rate limits, and error response behavior as
   security-sensitive.
 - Never log or return secrets, tokens, passwords, credentials, private keys,
