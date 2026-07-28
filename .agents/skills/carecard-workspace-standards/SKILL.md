@@ -416,9 +416,9 @@ the authenticated dashboard.
   may map that role to `super_admin`, but backend auth RLS must not require a
   separate database role row for that bypass.
 - Public auth flows such as registration, login, server-auth session create and
-  introspection, confirmation, recovery, visitor creation, and service user
+  introspection, recovery, visitor creation, and service user
   lookup must use narrow system contexts (`system_create`, `system_login`,
-  `system_confirm`, `system_recovery`, `system_visitor`, `system_service`)
+  `system_recovery`, `system_visitor`, `system_service`)
   instead of privileged runtime queries.
 
 - `ms-auth` controller exports use concise action names such as `loginUser`,
@@ -429,7 +429,7 @@ the authenticated dashboard.
 
 ## Security Requirements
 
-- Treat authentication, authorization, JWT, password, email confirmation,
+- Treat authentication, authorization, JWT, password, email verification,
   recovery, file upload, CORS, rate limits, and error response behavior as
   security-sensitive.
 - Never log or return secrets, tokens, passwords, credentials, private keys,
