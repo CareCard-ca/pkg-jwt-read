@@ -7,6 +7,8 @@ Non-negotiable root-cause solution rule: Always identify and solve the verified 
 
 # pkg Publish
 
+Non-negotiable test order invariance rule: Every test must pass independently of which tests run before or after it, and the suite must pass in every execution order. Each test must establish the state it needs, isolate mutable state, and clean up state it owns; it must never rely on another test's setup, mutations, or cleanup. Default test, CI, and Husky commands must use the test framework's ordinary ordering and must not force randomized ordering. Random-order execution is an explicit diagnostic only, and every failure it exposes must be fixed at the root cause.
+
 Non-negotiable TDD rule: Always write the failing test first, run it to confirm it fails for the intended reason, then implement the code and rerun the test until it passes. Test Driven Development is required for all coding work and must not be skipped. For documentation- or skill-only edits, add or update the relevant validation check before changing the prose.
 
 Non-negotiable repository isolation rule: Every repository must run its Husky hooks and tests using only files, code, fixtures, dependencies, and services contained within that repository. Tests and Husky scripts must not import, require, read, execute, or otherwise depend on sibling repositories or paths outside the repository root. app-e2e-tests is the only exception because cross-repository end-to-end testing is its explicit responsibility.
@@ -27,12 +29,15 @@ Do not run this skill for Markdown-only changes, including README-only or
 
 ## Version Rule
 
-1. Check `package.json` in all four package repositories:
-   `pkg-common-util`, `pkg-validate`, `pkg-auth-util`, and `pkg-jwt-read`.
-2. Select one minor version higher than the highest current package version.
+1. Check `package.json` in all five package repositories:
+   `pkg-common-util`, `pkg-validate`, `pkg-auth-util`, `pkg-jwt-read`, and
+   `pkg-telemetry`.
+2. Select one minor version higher than the highest currently published package
+   version. An unpublished new package adopts that coordinated target version
+   and does not raise it again.
    If the highest version is `3.7.0`, the coordinated target version is
    `3.8.0`.
-3. Use the same target version for all four packages.
+3. Use the same target version for all five packages.
 4. Update each package's `package.json` and `package-lock.json`, then commit the
    version change on a package release branch before publishing.
 
@@ -44,6 +49,7 @@ Always publish packages in this order, one repository at a time:
 2. `@carecard/validate`
 3. `@carecard/auth-util`
 4. `@carecard/jwt-read`
+5. `@carecard/telemetry`
 
 Publish by pushing the package release branch, creating or reusing a pull
 request into `development`, marking it ready, waiting for checks, squash-merging
@@ -83,7 +89,8 @@ continuing:
    `pkg-jwt-read` when declared.
 3. After publishing `@carecard/auth-util`, update it in `pkg-jwt-read` when
    declared.
-4. `@carecard/jwt-read` is last, so no later package repository depends on it.
+4. `@carecard/jwt-read` has no later dependent CareCard package.
+5. `@carecard/telemetry` is last and has no `@carecard/*` package dependencies.
 
 Use exact installs so `package.json` and `package-lock.json` stay aligned:
 
@@ -93,7 +100,7 @@ npm install <package-name>@<target-version> --save-exact
 
 ## Service And Dashboard Consumers
 
-After all four packages are published, update all `ms-*` repositories and
+After all five packages are published, update all `ms-*` repositories and
 `app-dashboard` that declare any `@carecard/*` package dependency. Install the
 latest exact target version for every declared CareCard package, run the
 repository's required validation, and commit the dependency updates locally.
@@ -113,6 +120,6 @@ For each changed repository:
 - For `app-dashboard`, run both `.husky/pre-commit` and `.husky/pre-push` when
   dependencies change.
 
-Finish by verifying that all four packages are published at the same target
+Finish by verifying that all five packages are published at the same target
 version and every declared `@carecard/*` dependency in `pkg-*`, `ms-*`, and
 `app-dashboard` is pinned to that version.
