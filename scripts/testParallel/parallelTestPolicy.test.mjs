@@ -7,6 +7,7 @@ import test from 'node:test';
 const require = createRequire(import.meta.url);
 const repositoryRoot = resolve(import.meta.dirname, '../..');
 const packageJson = JSON.parse(readFileSync(new URL('../../package.json', import.meta.url), 'utf8'));
+const packageTaskRunnerSource = readFileSync(new URL('../runPackageTask.mjs', import.meta.url), 'utf8');
 const testIndexSource = readFileSync(new URL('../../test/index.test.js', import.meta.url), 'utf8');
 const { parallelTestFiles } = require('../../test/index.test.js');
 
@@ -22,8 +23,11 @@ function listRuntimeTestFiles(directoryPath) {
 }
 
 test('keeps runtime test selection in the index and package scripts short', () => {
-  assert.equal(packageJson.scripts.test, 'npm run test:order && node test/index.test.js');
-  assert.match(packageJson.scripts['test:coverage'], /nyc node test\/index\.test\.js$/);
+  assert.equal(packageJson.scripts.test, 'node scripts/runPackageTask.mjs test');
+  assert.equal(packageJson.scripts['test:coverage'], 'node scripts/runPackageTask.mjs test:coverage');
+  assert.match(packageTaskRunnerSource, /arguments: \['run', 'test:order'\]/);
+  assert.match(packageTaskRunnerSource, /arguments: \['test\/index\.test\.js'\]/);
+  assert.match(packageTaskRunnerSource, /command: 'nyc'/);
   assert.match(testIndexSource, /parallelTestFiles/);
   assert.match(testIndexSource, /runIndexedMochaTests/);
   assert.match(testIndexSource, /if \(require\.main === module\)/);

@@ -1,6 +1,6 @@
 {
   "name": "@carecard/jwt-read",
-  "version": "3.17.0",
+  "version": "3.18.0",
   "repository": {
     "type": "git",
     "url": "https://github.com/CareCard-ca/pkg-jwt-read.git"
@@ -9,11 +9,11 @@
   "main": "index.js",
   "types": "index.d.ts",
   "scripts": {
-    "test": "npm run test:order && node test/index.test.js",
-    "test:order": "node --test scripts/testOrder/randomizeTestOrder.test.mjs scripts/testOrder/testOrderPolicy.test.mjs scripts/testParallel/runIndexedMochaTests.test.mjs scripts/testParallel/parallelTestPolicy.test.mjs",
-    "test:types": "npm run test:order && tsc --noEmit && mocha --require ./scripts/testOrder/randomizeTestOrder.cjs -r ts-node/register test/types.test.ts",
-    "test:coverage": "npm run test:order && tsc --noEmit && nyc node test/index.test.js",
-    "test:All": "npm run test && npm run test:types",
+    "test": "node scripts/runPackageTask.mjs test",
+    "test:order": "node --test scripts/testOrder/randomizeTestOrder.test.mjs scripts/testOrder/testOrderPolicy.test.mjs scripts/testParallel/runIndexedMochaTests.test.mjs scripts/testParallel/parallelTestPolicy.test.mjs scripts/packageTaskRunner.test.mjs",
+    "test:types": "node scripts/runPackageTask.mjs test:types",
+    "test:coverage": "node scripts/runPackageTask.mjs test:coverage",
+    "test:All": "node scripts/runPackageTask.mjs test:All",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "prepare": "husky",
@@ -42,9 +42,9 @@
     "typescript": "6.0.3"
   },
   "dependencies": {
-    "@carecard/auth-util": "3.17.0",
-    "@carecard/common-util": "3.17.0",
-    "@carecard/validate": "3.17.0"
+    "@carecard/auth-util": "3.18.0",
+    "@carecard/common-util": "3.18.0",
+    "@carecard/validate": "3.18.0"
   },
   "overrides": {
     "diff": "8.0.4",
