@@ -7,7 +7,9 @@ Non-negotiable root-cause solution rule: Always identify and solve the verified 
 
 # Pull Request Merge Close
 
-Non-negotiable TDD rule: Always write the failing test first, run it to confirm it fails for the intended reason, then implement the code and rerun the test until it passes. Test Driven Development is required for all coding work and must not be skipped. For documentation- or skill-only edits, add or update the relevant validation check before changing the prose.
+Non-negotiable TDD rule: Always write the failing test first, run it to confirm it fails for the intended reason, then implement the code and rerun the test until it passes. Test Driven Development is required for all coding work and must not be skipped. For documentation- or skill-only edits, run the relevant focused non-test
+validation before changing the prose; do not add automated tests that inspect
+prose, files, or repository structure.
 
 Non-negotiable repository isolation rule: Every repository must run its Husky hooks and tests using only files, code, fixtures, dependencies, and services contained within that repository. Tests and Husky scripts must not import, require, read, execute, or otherwise depend on sibling repositories or paths outside the repository root. app-e2e-tests is the only exception because cross-repository end-to-end testing is its explicit responsibility.
 
@@ -233,3 +235,22 @@ completion.
     cleanup commit was added, whether the remote target branch was deleted or
     protected, whether the local target branch was deleted, and whether local
     base branch is up to date.
+
+## TDD And Validation
+
+Test Driven Development is a non-negotiable requirement.
+
+The sole purpose of automated tests is to verify observable functionality and externally visible behavior.
+Tests must validate what the system does through its public interfaces and expected outcomes.
+
+Tests must not assert, inspect, or depend on implementation details, including but not limited to:
+
+- The existence of specific lines of code, statements, functions, classes, files, or modules.
+- Specific algorithms, control flow, variable names, method calls, code snippets, or internal implementation choices.
+- Any internal structure that can change without changing externally observable behavior.
+
+A correct implementation may be completely rewritten or refactored without requiring changes to functional tests, provided its externally observable behavior remains unchanged.
+
+Any test that fails solely because the implementation changed while the externally observable behavior remained correct is incorrectly designed and must be rewritten or removed.
+
+This requirement is mandatory for all new tests and must be applied whenever existing tests are modified.

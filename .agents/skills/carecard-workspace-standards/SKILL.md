@@ -15,10 +15,13 @@ Non-negotiable test order invariance rule: Every test must pass independently of
 
 Non-negotiable parallel test execution rule: Run independent test files in parallel with repository-native worker support wherever resource isolation makes parallel execution safe. Tests that share a mutable database, application server, browser state, filesystem fixture, port, or cluster resource must remain in an explicitly isolated serial group until every worker owns a separate resource. Parallel execution must preserve ordinary test selection and must never use randomized ordering, retries, locks, or error suppression to conceal coupling.
 
-Non-negotiable TDD rule: Always write the failing test first, run it to confirm it fails for the intended reason, then implement the code and rerun the test until it passes. Test Driven Development is required for all coding work and must not be skipped. For documentation- or skill-only edits, add or update the relevant validation check before changing the prose.
+Non-negotiable TDD rule: Always write the failing test first, run it to confirm it fails for the intended reason, then implement the code and rerun the test until it passes. Test Driven Development is required for all coding work and must not be skipped. For documentation- or skill-only edits, run the relevant focused non-test
+validation before changing the prose; do not add automated tests that inspect
+prose, files, or repository structure.
 
-This requirement is non-negotiable and may be overridden only with the user's
-explicit, direct approval.
+The TDD and validation requirements are non-negotiable and cannot be
+overridden. The separate pre-existing-test protection still requires the
+user's fresh, explicit permission for each exact proposed test modification.
 
 A pre-existing test—defined as any test present before work on the current task
 begins—must not be deleted, disabled, skipped, weakened, excluded from execution,
@@ -29,6 +32,11 @@ request approval. The request must identify every affected test, describe the
 precise proposed modification, provide detailed technical justification, and
 explain all known or reasonably foreseeable regression risks. Until approval is
 granted, leave every pre-existing test unchanged.
+
+An implementation-detail test remains invalid under the authoritative TDD and
+validation policy. Identify the exact test and obtain the user's explicit
+approval before rewriting or removing it. Until approval is granted, leave the
+test unchanged and report the blocked correction.
 
 Non-negotiable repository isolation rule: Every repository must run its Husky hooks and tests using only files, code, fixtures, dependencies, and services contained within that repository. Tests and Husky scripts must not import, require, read, execute, or otherwise depend on sibling repositories or paths outside the repository root. app-e2e-tests is the only exception because cross-repository end-to-end testing is its explicit responsibility.
 
@@ -70,8 +78,10 @@ Use before modifying, testing, reviewing, or debugging any CareCard workspace re
 
 ## Testing Expectations
 
-- Write or update package tests before behavior or public API changes.
-- Include type/export compatibility tests where the package already has them.
+- Write a new failing consumer-facing test through the supported package root
+  before behavior or public API changes. Modify a pre-existing test only after
+  the user grants fresh, explicit permission for that exact change.
+- Include consumer-facing runtime and compilation tests through the supported package root. Exercise public behavior and realistic type usage without inspecting export objects, source files, or module layout.
 - Run package test, lint, type, and Husky validation commands required by the changed area.
 
 ## Safety Constraints
@@ -106,9 +116,10 @@ config.
 - Follow the owner's coding style, naming conventions, and project structure.
 - Put code, tests, docs, services, validation, transforms, components, and
   helpers where the current repository expects them.
-- Use Test-Driven Development for behavior changes: write or update focused
-  tests first, verify they fail for the missing behavior when practical, then
-  implement.
+- Use Test-Driven Development for behavior changes: write a focused
+  functional test first or, after fresh permission for the exact change,
+  update a pre-existing test. Run the selected test, confirm it fails for the
+  missing behavior, then implement.
 - Never suppress errors, TypeScript errors, linter warnings, authorization
   failures, RLS failures, build failures, hydration issues, or failing tests.
   Do not add `eslint-disable`, `@ts-ignore`, broad catches, empty catches, or
@@ -309,10 +320,11 @@ existing TypeScript style.
 ## Tests
 
 - Testing is mandatory before finalizing code changes.
-- Code coverage percentage must not decrease from the previous commit; it can
-  stay the same or increase. When coverage tooling exists, compare against the
-  previous commit or recorded baseline, add tests to maintain or improve
-  coverage, and never reduce coverage thresholds to pass checks.
+- Use coverage reports only as diagnostics for potentially untested observable
+  behavior. Percentages for lines, branches, functions, and statements are not
+  functional evidence and must not determine test assertions. Never add
+  implementation-detail tests to preserve a metric or lower thresholds to hide
+  a failing check; report any conflict with the behavior-only policy.
 - Keep tests readable and domain-specific.
 - Tests must cover desired or happy paths and prevention or rejection of
   undesired behavior.
@@ -324,14 +336,14 @@ existing TypeScript style.
   Selenium for end-to-end flows.
 - For database tests, use existing seed, migration, rollback, and cleanup
   patterns.
-- In database `rls_logic.test.js` files, assert RLS logic only by calling
-  `carecard.can_access_row(...)` and checking the intended boolean. Put table
-  CRUD and lower RLS helper checks in query/enforcement tests.
+- Test row-level security through app-equivalent SQL operations under the
+  intended caller context. Assert returned rows, successful writes, and
+  authorization denials without calling internal RLS helpers or inspecting SQL
+  text.
 - Add tests for API success responses, validation errors, auth/authz errors,
   JWT errors, not-found/conflict cases, and unexpected error handling when
   those paths change.
-- For frontend changes, test validation, transforms, query/mutation wrappers,
-  components, and user-visible flows at the narrowest practical level first.
+- For frontend changes, test rendered UI, public HTTP or network outcomes, navigation, accessibility, and user-visible flows at the narrowest practical level first. Use focused non-test dependency checks for validation, transform, query, mutation, hook, and module organization.
 - If a test or repository check fails, fix the issue and rerun the failing
   command. Only finalize with failing checks when the failure is unrelated or
   blocked by environment constraints, and document that explicitly.
@@ -370,9 +382,7 @@ Dashboard service and test conventions:
 - Profile, settings, notifications, institutions, and user authorization UI
   prefer service snackbar helpers for user-friendly fallback errors, technical
   error filtering, mutation result handling, and duplicate error suppression.
-- `tests/app/dashboard/profile/page.test.tsx` keeps dynamic profile children
-  inert in the shell-level page test to avoid async imports resolving after
-  Vitest tears down jsdom in CI.
+- Profile page tests assert visible loading, navigation, form, and error behavior through the rendered route. They must not depend on dynamic-import structure or a specific mocking strategy.
 
 ## Public Website Frontends
 
@@ -441,3 +451,22 @@ the authenticated dashboard.
   intact unless a task explicitly changes them.
 - Document remaining security concerns that require product, infrastructure, or
   deployment decisions.
+
+## TDD And Validation
+
+Test Driven Development is a non-negotiable requirement.
+
+The sole purpose of automated tests is to verify observable functionality and externally visible behavior.
+Tests must validate what the system does through its public interfaces and expected outcomes.
+
+Tests must not assert, inspect, or depend on implementation details, including but not limited to:
+
+- The existence of specific lines of code, statements, functions, classes, files, or modules.
+- Specific algorithms, control flow, variable names, method calls, code snippets, or internal implementation choices.
+- Any internal structure that can change without changing externally observable behavior.
+
+A correct implementation may be completely rewritten or refactored without requiring changes to functional tests, provided its externally observable behavior remains unchanged.
+
+Any test that fails solely because the implementation changed while the externally observable behavior remained correct is incorrectly designed and must be rewritten or removed.
+
+This requirement is mandatory for all new tests and must be applied whenever existing tests are modified.

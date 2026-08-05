@@ -65,9 +65,11 @@ completion rules below without weakening those companion skills.
 
 - Treat every workspace repository as independent and validate it from its own
   root.
-- Update every skill, document, source, runtime test, type test, export,
-  declaration, consumer, and package version genuinely required for a coherent
-  task.
+- Update every skill, document, source, export, declaration, consumer, and
+  package version genuinely required for a coherent task, and add every new
+  consumer-facing runtime or type test the behavior requires. Modify a
+  pre-existing test only after the user grants fresh, explicit permission for
+  that exact change.
 - Do not broaden the task into unrelated cleanup.
 - Preserve CommonJS, middleware, request-context, role, declaration, naming,
   and test conventions unless the task explicitly replaces them.
@@ -102,8 +104,8 @@ overloads, duplicate exports, dual auth paths, transitional names, or fallback
 behavior solely to preserve the superseded contract.
 
 Delete obsolete functions and exports after all intended consumers have
-migrated and repository-native search, runtime tests, and type tests prove them
-unused. This does not authorize unrelated API removal. If an existing
+migrated and repository-native search proves them unused, while runtime and type tests
+verify the remaining public contract. This does not authorize unrelated API removal. If an existing
 published or security contract requires compatibility and the request does not
 clearly supersede it, explain the conflict and ask first.
 
@@ -111,8 +113,9 @@ clearly supersede it, explain the conflict and ask first.
 
 Follow `$carecard-workspace-standards` and
 `$pkg-jwt-read-jwt-middleware-library` for the complete failing-test-first and
-root-cause workflow. Documentation and skill changes require a focused
-structural validation before prose changes. Do not accept retries, suppressed
+root-cause workflow. Documentation and skill changes require focused non-test validation before
+prose changes; do not add automated tests that inspect prose, files, or
+repository structure. Do not accept retries, suppressed
 diagnostics, weakened types, disabled tests, forced success, compatibility
 patches, or symptom-only workarounds as completion.
 
@@ -160,3 +163,22 @@ them unused and replaced.
 5. Fix every in-scope failure at its root cause and rerun the exact command.
 6. Report exact commands, results, limitations, and remaining risk.
 7. Do not perform remote Git or GitHub operations unless explicitly requested.
+
+## TDD And Validation
+
+Test Driven Development is a non-negotiable requirement.
+
+The sole purpose of automated tests is to verify observable functionality and externally visible behavior.
+Tests must validate what the system does through its public interfaces and expected outcomes.
+
+Tests must not assert, inspect, or depend on implementation details, including but not limited to:
+
+- The existence of specific lines of code, statements, functions, classes, files, or modules.
+- Specific algorithms, control flow, variable names, method calls, code snippets, or internal implementation choices.
+- Any internal structure that can change without changing externally observable behavior.
+
+A correct implementation may be completely rewritten or refactored without requiring changes to functional tests, provided its externally observable behavior remains unchanged.
+
+Any test that fails solely because the implementation changed while the externally observable behavior remained correct is incorrectly designed and must be rewritten or removed.
+
+This requirement is mandatory for all new tests and must be applied whenever existing tests are modified.
