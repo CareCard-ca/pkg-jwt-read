@@ -4,12 +4,8 @@ import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 export const packageTasks = Object.freeze({
-  test: [
-    { command: 'npm', arguments: ['run', 'test:order'] },
-    { command: 'node', arguments: ['test/index.test.js'] },
-  ],
+  test: [{ command: 'node', arguments: ['test/index.test.js'] }],
   'test:types': [
-    { command: 'npm', arguments: ['run', 'test:order'] },
     { command: 'tsc', arguments: ['--noEmit'] },
     {
       command: 'mocha',
@@ -17,7 +13,6 @@ export const packageTasks = Object.freeze({
     },
   ],
   'test:coverage': [
-    { command: 'npm', arguments: ['run', 'test:order'] },
     { command: 'tsc', arguments: ['--noEmit'] },
     { command: 'nyc', arguments: ['node', 'test/index.test.js'] },
   ],

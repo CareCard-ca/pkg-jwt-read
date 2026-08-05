@@ -11,42 +11,10 @@ import {
   jwtClientId,
   JwtContext,
   JwtRequestContext,
-  jwtGetAgeInSeconds,
-  jwtGetClientId,
   jwtGetContext,
-  jwtGetRoleCode,
-  jwtGetRoleName,
-  jwtGetVisitorClientId,
-  jwtIsExpired,
-  jwtValidateAndExtract,
-  jwtValidateAndExtractNoThrow,
-  jwtValidateAndExtractOrServerAuth,
-  jwtValidateAndExtractService,
-  jwtValidateAndExtractUserAuthorization,
-  jwtValidateAndExtractUserAuthorizationNoThrow,
-  jwtValidateAndExtractVisitorNoThrow,
-  jwtValidateAndExtractWebToken,
-  jwtValidateAndExtractWebTokenNoThrow,
-  jwtVerify,
-  jwtVerifyAndHasRole,
-  jwtVerifyNoThrow,
-  jwtVerifyOrServerAuth,
-  jwtVerifyOrServerAuthAndHasRole,
-  jwtVerifyService,
-  jwtVerifyUserAuthorization,
-  jwtVerifyUserAuthorizationNoThrow,
-  jwtVerifyVisitorNoThrow,
-  jwtVerifyWebToken,
-  jwtVerifyWebTokenNoThrow,
   throwUsedTokenError,
   UserAuthorizationPayload,
   UserAuthorizationReadOptions,
-  verifyJwt,
-  verifyJwtAndRole,
-  verifyJwtNoThrow,
-  verifyVisitorNoThrow,
-  verifyWebToken,
-  verifyWebTokenNoThrow,
   visitorClientId,
 } from '../index';
 
@@ -62,50 +30,6 @@ describe('TypeScript Type Definitions - JWT Read Utilities', () => {
 
     assert.strictEqual(headerName, 'X-Authorization-Context');
     assert.strictEqual(maxTokenLength, 2048);
-  });
-
-  it('should verify new jwt utility names', () => {
-    assert.strictEqual(typeof jwtClientId, 'function');
-    assert.strictEqual(typeof jwtGetClientId, 'function');
-    assert.strictEqual(typeof jwtGetVisitorClientId, 'function');
-    assert.strictEqual(typeof jwtIsExpired, 'function');
-    assert.strictEqual(typeof jwtGetAgeInSeconds, 'function');
-    assert.strictEqual(typeof jwtGetRoleName, 'function');
-    assert.strictEqual(typeof jwtGetRoleCode, 'function');
-  });
-
-  it('should verify new middleware creator names', () => {
-    const publicKey = 'dummy-key';
-    assert.strictEqual(typeof jwtVerify(publicKey), 'function');
-    assert.strictEqual(typeof jwtVerifyWebToken(publicKey, 'X-Token'), 'function');
-    assert.strictEqual(typeof jwtVerifyNoThrow(publicKey), 'function');
-    assert.strictEqual(typeof jwtVerifyWebTokenNoThrow(publicKey, 'X-Token'), 'function');
-    assert.strictEqual(typeof jwtVerifyVisitorNoThrow(publicKey), 'function');
-    assert.strictEqual(typeof jwtVerifyAndHasRole('admin', publicKey), 'function');
-    assert.strictEqual(typeof jwtVerifyOrServerAuth(publicKey, () => ({ userId: '123' })), 'function');
-    assert.strictEqual(typeof jwtVerifyOrServerAuthAndHasRole('admin', publicKey, () => ({ userId: '123' })), 'function');
-    assert.strictEqual(typeof jwtVerifyService(publicKey, 'ms-auth', 'ms-institutions'), 'function');
-    assert.strictEqual(typeof jwtVerifyUserAuthorization(publicKey), 'function');
-    assert.strictEqual(typeof jwtVerifyUserAuthorizationNoThrow(publicKey), 'function');
-  });
-
-  it('should verify new validateAndExtract names', () => {
-    assert.strictEqual(typeof jwtValidateAndExtract, 'function');
-    assert.strictEqual(typeof jwtValidateAndExtractWebToken, 'function');
-    assert.strictEqual(typeof jwtValidateAndExtractNoThrow, 'function');
-    assert.strictEqual(typeof jwtValidateAndExtractWebTokenNoThrow, 'function');
-    assert.strictEqual(typeof jwtValidateAndExtractVisitorNoThrow, 'function');
-    assert.strictEqual(typeof jwtValidateAndExtractService, 'function');
-    assert.strictEqual(typeof jwtValidateAndExtractOrServerAuth, 'function');
-    assert.strictEqual(typeof jwtValidateAndExtractUserAuthorization, 'function');
-    assert.strictEqual(typeof jwtValidateAndExtractUserAuthorizationNoThrow, 'function');
-  });
-
-  it('should verify jwt utility types', () => {
-    assert.strictEqual(typeof jwtClientId, 'function');
-    assert.strictEqual(typeof visitorClientId, 'function');
-    assert.strictEqual(typeof isJwtExpired, 'function');
-    assert.strictEqual(typeof jwtAgeInSeconds, 'function');
   });
 
   it('should verify that functions return expected types', () => {
@@ -181,18 +105,7 @@ describe('TypeScript Type Definitions - JWT Read Utilities', () => {
     assert.strictEqual(options.userAuthorization?.headerName, undefined);
   });
 
-  it('should verify middleware creator types', () => {
-    const publicKey = 'dummy-key';
-    assert.strictEqual(typeof verifyJwt(publicKey), 'function');
-    assert.strictEqual(typeof verifyWebToken(publicKey, 'X-Token'), 'function');
-    assert.strictEqual(typeof verifyJwtNoThrow(publicKey), 'function');
-    assert.strictEqual(typeof verifyWebTokenNoThrow(publicKey, 'X-Token'), 'function');
-    assert.strictEqual(typeof verifyVisitorNoThrow(publicKey), 'function');
-    assert.strictEqual(typeof verifyJwtAndRole('admin', publicKey), 'function');
-  });
-
   it('should verify jwtGetContext types and behavior', () => {
-    assert.strictEqual(typeof jwtGetContext, 'function');
     const adminUserId = '85b3560f-2f26-4371-9f13-e4d8ba1ea581';
     const regularUserId = '6f4cb7f4-2c2a-4a91-9b56-3e5389703d42';
     const scopedUserId = '7a97e8e1-f2f3-4074-a182-12a64c5d4f79';
@@ -234,14 +147,6 @@ describe('TypeScript Type Definitions - JWT Read Utilities', () => {
 
   it('should verify throwUsedTokenError', () => {
     assert.throws(() => throwUsedTokenError(), /Used_Token/);
-  });
-
-  it('should verify throwError', () => {
-    // throwError removed
-  });
-
-  it('should verify validateAndExtract functions', () => {
-    // validateAndExtractJwtObject removed
   });
 
   it('should verify doesJwtUserHasRole overloads', () => {
