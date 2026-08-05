@@ -1,6 +1,6 @@
 'use strict';
 
-const { runIndexedMochaTests } = require('../scripts/testParallel/runIndexedMochaTests.cjs');
+const { runIndexedMochaTests } = require('./testParallel/runIndexedMochaTests.cjs');
 
 const parallelTestFiles = ['test/jwtLib.test.js', 'test/jwtRoles.test.js'];
 

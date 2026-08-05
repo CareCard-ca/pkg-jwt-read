@@ -270,7 +270,9 @@ function createUserAuthorizationToken() {
 }
 
 function corruptToken(token) {
-  return `${token.slice(0, -1)}${token.endsWith('a') ? 'b' : 'a'}`;
+  const [header, payload, signature] = token.split('.');
+  const corruptedFirstCharacter = signature.startsWith('a') ? 'b' : 'a';
+  return `${header}.${payload}.${corruptedFirstCharacter}${signature.slice(1)}`;
 }
 
 function captureMiddlewareError(middleware, request) {
