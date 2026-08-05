@@ -7,7 +7,9 @@ Non-negotiable root-cause solution rule: Always identify and solve the verified 
 
 # Package JWT Read
 
-Non-negotiable TDD rule: Always write the failing test first, run it to confirm it fails for the intended reason, then implement the code and rerun the test until it passes. Test Driven Development is required for all coding work and must not be skipped. For documentation- or skill-only edits, add or update the relevant validation check before changing the prose.
+Non-negotiable TDD rule: Always write the failing test first, run it to confirm it fails for the intended reason, then implement the code and rerun the test until it passes. Test Driven Development is required for all coding work and must not be skipped. For documentation- or skill-only edits, run the relevant focused non-test
+validation before changing the prose; do not add automated tests that inspect
+prose, files, or repository structure.
 
 Non-negotiable repository isolation rule: Every repository must run its Husky hooks and tests using only files, code, fixtures, dependencies, and services contained within that repository. Tests and Husky scripts must not import, require, read, execute, or otherwise depend on sibling repositories or paths outside the repository root. app-e2e-tests is the only exception because cross-repository end-to-end testing is its explicit responsibility.
 
@@ -51,8 +53,10 @@ CareCard JWT read package for parsing, request attachment, visitor tokens, role 
 
 ## Testing Expectations
 
-- Write or update package tests before behavior or public API changes.
-- Include type/export compatibility tests where the package already has them.
+- Write a new failing consumer-facing test through the supported package root
+  before behavior or public API changes. Modify a pre-existing test only after
+  the user grants fresh, explicit permission for that exact change.
+- Include consumer-facing runtime and compilation tests through the supported package root. Exercise public behavior and realistic type usage without inspecting export objects, source files, or module layout.
 - Run package test, lint, type, and Husky validation commands required by the changed area.
 
 ## Safety Constraints
@@ -82,8 +86,10 @@ depend on those folders being present.
   header, role, generic, or `unknown` types with narrowing.
 - Follow this repository's coding style, naming conventions, and CommonJS
   project structure.
-- Use Test-Driven Development: add or update relevant Mocha or type tests before
-  changing behavior.
+- Use Test-Driven Development: add a new failing consumer-facing Mocha or type
+  test through the supported package root before changing behavior. Modify a
+  pre-existing test only after the user grants fresh, explicit permission for
+  that exact change.
 - Never suppress errors, linter warnings, TypeScript errors, or failing tests.
   Handle the underlying issue.
 - Do not add dependencies unless absolutely needed. Ask for confirmation first
@@ -209,17 +215,19 @@ role names, such as `ad` and `admin`.
 - When existing declarations are too loose, improve them with specific types as
   part of the touched change instead of adding new loose types.
 - Keep overloads for context-bound helpers such as `jwtIsExpired` readable and
-  covered by type tests.
-- Update `test/types.test.ts` whenever public types, exports, overloads, or
-  attached request methods change.
+  verify them by compiling realistic consumer usage through the package root.
+- When public types, overloads, or attached request behavior changes, compile
+  the supported consumer contract without asserting that named exports or
+  declaration nodes exist.
 
 ## Tests
 
 - Use Mocha for runtime tests under `test`.
-- `lib` modules should have corresponding test files under `test`.
-- `test/attachedMethods.test.js` covers methods attached to objects or used as
-  context.
-- `test/types.test.ts` verifies TypeScript declarations with `tsc`.
+- Exercise runtime behavior only through the package's supported root exports;
+  tests must not mirror `lib` modules or depend on internal file layout.
+- Verify request-attachment and context-bound behavior through those public
+  exports without asserting internal method calls.
+- Compile realistic consumer code through the package root with `tsc` to verify externally visible declaration behavior.
 - Add focused tests for valid JWTs, invalid JWTs, missing headers, role checks,
   visitor token extraction, expiration behavior, request attachment behavior,
   server-auth introspection success/failure, NoThrow behavior, and
@@ -307,3 +315,22 @@ immediately when no helper remains, allow only a bounded 250 ms settlement
 window for already-stopping helpers, fail persistent descendants, preserve
 failures and output, use exit code `124` only for a real outer deadline, and
 remain a final guard rather than a substitute for explicit cleanup.
+
+## TDD And Validation
+
+Test Driven Development is a non-negotiable requirement.
+
+The sole purpose of automated tests is to verify observable functionality and externally visible behavior.
+Tests must validate what the system does through its public interfaces and expected outcomes.
+
+Tests must not assert, inspect, or depend on implementation details, including but not limited to:
+
+- The existence of specific lines of code, statements, functions, classes, files, or modules.
+- Specific algorithms, control flow, variable names, method calls, code snippets, or internal implementation choices.
+- Any internal structure that can change without changing externally observable behavior.
+
+A correct implementation may be completely rewritten or refactored without requiring changes to functional tests, provided its externally observable behavior remains unchanged.
+
+Any test that fails solely because the implementation changed while the externally observable behavior remained correct is incorrectly designed and must be rewritten or removed.
+
+This requirement is mandatory for all new tests and must be applied whenever existing tests are modified.
