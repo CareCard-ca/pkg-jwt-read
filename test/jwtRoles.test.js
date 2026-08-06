@@ -1,11 +1,6 @@
 const { describe, it } = require('mocha');
 const assert = require('assert');
-const { jwtGetContext, jwtGetRoleCode, jwtGetRoleName } = require('../index');
-const jwtRoles = {
-  getCodeFromNameOfRole: jwtGetRoleCode,
-  getContext: jwtGetContext,
-  getNameOfRoleFromCode: jwtGetRoleName,
-};
+const jwtRoles = require('../lib/jwtRoles');
 
 describe('Lib jwt Roles', function () {
   const adminUserId = '85b3560f-2f26-4371-9f13-e4d8ba1ea581';
