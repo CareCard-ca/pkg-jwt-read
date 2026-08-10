@@ -10,10 +10,11 @@
   "types": "index.d.ts",
   "scripts": {
     "test": "node scripts/runPackageTask.mjs test",
-    "test:order": "node --test scripts/testOrder/randomizeTestOrder.test.mjs scripts/testOrder/testOrderPolicy.test.mjs scripts/testParallel/runIndexedMochaTests.test.mjs scripts/testParallel/parallelTestPolicy.test.mjs scripts/packageTaskRunner.test.mjs",
+    "test:order": "node --test scripts/testOrder/randomizeTestOrder.test.mjs scripts/testParallel/runIndexedMochaTests.test.mjs scripts/packageTaskRunner.test.mjs",
     "test:types": "node scripts/runPackageTask.mjs test:types",
     "test:coverage": "node scripts/runPackageTask.mjs test:coverage",
     "test:All": "node scripts/runPackageTask.mjs test:All",
+    "validate:audits": "node scripts/runPackageTask.mjs validate:audits",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "prepare": "husky",

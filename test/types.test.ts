@@ -1,6 +1,7 @@
 import assert from 'assert';
 import { describe, it } from 'mocha';
 import {
+  AuthenticatedRequest,
   DEFAULT_USER_AUTHORIZATION_HEADER_NAME,
   DEFAULT_USER_AUTHORIZATION_MAX_TOKEN_LENGTH,
   doesJwtUserHasRole,
@@ -65,13 +66,19 @@ describe('TypeScript Type Definitions - JWT Read Utilities', () => {
   });
 
   it('should verify new jwt utility names', () => {
-    assert.strictEqual(typeof jwtClientId, 'function');
-    assert.strictEqual(typeof jwtGetClientId, 'function');
-    assert.strictEqual(typeof jwtGetVisitorClientId, 'function');
-    assert.strictEqual(typeof jwtIsExpired, 'function');
-    assert.strictEqual(typeof jwtGetAgeInSeconds, 'function');
-    assert.strictEqual(typeof jwtGetRoleName, 'function');
-    assert.strictEqual(typeof jwtGetRoleCode, 'function');
+    const issuedAt = Math.floor(Date.now() / 1000) - 10;
+    const request: JwtRequestContext = {
+      jwt: { payload: { exp: issuedAt + 60, iat: issuedAt, sub: 'typed-user' } },
+      visitor: { payload: { sub: 'typed-visitor' } },
+    };
+
+    assert.strictEqual(jwtClientId(request), 'typed-user');
+    assert.strictEqual(jwtGetClientId(request), 'typed-user');
+    assert.strictEqual(jwtGetVisitorClientId(request), 'typed-visitor');
+    assert.strictEqual(jwtIsExpired(request), false);
+    assert.ok(jwtGetAgeInSeconds(request) >= 10);
+    assert.strictEqual(jwtGetRoleName('ad'), 'admin');
+    assert.strictEqual(jwtGetRoleCode('admin'), 'ad');
   });
 
   it('should verify new middleware creator names', () => {
@@ -89,23 +96,38 @@ describe('TypeScript Type Definitions - JWT Read Utilities', () => {
     assert.strictEqual(typeof jwtVerifyUserAuthorizationNoThrow(publicKey), 'function');
   });
 
-  it('should verify new validateAndExtract names', () => {
-    assert.strictEqual(typeof jwtValidateAndExtract, 'function');
-    assert.strictEqual(typeof jwtValidateAndExtractWebToken, 'function');
-    assert.strictEqual(typeof jwtValidateAndExtractNoThrow, 'function');
-    assert.strictEqual(typeof jwtValidateAndExtractWebTokenNoThrow, 'function');
-    assert.strictEqual(typeof jwtValidateAndExtractVisitorNoThrow, 'function');
-    assert.strictEqual(typeof jwtValidateAndExtractService, 'function');
-    assert.strictEqual(typeof jwtValidateAndExtractOrServerAuth, 'function');
-    assert.strictEqual(typeof jwtValidateAndExtractUserAuthorization, 'function');
-    assert.strictEqual(typeof jwtValidateAndExtractUserAuthorizationNoThrow, 'function');
+  it('should execute validateAndExtract contracts', async () => {
+    const optionalRequest = createAuthenticatedRequest();
+    jwtValidateAndExtractNoThrow(optionalRequest, 'invalid-public-key');
+    jwtValidateAndExtractWebTokenNoThrow(optionalRequest, 'invalid-public-key', 'X-Token');
+    jwtValidateAndExtractVisitorNoThrow(optionalRequest, 'invalid-public-key');
+    jwtValidateAndExtractUserAuthorizationNoThrow(optionalRequest, 'invalid-public-key');
+    assert.strictEqual(optionalRequest.jwt, null);
+    assert.strictEqual(optionalRequest.visitor, null);
+    assert.strictEqual(optionalRequest.userAuthorization, null);
+
+    assert.throws(() => jwtValidateAndExtract(createAuthenticatedRequest(), 'invalid-public-key'));
+    assert.throws(() => jwtValidateAndExtractWebToken(createAuthenticatedRequest(), 'invalid-public-key', 'X-Token'));
+    assert.throws(() => jwtValidateAndExtractService(createAuthenticatedRequest(), 'invalid-public-key', 'ms-auth', 'ms-search'));
+    assert.throws(() => jwtValidateAndExtractUserAuthorization(createAuthenticatedRequest(), 'invalid-public-key'));
+
+    const serverAuthRequest = createAuthenticatedRequest({ Authorization: 'Bearer opaque-token' });
+    await jwtValidateAndExtractOrServerAuth(serverAuthRequest, 'invalid-public-key', () => ({
+      userId: 'typed-user',
+      valid: true,
+    }));
+    assert.strictEqual(serverAuthRequest.jwt?.payload.sub, 'typed-user');
   });
 
   it('should verify jwt utility types', () => {
-    assert.strictEqual(typeof jwtClientId, 'function');
-    assert.strictEqual(typeof visitorClientId, 'function');
-    assert.strictEqual(typeof isJwtExpired, 'function');
-    assert.strictEqual(typeof jwtAgeInSeconds, 'function');
+    const request: JwtRequestContext = {
+      jwt: { payload: { exp: Math.floor(Date.now() / 1000) + 60, iat: Math.floor(Date.now() / 1000), sub: 'legacy-user' } },
+      visitor: { payload: { sub: 'legacy-visitor' } },
+    };
+    assert.strictEqual(jwtClientId(request), 'legacy-user');
+    assert.strictEqual(visitorClientId(request), 'legacy-visitor');
+    assert.strictEqual(isJwtExpired(request), false);
+    assert.ok(jwtAgeInSeconds(request) >= 0);
   });
 
   it('should verify that functions return expected types', () => {
@@ -192,7 +214,6 @@ describe('TypeScript Type Definitions - JWT Read Utilities', () => {
   });
 
   it('should verify jwtGetContext types and behavior', () => {
-    assert.strictEqual(typeof jwtGetContext, 'function');
     const adminUserId = '85b3560f-2f26-4371-9f13-e4d8ba1ea581';
     const regularUserId = '6f4cb7f4-2c2a-4a91-9b56-3e5389703d42';
     const scopedUserId = '7a97e8e1-f2f3-4074-a182-12a64c5d4f79';
@@ -236,12 +257,15 @@ describe('TypeScript Type Definitions - JWT Read Utilities', () => {
     assert.throws(() => throwUsedTokenError(), /Used_Token/);
   });
 
-  it('should verify throwError', () => {
-    // throwError removed
+  it('should preserve legacy role mapping behavior', () => {
+    assert.strictEqual(getNameOfRole('su'), 'super_admin');
+    assert.strictEqual(getCodeOfRole('super_admin'), 'su');
   });
 
-  it('should verify validateAndExtract functions', () => {
-    // validateAndExtractJwtObject removed
+  it('should leave optional missing authentication unauthenticated', () => {
+    const request = createAuthenticatedRequest();
+    jwtValidateAndExtractNoThrow(request, 'invalid-public-key');
+    assert.strictEqual(request.jwt, null);
   });
 
   it('should verify doesJwtUserHasRole overloads', () => {
@@ -274,3 +298,12 @@ describe('TypeScript Type Definitions - JWT Read Utilities', () => {
     assert.strictEqual(boundIsJwtExpired(), false);
   });
 });
+
+function createAuthenticatedRequest(headers: Record<string, string> = {}): AuthenticatedRequest {
+  const normalizedHeaders = Object.fromEntries(Object.entries(headers).map(([name, value]) => [name.toLowerCase(), value]));
+  return {
+    get(name: string) {
+      return normalizedHeaders[name.toLowerCase()] ?? undefined;
+    },
+  } as unknown as AuthenticatedRequest;
+}
