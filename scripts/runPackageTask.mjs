@@ -4,6 +4,16 @@ import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 export const packageTasks = Object.freeze({
+  'validate:audits': [
+    { command: 'node', arguments: ['scripts/packageTaskRunner.audit.mjs'] },
+    { command: 'node', arguments: ['scripts/testOrder/testOrderPolicy.audit.mjs'] },
+    { command: 'node', arguments: ['scripts/testParallel/parallelTestPolicy.audit.mjs'] },
+    { command: 'mocha', arguments: ['test/config/errorWarningSuppression.audit.js'] },
+    { command: 'mocha', arguments: ['test/config/repositoryIsolation.audit.js'] },
+    { command: 'mocha', arguments: ['test/config/serverAuthEmailVerificationDocs.audit.js'] },
+    { command: 'mocha', arguments: ['test/config/tddGuidanceDocs.audit.js'] },
+    { command: 'mocha', arguments: ['test/jwtLib.audit.js'] },
+  ],
   test: [
     { command: 'npm', arguments: ['run', 'test:order'] },
     { command: 'node', arguments: ['test/index.test.js'] },
@@ -17,11 +27,13 @@ export const packageTasks = Object.freeze({
     },
   ],
   'test:coverage': [
+    { command: 'npm', arguments: ['run', 'validate:audits'] },
     { command: 'npm', arguments: ['run', 'test:order'] },
     { command: 'tsc', arguments: ['--noEmit'] },
     { command: 'nyc', arguments: ['node', 'test/index.test.js'] },
   ],
   'test:All': [
+    { command: 'npm', arguments: ['run', 'validate:audits'] },
     { command: 'npm', arguments: ['run', 'test'] },
     { command: 'npm', arguments: ['run', 'test:types'] },
   ],

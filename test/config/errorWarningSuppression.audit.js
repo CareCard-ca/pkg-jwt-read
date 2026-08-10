@@ -14,12 +14,16 @@ const SUPPRESSION_DIRECTIVES = [
   ['@ts', 'expect-error'].join('-'),
 ];
 
-// Pattern: Repository Query - limits validation to tracked code in this package.
+// Pattern: Repository Query - limits validation to tracked and pending code in this package.
 function listTrackedCodeFiles() {
-  return execFileSync('git', ['ls-files', '*.js', '*.jsx', '*.ts', '*.tsx', '*.mjs', '*.cjs'], {
-    cwd: process.cwd(),
-    encoding: 'utf8',
-  })
+  return execFileSync(
+    'git',
+    ['ls-files', '--cached', '--others', '--exclude-standard', '--', '*.js', '*.jsx', '*.ts', '*.tsx', '*.mjs', '*.cjs'],
+    {
+      cwd: process.cwd(),
+      encoding: 'utf8',
+    },
+  )
     .split('\n')
     .filter(Boolean)
     .filter(existsSync)
