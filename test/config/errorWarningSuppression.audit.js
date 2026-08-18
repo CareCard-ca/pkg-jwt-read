@@ -18,7 +18,19 @@ const SUPPRESSION_DIRECTIVES = [
 function listTrackedCodeFiles() {
   return execFileSync(
     'git',
-    ['ls-files', '--cached', '--others', '--exclude-standard', '--', '*.js', '*.jsx', '*.ts', '*.tsx', '*.mjs', '*.cjs'],
+    [
+      'ls-files',
+      '--cached',
+      '--others',
+      '--exclude-standard',
+      '--',
+      '*.js',
+      '*.jsx',
+      '*.ts',
+      '*.tsx',
+      '*.mjs',
+      '*.cjs',
+    ],
     {
       cwd: process.cwd(),
       encoding: 'utf8',
@@ -37,7 +49,9 @@ function findSuppressionDirectives(filePath) {
   return readFileSync(filePath, 'utf8')
     .split('\n')
     .flatMap((line, index) =>
-      SUPPRESSION_DIRECTIVES.filter(directive => line.includes(directive)).map(directive => `${filePath}:${index + 1}: ${directive}`),
+      SUPPRESSION_DIRECTIVES.filter(directive => line.includes(directive)).map(
+        directive => `${filePath}:${index + 1}: ${directive}`,
+      ),
     );
 }
 

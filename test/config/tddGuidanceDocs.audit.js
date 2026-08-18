@@ -16,15 +16,22 @@ function normalizeWhitespace(value) {
 }
 
 function containsGuidanceOrReference(filePath, expectedGuidance, visitedPaths = new Set()) {
-  if (visitedPaths.has(filePath)) return false;
+  if (visitedPaths.has(filePath)) {
+    return false;
+  }
 
   const fileContent = readFileSync(filePath, 'utf8');
-  if (normalizeWhitespace(fileContent).includes(expectedGuidance)) return true;
+  if (normalizeWhitespace(fileContent).includes(expectedGuidance)) {
+    return true;
+  }
 
   const nextVisitedPaths = new Set(visitedPaths).add(filePath);
   return [...fileContent.matchAll(/\$([a-z0-9-]+)/g)].some(([, skillName]) => {
     const referencedSkillPath = `.agents/skills/${skillName}/SKILL.md`;
-    return existsSync(referencedSkillPath) && containsGuidanceOrReference(referencedSkillPath, expectedGuidance, nextVisitedPaths);
+    return (
+      existsSync(referencedSkillPath) &&
+      containsGuidanceOrReference(referencedSkillPath, expectedGuidance, nextVisitedPaths)
+    );
   });
 }
 
@@ -61,10 +68,14 @@ function listTrackedGuidanceFiles() {
 }
 
 function listTrackedMarkdownFiles() {
-  const output = execFileSync('git', ['ls-files', '--cached', '--others', '--exclude-standard', '--', '*.md'], {
-    cwd: process.cwd(),
-    encoding: 'utf8',
-  });
+  const output = execFileSync(
+    'git',
+    ['ls-files', '--cached', '--others', '--exclude-standard', '--', '*.md'],
+    {
+      cwd: process.cwd(),
+      encoding: 'utf8',
+    },
+  );
 
   return output
     .split('\n')
@@ -80,14 +91,18 @@ function listTrackedMarkdownFiles() {
 describe('TDD guidance documentation', function () {
   it('documents or references the non-negotiable TDD rule in every README and skill', function () {
     const expectedGuidance = normalizeWhitespace(TDD_GUIDANCE);
-    const missingGuidance = listTrackedGuidanceFiles().filter(filePath => !containsGuidanceOrReference(filePath, expectedGuidance));
+    const missingGuidance = listTrackedGuidanceFiles().filter(
+      filePath => !containsGuidanceOrReference(filePath, expectedGuidance),
+    );
 
     assert.deepStrictEqual(missingGuidance, []);
   });
 
   it('documents or references the code organization rule in every Markdown file', function () {
     const expectedGuidance = normalizeWhitespace(CODE_ORGANIZATION_GUIDANCE);
-    const missingGuidance = listTrackedMarkdownFiles().filter(filePath => !containsGuidanceOrReference(filePath, expectedGuidance));
+    const missingGuidance = listTrackedMarkdownFiles().filter(
+      filePath => !containsGuidanceOrReference(filePath, expectedGuidance),
+    );
 
     assert.deepStrictEqual(missingGuidance, []);
   });

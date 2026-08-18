@@ -72,7 +72,9 @@ describe('@carecard/jwt-read public behavior', function () {
     jwtValidateAndExtractWebTokenNoThrow(invalidWebRequest, publicKey, 'X-Token');
     assert.strictEqual(invalidWebRequest.jwt, null);
 
-    const visitorRequest = createRequest({ Visitor: `Bearer ${createSignedToken({ sub: USER_ID })}` });
+    const visitorRequest = createRequest({
+      Visitor: `Bearer ${createSignedToken({ sub: USER_ID })}`,
+    });
     jwtValidateAndExtractVisitorNoThrow(visitorRequest, publicKey);
     assert.strictEqual(jwtGetVisitorClientId(visitorRequest), USER_ID);
   });
@@ -84,19 +86,33 @@ describe('@carecard/jwt-read public behavior', function () {
     const webRequest = createRequest({ 'X-Token': createUserToken() });
     await expectMiddlewareSuccess(jwtVerifyWebToken(publicKey, 'X-Token'), webRequest);
 
-    const visitorRequest = createRequest({ Visitor: `Bearer ${createSignedToken({ sub: USER_ID })}` });
+    const visitorRequest = createRequest({
+      Visitor: `Bearer ${createSignedToken({ sub: USER_ID })}`,
+    });
     await expectMiddlewareSuccess(jwtVerifyVisitorNoThrow(publicKey), visitorRequest);
 
     const invalidToken = corruptToken(createUserToken());
-    const requiredError = await captureMiddlewareError(jwtVerify(publicKey), createRequest({ Authorization: `Bearer ${invalidToken}` }));
+    const requiredError = await captureMiddlewareError(
+      jwtVerify(publicKey),
+      createRequest({ Authorization: `Bearer ${invalidToken}` }),
+    );
     assert.ok(requiredError instanceof Error);
 
-    await expectMiddlewareSuccess(jwtVerifyNoThrow(publicKey), createRequest({ Authorization: `Bearer ${invalidToken}` }));
-    await expectMiddlewareSuccess(jwtVerifyWebTokenNoThrow(publicKey, 'X-Token'), createRequest({ 'X-Token': invalidToken }));
+    await expectMiddlewareSuccess(
+      jwtVerifyNoThrow(publicKey),
+      createRequest({ Authorization: `Bearer ${invalidToken}` }),
+    );
+    await expectMiddlewareSuccess(
+      jwtVerifyWebTokenNoThrow(publicKey, 'X-Token'),
+      createRequest({ 'X-Token': invalidToken }),
+    );
   });
 
   it('enforces requested roles through bearer middleware', async function () {
-    await expectMiddlewareSuccess(jwtVerifyAndHasRole('admin', publicKey), createRequest({ Authorization: `Bearer ${createUserToken()}` }));
+    await expectMiddlewareSuccess(
+      jwtVerifyAndHasRole('admin', publicKey),
+      createRequest({ Authorization: `Bearer ${createUserToken()}` }),
+    );
 
     const deniedError = await captureMiddlewareError(
       jwtVerifyAndHasRole('reviewer', publicKey),
@@ -120,10 +136,15 @@ describe('@carecard/jwt-read public behavior', function () {
     assert.strictEqual(directRequest.userAuthorization.payload.table, 'documents');
 
     const middlewareRequest = createRequest({ [DEFAULT_USER_AUTHORIZATION_HEADER_NAME]: token });
-    await expectMiddlewareSuccess(jwtVerifyUserAuthorization(publicKey, undefined, options), middlewareRequest);
+    await expectMiddlewareSuccess(
+      jwtVerifyUserAuthorization(publicKey, undefined, options),
+      middlewareRequest,
+    );
 
     const invalidToken = corruptToken(token);
-    const optionalRequest = createRequest({ [DEFAULT_USER_AUTHORIZATION_HEADER_NAME]: invalidToken });
+    const optionalRequest = createRequest({
+      [DEFAULT_USER_AUTHORIZATION_HEADER_NAME]: invalidToken,
+    });
     jwtValidateAndExtractUserAuthorizationNoThrow(optionalRequest, publicKey);
     assert.strictEqual(optionalRequest.userAuthorization, null);
     await expectMiddlewareSuccess(jwtVerifyUserAuthorizationNoThrow(publicKey), optionalRequest);
@@ -145,7 +166,9 @@ describe('@carecard/jwt-read public behavior', function () {
     const wrongIssuerRequest = createRequest({
       Authorization: `Bearer ${createServiceToken('ms-search', 'ms-auth')}`,
     });
-    assert.throws(() => jwtValidateAndExtractService(wrongIssuerRequest, publicKey, 'ms-institutions', 'ms-auth'));
+    assert.throws(() =>
+      jwtValidateAndExtractService(wrongIssuerRequest, publicKey, 'ms-institutions', 'ms-auth'),
+    );
     assert.strictEqual(wrongIssuerRequest.jwt, null);
   });
 
@@ -179,7 +202,9 @@ describe('@carecard/jwt-read public behavior', function () {
 });
 
 function createRequest(headers) {
-  const normalizedHeaders = Object.fromEntries(Object.entries(headers).map(([name, value]) => [name.toLowerCase(), value]));
+  const normalizedHeaders = Object.fromEntries(
+    Object.entries(headers).map(([name, value]) => [name.toLowerCase(), value]),
+  );
   return {
     get(name) {
       return normalizedHeaders[name.toLowerCase()] ?? null;
@@ -188,7 +213,11 @@ function createRequest(headers) {
 }
 
 function createSignedToken(payload) {
-  return jwtCreateSignedToken({ alg: 'EdDSA', typ: 'JWT' }, { iat: Math.floor(Date.now() / 1000), ...payload }, privateKey);
+  return jwtCreateSignedToken(
+    { alg: 'EdDSA', typ: 'JWT' },
+    { iat: Math.floor(Date.now() / 1000), ...payload },
+    privateKey,
+  );
 }
 
 function createUserToken() {

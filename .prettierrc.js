@@ -4,7 +4,9 @@ module.exports = {
   bracketSpacing: true,
   singleQuote: true,
   trailingComma: 'all',
-  printWidth: 140,
+  printWidth: 100,
+  semi: true,
+  tabWidth: 2,
   useTabs: false,
-  endOfLine: 'auto',
+  endOfLine: 'lf',
 };

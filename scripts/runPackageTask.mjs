@@ -23,7 +23,13 @@ export const packageTasks = Object.freeze({
     { command: 'tsc', arguments: ['--noEmit'] },
     {
       command: 'mocha',
-      arguments: ['--require', './scripts/testOrder/randomizeTestOrder.cjs', '-r', 'ts-node/register', 'test/types.test.ts'],
+      arguments: [
+        '--require',
+        './scripts/testOrder/randomizeTestOrder.cjs',
+        '-r',
+        'ts-node/register',
+        'test/types.test.ts',
+      ],
     },
   ],
   'test:coverage': [
@@ -44,10 +50,18 @@ export function createTaskEnvironment(overrides = {}, inheritedEnvironment = pro
 }
 
 function getTaskExitCode(result) {
-  if (result.error) throw result.error;
-  if (typeof result.status === 'number') return result.status;
-  if (result.signal === 'SIGINT') return 130;
-  if (result.signal === 'SIGTERM') return 143;
+  if (result.error) {
+    throw result.error;
+  }
+  if (typeof result.status === 'number') {
+    return result.status;
+  }
+  if (result.signal === 'SIGINT') {
+    return 130;
+  }
+  if (result.signal === 'SIGTERM') {
+    return 143;
+  }
   return 1;
 }
 
@@ -69,20 +83,33 @@ function shouldRunTaskStep(taskStep, pathExists) {
   return !taskStep.whenMissing || !pathExists(taskStep.whenMissing);
 }
 
-export function runPackageTask(taskName, executeTask = executeTaskStep, taskDefinitions = packageTasks, pathExists = existsSync) {
+export function runPackageTask(
+  taskName,
+  executeTask = executeTaskStep,
+  taskDefinitions = packageTasks,
+  pathExists = existsSync,
+) {
   const taskSteps = taskDefinitions[taskName];
-  if (!Array.isArray(taskSteps)) throw new Error('Unknown package task.');
+  if (!Array.isArray(taskSteps)) {
+    throw new Error('Unknown package task.');
+  }
 
   for (const taskStep of taskSteps) {
-    if (!shouldRunTaskStep(taskStep, pathExists)) continue;
+    if (!shouldRunTaskStep(taskStep, pathExists)) {
+      continue;
+    }
     const exitCode = executeTask(taskStep);
-    if (exitCode !== 0) return exitCode;
+    if (exitCode !== 0) {
+      return exitCode;
+    }
   }
   return 0;
 }
 
 function isDirectExecution() {
-  if (!process.argv[1]) return false;
+  if (!process.argv[1]) {
+    return false;
+  }
   return resolve(process.argv[1]) === fileURLToPath(import.meta.url);
 }
 
@@ -97,4 +124,6 @@ function runCommandLineTask() {
   process.exitCode = runPackageTask(taskName);
 }
 
-if (isDirectExecution()) runCommandLineTask();
+if (isDirectExecution()) {
+  runCommandLineTask();
+}

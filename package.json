@@ -15,11 +15,12 @@
     "test:coverage": "node scripts/runPackageTask.mjs test:coverage",
     "test:All": "node scripts/runPackageTask.mjs test:All",
     "validate:audits": "node scripts/runPackageTask.mjs validate:audits",
-    "format": "prettier --write .",
-    "format:check": "prettier --check .",
+    "format": "prettier --write \"**/*.{js,jsx,mjs,cjs,ts,tsx,mts,cts}\"",
+    "format:check": "prettier --check \"**/*.{js,jsx,mjs,cjs,ts,tsx,mts,cts}\"",
+    "lint-staged": "lint-staged",
     "prepare": "husky",
-    "lint:fix": "eslint --fix",
-    "lint": "eslint"
+    "lint:fix": "eslint . --fix --max-warnings 0",
+    "lint": "eslint . --max-warnings 0"
   },
   "keywords": [
     "auth",
@@ -29,16 +30,26 @@
   ],
   "author": "CareCard team",
   "license": "ISC",
+  "lint-staged": {
+    "*.{js,jsx,mjs,cjs,ts,tsx,mts,cts}": [
+      "eslint --fix --max-warnings 0",
+      "prettier --write"
+    ],
+    "*.{json,jsonc,md,mdx,css,scss,yaml,yml}": [
+      "prettier --write"
+    ]
+  },
   "devDependencies": {
     "@types/express": "5.0.6",
     "@types/mocha": "10.0.10",
     "@types/node": "25.9.3",
-    "eslint": "9.39.4",
+    "@typescript-eslint/parser": "8.67.0",
+    "eslint": "9.39.5",
     "husky": "9.1.7",
-    "lint-staged": "17.0.7",
+    "lint-staged": "17.2.0",
     "mocha": "11.7.6",
     "nyc": "18.0.0",
-    "prettier": "3.8.4",
+    "prettier": "3.9.6",
     "ts-node": "10.9.2",
     "typescript": "6.0.3"
   },
@@ -49,8 +60,9 @@
   },
   "overrides": {
     "diff": "8.0.4",
-    "minimatch": "10.2.5",
+    "brace-expansion": "5.0.9",
+    "minimatch": "10.2.6",
     "serialize-javascript": "7.0.5",
-    "js-yaml": "4.3.0"
+    "js-yaml": "4.3.1"
   }
 }
