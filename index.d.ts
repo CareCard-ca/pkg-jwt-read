@@ -380,7 +380,11 @@ export function jwtValidateAndExtractWebToken(
 /**
  * Validates the JWT from the Authorization header and extracts it into req.jwt (no-throw).
  */
-export function jwtValidateAndExtractNoThrow(req: AuthenticatedRequest, publicKey: string, options?: UserAuthorizationReadOptions): void;
+export function jwtValidateAndExtractNoThrow(
+  req: AuthenticatedRequest,
+  publicKey: string,
+  options?: UserAuthorizationReadOptions,
+): void;
 
 /**
  * Validates the JWT from a custom header and extracts it into req.jwt (no-throw).

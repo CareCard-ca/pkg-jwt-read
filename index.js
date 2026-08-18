@@ -21,7 +21,8 @@ module.exports = {
   jwtGetContext: jwtRoles.getContext,
   jwtValidateAndExtract: jwtLib.validateAndExtractJwtObject,
   jwtValidateAndExtractUserAuthorization: jwtLib.validateAndExtractUserAuthorizationObject,
-  jwtValidateAndExtractUserAuthorizationNoThrow: jwtLib.validateAndExtractUserAuthorizationObjectNoThrow,
+  jwtValidateAndExtractUserAuthorizationNoThrow:
+    jwtLib.validateAndExtractUserAuthorizationObjectNoThrow,
   jwtValidateAndExtractService: jwtLib.validateAndExtractServiceJwtObject,
   jwtValidateAndExtractOrServerAuth: jwtLib.validateAndExtractJwtOrServerAuthObject,
   jwtValidateAndExtractWebToken: jwtLib.validateAndExtractWebToken,

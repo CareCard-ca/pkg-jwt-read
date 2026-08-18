@@ -94,38 +94,60 @@ jobs:
         run: |
           set -euo pipefail
 
-          # Avoid creating duplicates: check for an existing open PR for this head -> base.
-          # `gh pr list --head` expects the branch name (without owner prefix) for same-repo PRs.
-          EXISTING=$(gh pr list \
-            --repo "$REPO" \
-            --state open \
-            --head "$HEAD" \
-            --base "$BASE" \
-            --json number \
-            --jq '.[0].number')
-
-          if [[ -n "${EXISTING:-}" ]]; then
-            echo "An open PR already exists for $HEAD -> $BASE (#$EXISTING). Updating PR metadata."
-            PR_NUMBER="$EXISTING"
-          else
-            TITLE="Draft: merge \`$HEAD\` into \`$BASE\`"
-            BODY=$'Auto-created draft PR for branch `'"$HEAD"$'`.\n\nTarget base: `'"$BASE"$'`\n\nMark this PR as ready for review when you want it to be reviewed/merged.'
-
-            gh pr create \
-              --repo "$REPO" \
-              --draft \
-              --base "$BASE" \
-              --head "$HEAD" \
-              --title "$TITLE" \
-              --body  "$BODY"
-
-            PR_NUMBER=$(gh pr list \
+          # Pattern: Query Object - resolves the exact open PR for this head and base.
+          find_open_pull_request() {
+            gh pr list \
               --repo "$REPO" \
               --state open \
               --head "$HEAD" \
               --base "$BASE" \
               --json number \
-              --jq '.[0].number')
+              --jq '.[0].number // empty'
+          }
+
+          PR_NUMBER="$(find_open_pull_request)"
+          if [[ -n "$PR_NUMBER" ]]; then
+            echo "An open PR already exists for $HEAD -> $BASE (#$PR_NUMBER). Updating PR metadata."
+          else
+            TITLE="Draft: merge \`$HEAD\` into \`$BASE\`"
+            BODY=$'Auto-created draft PR for branch `'"$HEAD"$'`.\n\nTarget base: `'"$BASE"$'`\n\nMark this PR as ready for review when you want it to be reviewed/merged.'
+
+            CREATE_OUTPUT=""
+            if CREATE_OUTPUT="$(gh pr create \
+              --repo "$REPO" \
+              --draft \
+              --base "$BASE" \
+              --head "$HEAD" \
+              --title "$TITLE" \
+              --body "$BODY" 2>&1)"; then
+              printf '%s\n' "$CREATE_OUTPUT"
+            else
+              CREATE_STATUS=$?
+              if PR_NUMBER="$(find_open_pull_request)"; then
+                :
+              else
+                RECOVERY_STATUS=$?
+                printf '%s\n' "$CREATE_OUTPUT" >&2
+                exit "$RECOVERY_STATUS"
+              fi
+
+              if [[ -z "$PR_NUMBER" ]]; then
+                printf '%s\n' "$CREATE_OUTPUT" >&2
+                exit "$CREATE_STATUS"
+              fi
+
+              echo "Another workflow run created PR #$PR_NUMBER for $HEAD -> $BASE."
+            fi
+
+            if [[ -z "$PR_NUMBER" ]]; then
+              PR_NUMBER="$(find_open_pull_request)"
+            fi
+          fi
+
+          if [[ ! "$PR_NUMBER" =~ ^[1-9][0-9]*$ ]]; then
+            printf 'Expected an open PR number for %s -> %s, got %q\n' \
+              "$HEAD" "$BASE" "$PR_NUMBER" >&2
+            exit 1
           fi
 
           gh pr edit "$PR_NUMBER" \

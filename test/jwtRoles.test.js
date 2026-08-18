@@ -48,7 +48,10 @@ describe('Lib jwt Roles', function () {
   describe('getContext', function () {
     it('should return super_admin role with user_id when roles array contains ad', function () {
       const req = { jwt: { payload: { sub: adminUserId, roles: ['ad'] } } };
-      assert.deepStrictEqual(jwtRoles.getContext(req), { user_id: adminUserId, role: 'super_admin' });
+      assert.deepStrictEqual(jwtRoles.getContext(req), {
+        user_id: adminUserId,
+        role: 'super_admin',
+      });
     });
 
     it('should include verified user authorization context when present', function () {
@@ -103,13 +106,19 @@ describe('Lib jwt Roles', function () {
     });
 
     it('should not include user authorization context when payload is missing', function () {
-      const req = { jwt: { payload: { sub: regularUserId, roles: ['ag'] } }, userAuthorization: { header: {} } };
+      const req = {
+        jwt: { payload: { sub: regularUserId, roles: ['ag'] } },
+        userAuthorization: { header: {} },
+      };
       assert.deepStrictEqual(jwtRoles.getContext(req), { user_id: regularUserId });
     });
 
     it('should return super_admin when roles array contains ad among other roles', function () {
       const req = { jwt: { payload: { sub: adminUserId, roles: ['ag', 'ad'] } } };
-      assert.deepStrictEqual(jwtRoles.getContext(req), { user_id: adminUserId, role: 'super_admin' });
+      assert.deepStrictEqual(jwtRoles.getContext(req), {
+        user_id: adminUserId,
+        role: 'super_admin',
+      });
     });
 
     it('should return only user_id when roles array does not contain ad', function () {
