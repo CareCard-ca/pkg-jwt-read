@@ -50,7 +50,10 @@ test('merges task environment overrides without mutating inherited values', asyn
   const { createTaskEnvironment } = await loadPackageTaskRunner();
   const inheritedEnvironment = { NODE_ENV: 'test', PATH: '/bin' };
 
-  const environment = createTaskEnvironment({ NODE_ENV: 'production', DB_ENV: 'privileged' }, inheritedEnvironment);
+  const environment = createTaskEnvironment(
+    { NODE_ENV: 'production', DB_ENV: 'privileged' },
+    inheritedEnvironment,
+  );
 
   assert.deepEqual(environment, {
     NODE_ENV: 'production',

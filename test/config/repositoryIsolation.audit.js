@@ -19,8 +19,13 @@ const validationFileExtensions = new Set(['.cjs', '.js', '.mjs', '.mts', '.ts', 
 function listValidationFiles(directoryPath) {
   return fs.readdirSync(directoryPath, { withFileTypes: true }).flatMap(directoryEntry => {
     const entryPath = path.join(directoryPath, directoryEntry.name);
-    if (directoryEntry.isDirectory()) return listValidationFiles(entryPath);
-    return directoryEntry.isFile() && validationFileExtensions.has(path.extname(directoryEntry.name)) ? [entryPath] : [];
+    if (directoryEntry.isDirectory()) {
+      return listValidationFiles(entryPath);
+    }
+    return directoryEntry.isFile() &&
+      validationFileExtensions.has(path.extname(directoryEntry.name))
+      ? [entryPath]
+      : [];
   });
 }
 
@@ -35,7 +40,9 @@ function extractRelativeModuleSpecifiers(source) {
   ];
 
   for (const modulePattern of modulePatterns) {
-    for (const match of source.matchAll(modulePattern)) moduleSpecifiers.push(match[1]);
+    for (const match of source.matchAll(modulePattern)) {
+      moduleSpecifiers.push(match[1]);
+    }
   }
 
   return moduleSpecifiers;
@@ -44,15 +51,24 @@ function extractRelativeModuleSpecifiers(source) {
 // Pattern: Guard Clause - rejects paths that escape the current repository.
 function isInsideRepository(candidatePath) {
   const relativePath = path.relative(repositoryRoot, candidatePath);
-  return relativePath === '' || (!relativePath.startsWith(`..${path.sep}`) && relativePath !== '..' && !path.isAbsolute(relativePath));
+  return (
+    relativePath === '' ||
+    (!relativePath.startsWith(`..${path.sep}`) &&
+      relativePath !== '..' &&
+      !path.isAbsolute(relativePath))
+  );
 }
 
 // Pattern: Query Object - lists only local tracked or pending Markdown documentation.
 function listTrackedMarkdownFiles() {
-  const output = execFileSync('git', ['ls-files', '--cached', '--others', '--exclude-standard', '*.md'], {
-    cwd: repositoryRoot,
-    encoding: 'utf8',
-  });
+  const output = execFileSync(
+    'git',
+    ['ls-files', '--cached', '--others', '--exclude-standard', '*.md'],
+    {
+      cwd: repositoryRoot,
+      encoding: 'utf8',
+    },
+  );
 
   return output
     .split('\n')
@@ -99,7 +115,9 @@ describe('Repository-isolated Husky validation', function () {
         for (const moduleSpecifier of extractRelativeModuleSpecifiers(validationSource)) {
           const resolvedPath = path.resolve(path.dirname(validationFilePath), moduleSpecifier);
           if (!isInsideRepository(resolvedPath)) {
-            outsideImports.push(`${path.relative(repositoryRoot, validationFilePath)} -> ${moduleSpecifier}`);
+            outsideImports.push(
+              `${path.relative(repositoryRoot, validationFilePath)} -> ${moduleSpecifier}`,
+            );
           }
         }
       }

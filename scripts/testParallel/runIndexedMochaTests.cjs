@@ -15,7 +15,9 @@ function resolveParallelJobCount(
   availableJobCount = availableParallelism(),
 ) {
   const requestedJobCount =
-    configuredJobCount === undefined ? Math.min(availableJobCount, defaultMaximum) : Number.parseInt(configuredJobCount, 10);
+    configuredJobCount === undefined
+      ? Math.min(availableJobCount, defaultMaximum)
+      : Number.parseInt(configuredJobCount, 10);
 
   if (!Number.isInteger(requestedJobCount) || requestedJobCount < 1) {
     throw new Error('TEST_PARALLEL_JOBS must be a positive integer.');

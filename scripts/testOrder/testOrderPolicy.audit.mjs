@@ -7,7 +7,9 @@ const TEST_ORDER_INVARIANCE_RULE =
   "Non-negotiable test order invariance rule: Every test must pass independently of which tests run before or after it, and the suite must pass in every execution order. Each test must establish the state it needs, isolate mutable state, and clean up state it owns; it must never rely on another test's setup, mutations, or cleanup. Default test, CI, and Husky commands must use the test framework's ordinary ordering and must not force randomized ordering. Random-order execution is an explicit diagnostic only, and every failure it exposes must be fixed at the root cause.";
 
 function listRepositoryFiles() {
-  return execFileSync('git', ['ls-files', '--cached', '--others', '--exclude-standard'], { encoding: 'utf8' })
+  return execFileSync('git', ['ls-files', '--cached', '--others', '--exclude-standard'], {
+    encoding: 'utf8',
+  })
     .trim()
     .split('\n')
     .filter(Boolean);
@@ -43,6 +45,10 @@ test('keeps default package scripts on the test framework ordinary ordering', ()
 
   for (const [scriptName, command] of Object.entries(packageJson.scripts ?? {})) {
     assert.equal(typeof command, 'string', `${scriptName} must be a string command.`);
-    assert.doesNotMatch(command, /--test-randomize|--test-random-seed/, `${scriptName} must not force randomized test ordering.`);
+    assert.doesNotMatch(
+      command,
+      /--test-randomize|--test-random-seed/,
+      `${scriptName} must not force randomized test ordering.`,
+    );
   }
 });

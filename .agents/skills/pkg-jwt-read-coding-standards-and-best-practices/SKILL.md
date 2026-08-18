@@ -5,6 +5,19 @@ description: 'Mandatory for every pkg-jwt-read task, including analysis, clarifi
 
 # Pkg JWT Read Coding Standards And Best Practices
 
+## JavaScript And TypeScript Style Contract
+
+- Require braces around every optional control-flow body through ESLint core
+  `curly: ['error', 'all']`. Single-expression arrow functions may remain
+  expression-bodied.
+- Require semicolons on every applicable statement through Prettier's
+  `semi: true` option. Do not add a second semicolon linter.
+- Keep the shared Prettier baseline and lint-staged command order consistent
+  across CareCard repositories: run ESLint fixes before Prettier writes.
+- Use `lint`, `lint:fix`, `format`, `format:check`, and `lint-staged` as the
+  direct script names. Whole-repository lint and formatting checks must fail on
+  warnings or style drift.
+
 Non-negotiable root-cause solution rule: Always identify and solve the verified
 root cause, use the stronger solution, and deliver a correct, durable,
 production-quality result. Never treat a temporary workaround, resource

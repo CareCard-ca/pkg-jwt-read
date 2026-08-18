@@ -12,10 +12,16 @@ test('uses bounded Mocha file workers without randomized default ordering', () =
   const argumentsList = buildMochaArguments(['test/example.test.js'], 2);
 
   assert.ok(argumentsList.includes('--parallel'));
-  assert.deepEqual(argumentsList.slice(argumentsList.indexOf('--jobs'), argumentsList.indexOf('--jobs') + 2), ['--jobs', '2']);
+  assert.deepEqual(
+    argumentsList.slice(argumentsList.indexOf('--jobs'), argumentsList.indexOf('--jobs') + 2),
+    ['--jobs', '2'],
+  );
   assert.ok(argumentsList.includes('test/example.test.js'));
 });
 
 test('rejects invalid worker configuration instead of changing execution silently', () => {
-  assert.throws(() => resolveParallelJobCount('0', 8, 4, 12), /TEST_PARALLEL_JOBS must be a positive integer/);
+  assert.throws(
+    () => resolveParallelJobCount('0', 8, 4, 12),
+    /TEST_PARALLEL_JOBS must be a positive integer/,
+  );
 });

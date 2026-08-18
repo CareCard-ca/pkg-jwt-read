@@ -4,7 +4,11 @@ const Module = require('module');
 const jwtRead = require('../index');
 const jwtLib = require('../lib/jwtLib');
 const { publicKey, privateKey } = require('./keys/keys');
-const { generateKeyPair, jwtCreateSignedToken, jwtGetHeaderPayload } = require('@carecard/auth-util');
+const {
+  generateKeyPair,
+  jwtCreateSignedToken,
+  jwtGetHeaderPayload,
+} = require('@carecard/auth-util');
 
 describe('Lib jwtLib.js', function () {
   const jwtString = jwtCreateSignedToken(
@@ -29,7 +33,10 @@ describe('Lib jwtLib.js', function () {
     });
 
     it('should fail closed if a null-token handler returns normally', function () {
-      assert.throws(() => jwtLib._extractJwt(null, () => {}), /Custom authentication error function returned without throwing/);
+      assert.throws(
+        () => jwtLib._extractJwt(null, () => {}),
+        /Custom authentication error function returned without throwing/,
+      );
     });
   });
 
@@ -40,7 +47,10 @@ describe('Lib jwtLib.js', function () {
     });
 
     it('should fail closed if a null web-token handler returns normally', function () {
-      assert.throws(() => jwtLib._extractWebToken(null, () => {}), /Custom authentication error function returned without throwing/);
+      assert.throws(
+        () => jwtLib._extractWebToken(null, () => {}),
+        /Custom authentication error function returned without throwing/,
+      );
     });
   });
 
@@ -63,7 +73,10 @@ describe('Lib jwtLib.js', function () {
 
     it('should fail closed when a custom handler returns for invalid input', function () {
       const req = { get: () => 'not-a-jwt' };
-      assert.throws(() => jwtLib._validateJwt(req, () => {}), /Custom authentication error function returned without throwing/);
+      assert.throws(
+        () => jwtLib._validateJwt(req, () => {}),
+        /Custom authentication error function returned without throwing/,
+      );
     });
   });
 
@@ -126,7 +139,10 @@ describe('Lib jwtLib.js', function () {
     it('should clear the JWT and fail closed when a custom handler returns for non-string input', function () {
       const req = {};
 
-      assert.throws(() => jwtLib._extractJwtObject(req, 123, () => {}), /Custom authentication error function returned without throwing/);
+      assert.throws(
+        () => jwtLib._extractJwtObject(req, 123, () => {}),
+        /Custom authentication error function returned without throwing/,
+      );
       assert.strictEqual(req.jwt, null);
     });
   });
@@ -153,8 +169,12 @@ describe('Lib jwtLib.js', function () {
       const userAuthorizationToken = buildSignedUserAuthorizationTokenFixture();
       const req = {
         get: h => {
-          if (h === 'Authorization') return 'Bearer ' + jwtString;
-          if (h === 'X-Authorization-Context') return userAuthorizationToken;
+          if (h === 'Authorization') {
+            return 'Bearer ' + jwtString;
+          }
+          if (h === 'X-Authorization-Context') {
+            return userAuthorizationToken;
+          }
           return null;
         },
       };
@@ -177,8 +197,12 @@ describe('Lib jwtLib.js', function () {
     it('does not read X-Authorization-Context when userAuthorization options are not configured', function () {
       const req = {
         get: h => {
-          if (h === 'Authorization') return 'Bearer ' + jwtString;
-          if (h === 'X-Authorization-Context') return jwtStringBad;
+          if (h === 'Authorization') {
+            return 'Bearer ' + jwtString;
+          }
+          if (h === 'X-Authorization-Context') {
+            return jwtStringBad;
+          }
           return null;
         },
       };
@@ -203,8 +227,12 @@ describe('Lib jwtLib.js', function () {
     it('fails closed when optional X-Authorization-Context is present but invalid', function () {
       const req = {
         get: h => {
-          if (h === 'Authorization') return 'Bearer ' + jwtString;
-          if (h === 'X-Authorization-Context') return jwtStringBad;
+          if (h === 'Authorization') {
+            return 'Bearer ' + jwtString;
+          }
+          if (h === 'X-Authorization-Context') {
+            return jwtStringBad;
+          }
           return null;
         },
       };
@@ -229,7 +257,10 @@ describe('Lib jwtLib.js', function () {
         expectedAudience: 'ms-documents',
       });
 
-      assert.strictEqual(req.userAuthorization.payload.typ, 'carecard.authorization-context.scoped.v1');
+      assert.strictEqual(
+        req.userAuthorization.payload.typ,
+        'carecard.authorization-context.scoped.v1',
+      );
       assert.strictEqual(req.userAuthorization.payload.iss, 'ms-institutions');
       assert.strictEqual(req.userAuthorization.payload.aud, 'ms-documents');
       assert.strictEqual(req.userAuthorization.payload.schema, 'documents');
@@ -252,7 +283,12 @@ describe('Lib jwtLib.js', function () {
 
     it('rejects oversized X-Authorization-Context tokens', function () {
       const oversizePadding = '.'.repeat(jwtRead.DEFAULT_USER_AUTHORIZATION_MAX_TOKEN_LENGTH + 1);
-      const req = { get: h => (h === jwtRead.DEFAULT_USER_AUTHORIZATION_HEADER_NAME ? `${jwtString}${oversizePadding}` : null) };
+      const req = {
+        get: h =>
+          h === jwtRead.DEFAULT_USER_AUTHORIZATION_HEADER_NAME
+            ? `${jwtString}${oversizePadding}`
+            : null,
+      };
 
       assert.throws(() => {
         jwtLib.validateAndExtractUserAuthorizationObject(req, publicKey);
@@ -263,8 +299,14 @@ describe('Lib jwtLib.js', function () {
     it('exports the default X-Authorization-Context header settings', function () {
       assert.strictEqual(jwtRead.DEFAULT_USER_AUTHORIZATION_HEADER_NAME, 'X-Authorization-Context');
       assert.strictEqual(jwtRead.DEFAULT_USER_AUTHORIZATION_MAX_TOKEN_LENGTH, 2048);
-      assert.strictEqual(jwtLib.DEFAULT_USER_AUTHORIZATION_HEADER_NAME, jwtRead.DEFAULT_USER_AUTHORIZATION_HEADER_NAME);
-      assert.strictEqual(jwtLib.DEFAULT_USER_AUTHORIZATION_MAX_TOKEN_LENGTH, jwtRead.DEFAULT_USER_AUTHORIZATION_MAX_TOKEN_LENGTH);
+      assert.strictEqual(
+        jwtLib.DEFAULT_USER_AUTHORIZATION_HEADER_NAME,
+        jwtRead.DEFAULT_USER_AUTHORIZATION_HEADER_NAME,
+      );
+      assert.strictEqual(
+        jwtLib.DEFAULT_USER_AUTHORIZATION_MAX_TOKEN_LENGTH,
+        jwtRead.DEFAULT_USER_AUTHORIZATION_MAX_TOKEN_LENGTH,
+      );
     });
 
     it('rejects invalid user authorization claim variants', function () {
@@ -313,7 +355,12 @@ describe('Lib jwtLib.js', function () {
         const req = { get: h => (h === 'X-Authorization-Context' ? invalidCase.token : null) };
         assert.throws(
           () => {
-            jwtLib.validateAndExtractUserAuthorizationObject(req, publicKey, undefined, invalidCase.options);
+            jwtLib.validateAndExtractUserAuthorizationObject(
+              req,
+              publicKey,
+              undefined,
+              invalidCase.options,
+            );
           },
           undefined,
           invalidCase.name,
@@ -331,7 +378,10 @@ describe('Lib jwtLib.js', function () {
     });
 
     it('leaves a null request unchanged in direct no-throw mode', function () {
-      assert.strictEqual(jwtLib.validateAndExtractUserAuthorizationObjectNoThrow(null, publicKey), null);
+      assert.strictEqual(
+        jwtLib.validateAndExtractUserAuthorizationObjectNoThrow(null, publicKey),
+        null,
+      );
     });
 
     it('extracts req.userAuthorization in no-throw mode for valid tokens', function () {
@@ -396,7 +446,9 @@ describe('Lib jwtLib.js', function () {
 
       middleware(req, {}, err => {
         calledCount++;
-        if (calledCount === 1) throw new Error('next_throws');
+        if (calledCount === 1) {
+          throw new Error('next_throws');
+        }
         assert.ok(err);
       });
 
@@ -420,9 +472,13 @@ describe('Lib jwtLib.js', function () {
       jwtLib.validateAndExtractUserAuthorizationObject(reqWithCustomLength, publicKey, undefined, {
         maxTokenLength: 4096,
       });
-      jwtLib.validateAndExtractUserAuthorizationObjectNoThrow(reqWithMissingLowercaseHeader, publicKey, {
-        headerName: 'x-authorization-context',
-      });
+      jwtLib.validateAndExtractUserAuthorizationObjectNoThrow(
+        reqWithMissingLowercaseHeader,
+        publicKey,
+        {
+          headerName: 'x-authorization-context',
+        },
+      );
 
       assert.strictEqual(reqWithCustomLength.userAuthorization.payload.aud, 'ms-documents');
       assert.strictEqual(reqWithMissingLowercaseHeader.userAuthorization, null);
@@ -435,9 +491,15 @@ describe('Lib jwtLib.js', function () {
           throw new Error('decode failed');
         },
       });
-      const req = { get: h => (h === 'X-Authorization-Context' ? buildSignedUserAuthorizationTokenFixture() : null) };
+      const req = {
+        get: h =>
+          h === 'X-Authorization-Context' ? buildSignedUserAuthorizationTokenFixture() : null,
+      };
 
-      assert.throws(() => mockedJwtLib.validateAndExtractUserAuthorizationObjectNoThrow(req, publicKey), /decode failed/);
+      assert.throws(
+        () => mockedJwtLib.validateAndExtractUserAuthorizationObjectNoThrow(req, publicKey),
+        /decode failed/,
+      );
     });
 
     it('rejects user authorization when decoded JWT has no payload after signature validation', function () {
@@ -445,7 +507,10 @@ describe('Lib jwtLib.js', function () {
         jwtVerifySignedToken: () => true,
         jwtGetHeaderPayload: () => ({}),
       });
-      const req = { get: h => (h === 'X-Authorization-Context' ? buildSignedUserAuthorizationTokenFixture() : null) };
+      const req = {
+        get: h =>
+          h === 'X-Authorization-Context' ? buildSignedUserAuthorizationTokenFixture() : null,
+      };
 
       mockedJwtLib.validateAndExtractUserAuthorizationObjectNoThrow(req, publicKey);
 
@@ -546,13 +611,17 @@ describe('Lib jwtLib.js', function () {
     it('rejects server-auth when Authorization is missing', async function () {
       const req = { get: () => null };
 
-      await assert.rejects(() => jwtLib.validateAndExtractJwtOrServerAuthObject(req, publicKey, () => ({ valid: true })));
+      await assert.rejects(() =>
+        jwtLib.validateAndExtractJwtOrServerAuthObject(req, publicKey, () => ({ valid: true })),
+      );
     });
 
     it('rejects server-auth when the introspector is not a function', async function () {
       const req = { get: h => (h === 'Authorization' ? 'Bearer opaque-token' : null) };
 
-      await assert.rejects(() => jwtLib.validateAndExtractJwtOrServerAuthObject(req, publicKey, null));
+      await assert.rejects(() =>
+        jwtLib.validateAndExtractJwtOrServerAuthObject(req, publicKey, null),
+      );
     });
 
     it('rejects valid server-auth claims without a subject', async function () {
@@ -570,7 +639,9 @@ describe('Lib jwtLib.js', function () {
     it('rejects an invalid server-auth introspection result', async function () {
       const req = { get: h => (h === 'Authorization' ? 'Bearer opaque-token' : null) };
 
-      await assert.rejects(() => jwtLib.validateAndExtractJwtOrServerAuthObject(req, publicKey, () => ({ valid: false })));
+      await assert.rejects(() =>
+        jwtLib.validateAndExtractJwtOrServerAuthObject(req, publicKey, () => ({ valid: false })),
+      );
     });
   });
 
@@ -630,7 +701,9 @@ describe('Lib jwtLib.js', function () {
 
     it('passes flexible auth role errors through next', async function () {
       const req = { get: h => (h === 'Authorization' ? 'Bearer ' + jwtString : null) };
-      const middleware = jwtLib.verifyJwtOrServerAuthAndHasRole('admin', publicKey, () => ({ valid: true }));
+      const middleware = jwtLib.verifyJwtOrServerAuthAndHasRole('admin', publicKey, () => ({
+        valid: true,
+      }));
       let errorPassed = null;
 
       await middleware(req, {}, err => {
@@ -1091,7 +1164,9 @@ describe('Lib jwtLib.js', function () {
       let calledCount = 0;
       const next = err => {
         calledCount++;
-        if (calledCount === 1) throw new Error('next_throws');
+        if (calledCount === 1) {
+          throw new Error('next_throws');
+        }
         assert.ok(err);
       };
       await middleware(req, {}, next);
@@ -1131,7 +1206,9 @@ describe('Lib jwtLib.js', function () {
       let calledCount = 0;
       const next = err => {
         calledCount++;
-        if (calledCount === 1) throw new Error('next_throws');
+        if (calledCount === 1) {
+          throw new Error('next_throws');
+        }
         assert.ok(err);
       };
       middleware(req, {}, next);
@@ -1181,7 +1258,9 @@ describe('Lib jwtLib.js', function () {
       let calledCount = 0;
       const next = err => {
         calledCount++;
-        if (calledCount === 1) throw new Error('next_throws');
+        if (calledCount === 1) {
+          throw new Error('next_throws');
+        }
         assert.ok(err);
       };
       middleware(req, {}, next);
@@ -1236,8 +1315,12 @@ describe('Lib jwtLib.js', function () {
       const userAuthorizationToken = buildSignedUserAuthorizationTokenFixture();
       const req = {
         get: h => {
-          if (h === 'Authorization') return 'Bearer ' + jwtString;
-          if (h === 'X-Authorization-Context') return userAuthorizationToken;
+          if (h === 'Authorization') {
+            return 'Bearer ' + jwtString;
+          }
+          if (h === 'X-Authorization-Context') {
+            return userAuthorizationToken;
+          }
           return null;
         },
       };
@@ -1285,7 +1368,9 @@ describe('Lib jwtLib.js', function () {
       let calledCount = 0;
       const next = err => {
         calledCount++;
-        if (calledCount === 1) throw new Error('next_throws');
+        if (calledCount === 1) {
+          throw new Error('next_throws');
+        }
         assert.ok(err);
       };
       middleware(req, {}, next);
@@ -1298,7 +1383,9 @@ describe('Lib jwtLib.js', function () {
       let calledCount = 0;
       const next = err => {
         calledCount++;
-        if (calledCount === 1) throw new Error('next_throws');
+        if (calledCount === 1) {
+          throw new Error('next_throws');
+        }
         assert.ok(err);
       };
       middleware(req, {}, next);
@@ -1309,7 +1396,8 @@ describe('Lib jwtLib.js', function () {
   describe('verifyVisitorNoThrow', function () {
     it('should extract and validate visitor token', async function () {
       const visitorId = 'b63887af-4fd5-47ad-9aed-687866809554';
-      const visitorToken = 'Bearer ' + jwtCreateSignedToken({ alg: 'EdDSA' }, { sub: visitorId }, privateKey);
+      const visitorToken =
+        'Bearer ' + jwtCreateSignedToken({ alg: 'EdDSA' }, { sub: visitorId }, privateKey);
       const req = { get: h => (h === 'Visitor' ? visitorToken : null) };
       const middleware = jwtLib.verifyVisitorNoThrow(publicKey);
       middleware(req, {}, () => {});
@@ -1350,7 +1438,9 @@ describe('Lib jwtLib.js', function () {
       let calledCount = 0;
       const next = err => {
         calledCount++;
-        if (calledCount === 1) throw new Error('next_throws');
+        if (calledCount === 1) {
+          throw new Error('next_throws');
+        }
         assert.ok(err);
       };
       middleware(req, {}, next);
@@ -1476,15 +1566,24 @@ describe('Lib jwtLib.js', function () {
 
     it('should fail closed for a non-JWT web token when a custom handler returns', function () {
       const req = { get: () => 'not-a-jwt' };
-      assert.throws(() => jwtLib._validateWebToken(req, 'X', () => {}), /Custom authentication error function returned without throwing/);
+      assert.throws(
+        () => jwtLib._validateWebToken(req, 'X', () => {}),
+        /Custom authentication error function returned without throwing/,
+      );
     });
 
     it('should fail closed for an invalid raw JWT when a custom handler returns', function () {
-      assert.throws(() => jwtLib._extractJwt(123, () => {}), /Custom authentication error function returned without throwing/);
+      assert.throws(
+        () => jwtLib._extractJwt(123, () => {}),
+        /Custom authentication error function returned without throwing/,
+      );
     });
 
     it('should fail closed for a Basic token when a custom handler returns', function () {
-      assert.throws(() => jwtLib._extractJwt('Basic token', () => {}), /Custom authentication error function returned without throwing/);
+      assert.throws(
+        () => jwtLib._extractJwt('Basic token', () => {}),
+        /Custom authentication error function returned without throwing/,
+      );
     });
 
     it('_isLoginRequired should handle missing role', function () {
@@ -1519,7 +1618,10 @@ describe('Lib jwtLib.js', function () {
     it('should clear the JWT and fail closed for non-string input when a custom handler returns', function () {
       const req = {};
 
-      assert.throws(() => jwtLib._extractJwtObject(req, 123, () => {}), /Custom authentication error function returned without throwing/);
+      assert.throws(
+        () => jwtLib._extractJwtObject(req, 123, () => {}),
+        /Custom authentication error function returned without throwing/,
+      );
       assert.strictEqual(req.jwt, null);
     });
 
@@ -1647,7 +1749,10 @@ describe('Lib jwtLib.js', function () {
       assert.strictEqual(optionalRequest.jwt, null);
 
       const optionalWebRequest = createRequest({ 'X-Token': invalidToken });
-      await expectMiddlewareSuccess(jwtVerifyWebTokenNoThrow(publicKey, 'X-Token'), optionalWebRequest);
+      await expectMiddlewareSuccess(
+        jwtVerifyWebTokenNoThrow(publicKey, 'X-Token'),
+        optionalWebRequest,
+      );
       assert.strictEqual(optionalWebRequest.jwt, null);
     });
 
@@ -1656,7 +1761,10 @@ describe('Lib jwtLib.js', function () {
       await expectMiddlewareSuccess(jwtVerifyAndHasRole('admin', publicKey), allowedRequest);
 
       const deniedRequest = createRequest({ Authorization: `Bearer ${createUserToken()}` });
-      const deniedError = await captureMiddlewareError(jwtVerifyAndHasRole('reviewer', publicKey), deniedRequest);
+      const deniedError = await captureMiddlewareError(
+        jwtVerifyAndHasRole('reviewer', publicKey),
+        deniedRequest,
+      );
       assert.ok(deniedError instanceof Error);
     });
 
@@ -1676,24 +1784,34 @@ describe('Lib jwtLib.js', function () {
       assert.strictEqual(directRequest.userAuthorization.token, undefined);
 
       const middlewareRequest = createRequest({ [DEFAULT_USER_AUTHORIZATION_HEADER_NAME]: token });
-      await expectMiddlewareSuccess(jwtVerifyUserAuthorization(publicKey, undefined, options), middlewareRequest);
+      await expectMiddlewareSuccess(
+        jwtVerifyUserAuthorization(publicKey, undefined, options),
+        middlewareRequest,
+      );
       assert.strictEqual(middlewareRequest.userAuthorization.payload.aud, 'ms-documents');
     });
 
     it('fails closed for malformed scoped authorization in required and no-throw modes', async function () {
       const invalidToken = corruptToken(createUserAuthorizationToken());
-      const directRequest = createRequest({ [DEFAULT_USER_AUTHORIZATION_HEADER_NAME]: invalidToken });
+      const directRequest = createRequest({
+        [DEFAULT_USER_AUTHORIZATION_HEADER_NAME]: invalidToken,
+      });
       assert.throws(() => jwtValidateAndExtractUserAuthorization(directRequest, publicKey));
       assert.strictEqual(directRequest.userAuthorization, null);
 
-      const optionalRequest = createRequest({ [DEFAULT_USER_AUTHORIZATION_HEADER_NAME]: invalidToken });
+      const optionalRequest = createRequest({
+        [DEFAULT_USER_AUTHORIZATION_HEADER_NAME]: invalidToken,
+      });
       jwtValidateAndExtractUserAuthorizationNoThrow(optionalRequest, publicKey);
       assert.strictEqual(optionalRequest.userAuthorization, null);
 
       const middlewareRequest = createRequest({
         [DEFAULT_USER_AUTHORIZATION_HEADER_NAME]: invalidToken,
       });
-      await expectMiddlewareSuccess(jwtVerifyUserAuthorizationNoThrow(publicKey), middlewareRequest);
+      await expectMiddlewareSuccess(
+        jwtVerifyUserAuthorizationNoThrow(publicKey),
+        middlewareRequest,
+      );
       assert.strictEqual(middlewareRequest.userAuthorization, null);
     });
 
@@ -1706,12 +1824,17 @@ describe('Lib jwtLib.js', function () {
       assert.strictEqual(directRequest.jwt.payload.aud, 'ms-auth');
 
       const middlewareRequest = createRequest({ Authorization: `Bearer ${token}` });
-      await expectMiddlewareSuccess(jwtVerifyService(publicKey, 'ms-institutions', 'ms-auth'), middlewareRequest);
+      await expectMiddlewareSuccess(
+        jwtVerifyService(publicKey, 'ms-institutions', 'ms-auth'),
+        middlewareRequest,
+      );
 
       const wrongIssuerRequest = createRequest({
         Authorization: `Bearer ${createServiceToken('ms-search', 'ms-auth')}`,
       });
-      assert.throws(() => jwtValidateAndExtractService(wrongIssuerRequest, publicKey, 'ms-institutions', 'ms-auth'));
+      assert.throws(() =>
+        jwtValidateAndExtractService(wrongIssuerRequest, publicKey, 'ms-institutions', 'ms-auth'),
+      );
       assert.strictEqual(wrongIssuerRequest.jwt, null);
     });
 
@@ -1734,7 +1857,10 @@ describe('Lib jwtLib.js', function () {
       assert.strictEqual(request.jwt.payload.email_verified, true);
 
       const middlewareRequest = createRequest({ Authorization: 'Bearer opaque-server-token' });
-      await expectMiddlewareSuccess(jwtVerifyOrServerAuthAndHasRole('admin', publicKey, introspector), middlewareRequest);
+      await expectMiddlewareSuccess(
+        jwtVerifyOrServerAuthAndHasRole('admin', publicKey, introspector),
+        middlewareRequest,
+      );
       assert.strictEqual(middlewareRequest.jwt.payload.sub, USER_ID);
     });
 
@@ -1746,7 +1872,9 @@ describe('Lib jwtLib.js', function () {
   });
 
   function createRequest(headers) {
-    const normalizedHeaders = Object.fromEntries(Object.entries(headers).map(([name, value]) => [name.toLowerCase(), value]));
+    const normalizedHeaders = Object.fromEntries(
+      Object.entries(headers).map(([name, value]) => [name.toLowerCase(), value]),
+    );
 
     return {
       get(name) {
@@ -1821,7 +1949,12 @@ describe('Lib jwtLib.js', function () {
   }
 }
 
-function buildSignedServiceTokenFixture({ issuer, audience, issuedAt = Math.floor(Date.now() / 1000), expiresInSeconds = 60 }) {
+function buildSignedServiceTokenFixture({
+  issuer,
+  audience,
+  issuedAt = Math.floor(Date.now() / 1000),
+  expiresInSeconds = 60,
+}) {
   return jwtCreateSignedToken(
     { alg: 'EdDSA', typ: 'JWT' },
     {
@@ -1859,7 +1992,9 @@ function buildSignedUserAuthorizationTokenFixture({
     exp: issuedAt + expiresInSeconds,
     jti: '9c84c2e2-5b27-4c0d-bd1a-0fb56304a2b8',
   };
-  if (notBefore !== undefined) payload.nbf = notBefore;
+  if (notBefore !== undefined) {
+    payload.nbf = notBefore;
+  }
 
   return jwtCreateSignedToken({ alg: 'EdDSA', typ: 'JWT' }, payload, privateKey);
 }

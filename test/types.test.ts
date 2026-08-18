@@ -89,9 +89,18 @@ describe('TypeScript Type Definitions - JWT Read Utilities', () => {
     assert.strictEqual(typeof jwtVerifyWebTokenNoThrow(publicKey, 'X-Token'), 'function');
     assert.strictEqual(typeof jwtVerifyVisitorNoThrow(publicKey), 'function');
     assert.strictEqual(typeof jwtVerifyAndHasRole('admin', publicKey), 'function');
-    assert.strictEqual(typeof jwtVerifyOrServerAuth(publicKey, () => ({ userId: '123' })), 'function');
-    assert.strictEqual(typeof jwtVerifyOrServerAuthAndHasRole('admin', publicKey, () => ({ userId: '123' })), 'function');
-    assert.strictEqual(typeof jwtVerifyService(publicKey, 'ms-auth', 'ms-institutions'), 'function');
+    assert.strictEqual(
+      typeof jwtVerifyOrServerAuth(publicKey, () => ({ userId: '123' })),
+      'function',
+    );
+    assert.strictEqual(
+      typeof jwtVerifyOrServerAuthAndHasRole('admin', publicKey, () => ({ userId: '123' })),
+      'function',
+    );
+    assert.strictEqual(
+      typeof jwtVerifyService(publicKey, 'ms-auth', 'ms-institutions'),
+      'function',
+    );
     assert.strictEqual(typeof jwtVerifyUserAuthorization(publicKey), 'function');
     assert.strictEqual(typeof jwtVerifyUserAuthorizationNoThrow(publicKey), 'function');
   });
@@ -107,9 +116,20 @@ describe('TypeScript Type Definitions - JWT Read Utilities', () => {
     assert.strictEqual(optionalRequest.userAuthorization, null);
 
     assert.throws(() => jwtValidateAndExtract(createAuthenticatedRequest(), 'invalid-public-key'));
-    assert.throws(() => jwtValidateAndExtractWebToken(createAuthenticatedRequest(), 'invalid-public-key', 'X-Token'));
-    assert.throws(() => jwtValidateAndExtractService(createAuthenticatedRequest(), 'invalid-public-key', 'ms-auth', 'ms-search'));
-    assert.throws(() => jwtValidateAndExtractUserAuthorization(createAuthenticatedRequest(), 'invalid-public-key'));
+    assert.throws(() =>
+      jwtValidateAndExtractWebToken(createAuthenticatedRequest(), 'invalid-public-key', 'X-Token'),
+    );
+    assert.throws(() =>
+      jwtValidateAndExtractService(
+        createAuthenticatedRequest(),
+        'invalid-public-key',
+        'ms-auth',
+        'ms-search',
+      ),
+    );
+    assert.throws(() =>
+      jwtValidateAndExtractUserAuthorization(createAuthenticatedRequest(), 'invalid-public-key'),
+    );
 
     const serverAuthRequest = createAuthenticatedRequest({ Authorization: 'Bearer opaque-token' });
     await jwtValidateAndExtractOrServerAuth(serverAuthRequest, 'invalid-public-key', () => ({
@@ -121,7 +141,13 @@ describe('TypeScript Type Definitions - JWT Read Utilities', () => {
 
   it('should verify jwt utility types', () => {
     const request: JwtRequestContext = {
-      jwt: { payload: { exp: Math.floor(Date.now() / 1000) + 60, iat: Math.floor(Date.now() / 1000), sub: 'legacy-user' } },
+      jwt: {
+        payload: {
+          exp: Math.floor(Date.now() / 1000) + 60,
+          iat: Math.floor(Date.now() / 1000),
+          sub: 'legacy-user',
+        },
+      },
       visitor: { payload: { sub: 'legacy-visitor' } },
     };
     assert.strictEqual(jwtClientId(request), 'legacy-user');
@@ -300,7 +326,9 @@ describe('TypeScript Type Definitions - JWT Read Utilities', () => {
 });
 
 function createAuthenticatedRequest(headers: Record<string, string> = {}): AuthenticatedRequest {
-  const normalizedHeaders = Object.fromEntries(Object.entries(headers).map(([name, value]) => [name.toLowerCase(), value]));
+  const normalizedHeaders = Object.fromEntries(
+    Object.entries(headers).map(([name, value]) => [name.toLowerCase(), value]),
+  );
   return {
     get(name: string) {
       return normalizedHeaders[name.toLowerCase()] ?? undefined;

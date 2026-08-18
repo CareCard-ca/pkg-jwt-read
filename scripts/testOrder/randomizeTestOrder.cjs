@@ -3,10 +3,16 @@
 const MAX_TEST_ORDER_SEED = 2_147_483_647;
 
 function resolveTestOrderSeed(configuredSeed) {
-  if (configuredSeed === undefined) return undefined;
-  if (!/^[1-9]\d*$/.test(configuredSeed)) throw new Error('TEST_ORDER_SEED must be a positive 32-bit integer.');
+  if (configuredSeed === undefined) {
+    return undefined;
+  }
+  if (!/^[1-9]\d*$/.test(configuredSeed)) {
+    throw new Error('TEST_ORDER_SEED must be a positive 32-bit integer.');
+  }
   const seed = Number(configuredSeed);
-  if (!Number.isSafeInteger(seed) || seed > MAX_TEST_ORDER_SEED) throw new Error('TEST_ORDER_SEED must be a positive 32-bit integer.');
+  if (!Number.isSafeInteger(seed) || seed > MAX_TEST_ORDER_SEED) {
+    throw new Error('TEST_ORDER_SEED must be a positive 32-bit integer.');
+  }
   return seed;
 }
 function createSeededRandom(seed) {
@@ -25,14 +31,18 @@ function shuffleValues(values, random) {
   }
 }
 function shuffleSuiteTree(suite, random) {
-  for (const childSuite of suite.suites) shuffleSuiteTree(childSuite, random);
+  for (const childSuite of suite.suites) {
+    shuffleSuiteTree(childSuite, random);
+  }
   shuffleValues(suite.tests, random);
   shuffleValues(suite.suites, random);
 }
 const mochaHooks = {
   beforeAll() {
     const seed = resolveTestOrderSeed(process.env.TEST_ORDER_SEED);
-    if (seed === undefined) return;
+    if (seed === undefined) {
+      return;
+    }
     console.log(`Test order seed: ${seed} (reproduce with TEST_ORDER_SEED=${seed})`);
     shuffleSuiteTree(this.test.parent, createSeededRandom(seed));
   },
