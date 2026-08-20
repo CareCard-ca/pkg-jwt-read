@@ -1,6 +1,6 @@
 {
   "name": "@carecard/jwt-read",
-  "version": "3.18.0",
+  "version": "3.19.0",
   "repository": {
     "type": "git",
     "url": "https://github.com/CareCard-ca/pkg-jwt-read.git"
@@ -10,7 +10,7 @@
   "types": "index.d.ts",
   "scripts": {
     "test": "node scripts/runPackageTask.mjs test",
-    "test:order": "node --test scripts/testOrder/randomizeTestOrder.test.mjs scripts/testParallel/runIndexedMochaTests.test.mjs scripts/packageTaskRunner.test.mjs",
+    "test:order": "node --test scripts/testOrder/randomizeTestOrder.test.mjs scripts/testParallel/runIndexedMochaTests.test.mjs scripts/packageTaskRunner.test.mjs scripts/canonicalTestCommand.test.mjs",
     "test:types": "node scripts/runPackageTask.mjs test:types",
     "test:coverage": "node scripts/runPackageTask.mjs test:coverage",
     "test:All": "node scripts/runPackageTask.mjs test:All",
@@ -30,21 +30,14 @@
   ],
   "author": "CareCard team",
   "license": "ISC",
-  "lint-staged": {
-    "*.{js,jsx,mjs,cjs,ts,tsx,mts,cts}": [
-      "eslint --fix --max-warnings 0",
-      "prettier --write"
-    ],
-    "*.{json,jsonc,md,mdx,css,scss,yaml,yml}": [
-      "prettier --write"
-    ]
-  },
   "devDependencies": {
+    "@eslint/js": "9.39.5",
     "@types/express": "5.0.6",
     "@types/mocha": "10.0.10",
     "@types/node": "25.9.3",
     "@typescript-eslint/parser": "8.67.0",
     "eslint": "9.39.5",
+    "globals": "17.7.0",
     "husky": "9.1.7",
     "lint-staged": "17.2.0",
     "mocha": "11.7.6",
