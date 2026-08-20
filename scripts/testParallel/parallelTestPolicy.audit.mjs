@@ -36,7 +36,7 @@ test('keeps runtime test selection in the index and package scripts short', () =
     'node scripts/runPackageTask.mjs test:coverage',
   );
   assert.match(packageTaskRunnerSource, /arguments: \['run', 'test:order'\]/);
-  assert.match(packageTaskRunnerSource, /arguments: \['test\/index\.test\.js'\]/);
+  assert.match(packageTaskRunnerSource, /arguments: \['node', 'test\/index\.test\.js'\]/);
   assert.match(packageTaskRunnerSource, /command: 'nyc'/);
   assert.match(testIndexSource, /parallelTestFiles/);
   assert.match(testIndexSource, /runIndexedMochaTests/);
