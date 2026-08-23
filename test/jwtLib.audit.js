@@ -11,9 +11,15 @@ const {
 } = require('@carecard/auth-util');
 
 describe('Lib jwtLib.js', function () {
+  const validIssuedAt = Math.floor(Date.now() / 1000) - 60;
   const jwtString = jwtCreateSignedToken(
     { alg: 'EdDSA' },
-    { iat: 1638662314, sub: '8b0db877-a6b3-4a23-a493-e687915cdd87', roles: [] },
+    {
+      iat: validIssuedAt,
+      exp: validIssuedAt + 3600,
+      sub: '8b0db877-a6b3-4a23-a493-e687915cdd87',
+      roles: [],
+    },
     privateKey,
   );
 
