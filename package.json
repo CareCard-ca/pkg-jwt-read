@@ -49,7 +49,7 @@
   "dependencies": {
     "@carecard/auth-util": "3.18.0",
     "@carecard/common-util": "3.20.0",
-    "@carecard/validate": "3.18.0"
+    "@carecard/validate": "3.20.0"
   },
   "overrides": {
     "diff": "8.0.4",
