@@ -1,6 +1,6 @@
 {
   "name": "@carecard/jwt-read",
-  "version": "3.23.0",
+  "version": "3.24.0",
   "repository": {
     "type": "git",
     "url": "https://github.com/CareCard-ca/pkg-jwt-read.git"
@@ -8,6 +8,9 @@
   "description": "Jwt read functions",
   "main": "index.js",
   "types": "index.d.ts",
+  "engines": {
+    "node": ">=24.20.0 <25"
+  },
   "scripts": {
     "test": "node scripts/runPackageTask.mjs test",
     "test:order": "node --test scripts/testOrder/randomizeTestOrder.test.mjs scripts/testParallel/runIndexedMochaTests.test.mjs scripts/packageTaskRunner.test.mjs scripts/canonicalTestCommand.test.mjs",
@@ -47,9 +50,9 @@
     "typescript": "6.0.3"
   },
   "dependencies": {
-    "@carecard/auth-util": "3.23.0",
-    "@carecard/common-util": "3.23.0",
-    "@carecard/validate": "3.23.0"
+    "@carecard/auth-util": "3.24.0",
+    "@carecard/common-util": "3.24.0",
+    "@carecard/validate": "3.24.0"
   },
   "overrides": {
     "diff": "8.0.4",
