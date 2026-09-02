@@ -1,17 +1,28 @@
-const privateKey =
-  '-----BEGIN PRIVATE KEY-----\n' +
-  'MC4CAQAwBQYDK2VwBCIEIFDSgS6vALkswz0iiAfyYDh+QJnJa+OXSKfMAk/nkA6L\n' +
-  '-----END PRIVATE KEY-----';
+'use strict';
 
-const publicKey =
-  '-----BEGIN PUBLIC KEY-----\n' +
-  'MCowBQYDK2VwAyEAaXXgySpK3+derfui5rZR+VKDbU0goznsdu65nsHo2ls=\n' +
-  '-----END PUBLIC KEY-----';
+const { createHash, generateKeyPairSync } = require('node:crypto');
+const { parseJwtSigningJwk, parseJwtVerificationJwks } = require('@carecard/auth-util');
 
-const hashKey = '240gTxVT2KnXOP4W6OdFkSEsdDWLqhLO2OP68o';
+function createJwkIdentity() {
+  const { privateKey, publicKey } = generateKeyPairSync('ed25519');
+  const privateJwk = privateKey.export({ format: 'jwk' });
+  const publicJwk = publicKey.export({ format: 'jwk' });
+  const canonical = JSON.stringify({ crv: 'Ed25519', kty: 'OKP', x: publicJwk.x });
+  const kid = createHash('sha256').update(canonical).digest('base64url');
+  return {
+    signing: { ...privateJwk, alg: 'EdDSA', use: 'sig', key_ops: ['sign'], kid },
+    verification: { ...publicJwk, alg: 'EdDSA', use: 'sig', key_ops: ['verify'], kid },
+  };
+}
+
+const identity = createJwkIdentity();
+const signingJwk = parseJwtSigningJwk(JSON.stringify(identity.signing));
+const verificationJwks = parseJwtVerificationJwks(
+  JSON.stringify({ keys: [identity.verification] }),
+);
 
 module.exports = {
-  privateKey,
-  publicKey,
-  hashKey,
+  createJwkIdentity,
+  signingJwk,
+  verificationJwks,
 };

@@ -52,9 +52,10 @@ npm install @carecard/jwt-read
 
 ```javascript
 const { verifyJwtAndRole, throwUsedTokenError } = require('@carecard/jwt-read');
+const { parseJwtVerificationJwks } = require('@carecard/auth-util');
 
-// Create a verification function for 'admin' role
-const verifyAdmin = verifyJwtAndRole('admin', publicKey, throwUsedTokenError);
+const verificationJwks = parseJwtVerificationJwks(process.env.MS_AUTH_JWT_VERIFICATION_JWKS);
+const verifyAdmin = verifyJwtAndRole('admin', verificationJwks, throwUsedTokenError);
 
 // In an Express controller/middleware
 try {
@@ -66,15 +67,12 @@ try {
 }
 ```
 
-### Direct JWT Reading
+### Bearer JWT Verification
 
 ```javascript
-const { verifyJwt, isJwtExpired } = require('@carecard/jwt-read');
+const { jwtVerify } = require('@carecard/jwt-read');
 
-const result = verifyJwt(rawJwt, publicKey);
-if (result && !isJwtExpired(result)) {
-  console.log('JWT is valid and not expired:', result.payload);
-}
+app.use(jwtVerify(verificationJwks));
 ```
 
 ### Role Utilities
@@ -103,8 +101,8 @@ Access level is conveyed by route middleware and endpoint placement, not by
 
 Use service JWT verification helpers for backend service calls. The sending
 service signs the token with `@carecard/auth-util`. The receiving service uses
-this package to verify the token with the sending service public key and check
-the expected issuer and audience.
+this package to verify the token by `kid` through the sending service's public
+JWKS and check the expected issuer and audience.
 
 ```javascript
 const { jwtCreateServiceAuthorizationHeader } = require('@carecard/auth-util');
@@ -113,10 +111,17 @@ const { jwtVerifyService } = require('@carecard/jwt-read');
 const authorization = jwtCreateServiceAuthorizationHeader({
   issuer: 'ms-institutions',
   audience: 'ms-auth',
-  privateKey: institutionsPrivateKey,
+  signingJwk: institutionsSigningJwk,
 });
 
-app.use(jwtVerifyService(institutionsPublicKey, 'ms-institutions', 'ms-auth', throwNotAuthorizedError));
+app.use(
+  jwtVerifyService(
+    institutionsVerificationJwks,
+    'ms-institutions',
+    'ms-auth',
+    throwNotAuthorizedError,
+  ),
+);
 ```
 
 Service JWT payloads follow standard JWT semantics:
@@ -131,19 +136,27 @@ Service JWT payloads follow standard JWT semantics:
 
 Use the `OrServerAuth` helpers on app-facing `ms-*` routes that should accept
 both current authentication modes. The JWT path verifies locally with the
-`ms-auth` public key. The server-auth path calls the provided introspector,
+`ms-auth` public JWKS. The server-auth path calls the provided introspector,
 which should send the opaque token to
 `POST /api/v1/ms-auth/server-auth/introspect` with the receiving service's
 service JWT.
 
 ```javascript
-const { jwtGetRoleCode, jwtVerifyOrServerAuth, jwtVerifyOrServerAuthAndHasRole } = require('@carecard/jwt-read');
+const {
+  jwtGetRoleCode,
+  jwtVerifyOrServerAuth,
+  jwtVerifyOrServerAuthAndHasRole,
+} = require('@carecard/jwt-read');
 
-const verifyUser = jwtVerifyOrServerAuth(msAuthPublicKey, token => introspectServerAuthTokenWithMsAuth(token), throwNotAuthorizedError);
+const verifyUser = jwtVerifyOrServerAuth(
+  msAuthVerificationJwks,
+  token => introspectServerAuthTokenWithMsAuth(token),
+  throwNotAuthorizedError,
+);
 
 const verifyAdmin = jwtVerifyOrServerAuthAndHasRole(
   jwtGetRoleCode('admin'),
-  msAuthPublicKey,
+  msAuthVerificationJwks,
   token => introspectServerAuthTokenWithMsAuth(token),
   throwNotAuthorizedError,
 );
@@ -171,7 +184,7 @@ local limit.
 const { jwtVerifyUserAuthorization } = require('@carecard/jwt-read');
 
 app.use(
-  jwtVerifyUserAuthorization(institutionsPublicKey, throwNotAuthorizedError, {
+  jwtVerifyUserAuthorization(institutionsVerificationJwks, throwNotAuthorizedError, {
     expectedType: 'carecard.authorization-context.scoped.v1',
     expectedIssuer: 'ms-institutions',
     expectedAudience: 'ms-documents',
@@ -184,15 +197,26 @@ optional trailing options object. This preserves current `req.jwt` behavior and
 adds decoded scoped claims to `req.userAuthorization`.
 
 ```javascript
-const verifyUser = jwtVerifyOrServerAuth(msAuthPublicKey, token => introspectServerAuthTokenWithMsAuth(token), throwNotAuthorizedError, {
-  userAuthorization: {
-    publicKey: institutionsPublicKey,
-    expectedType: 'carecard.authorization-context.scoped.v1',
-    expectedIssuer: 'ms-institutions',
-    expectedAudience: 'ms-documents',
+const verifyUser = jwtVerifyOrServerAuth(
+  msAuthVerificationJwks,
+  token => introspectServerAuthTokenWithMsAuth(token),
+  throwNotAuthorizedError,
+  {
+    userAuthorization: {
+      verificationJwks: institutionsVerificationJwks,
+      expectedType: 'carecard.authorization-context.scoped.v1',
+      expectedIssuer: 'ms-institutions',
+      expectedAudience: 'ms-documents',
+    },
   },
-});
+);
 ```
+
+Every verification value must come from
+`parseJwtVerificationJwks(serializedJwks)`. A JWKS may contain active and
+retiring public Ed25519 keys, so rotation adds the replacement verifier before
+switching signers and removes the retiring key only after the maximum JWT
+lifetime plus clock skew. Unknown or removed `kid` values fail closed.
 
 When the optional reader is configured, a missing `X-Authorization-Context`
 leaves `req.userAuthorization` as `null`. If the header is present but invalid,

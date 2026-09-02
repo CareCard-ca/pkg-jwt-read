@@ -33,7 +33,7 @@ const {
   jwtVerifyWebTokenNoThrow,
   throwUsedTokenError,
 } = require('../index');
-const { privateKey, publicKey } = require('./keys/keys');
+const { signingJwk, verificationJwks } = require('./keys/keys');
 
 const USER_ID = '8b0db877-a6b3-4a23-a493-e687915cdd87';
 const AUTHORIZATION_SUBJECT = '6f4cb7f4-2c2a-4a91-9b56-3e5389703d42';
@@ -42,7 +42,7 @@ describe('@carecard/jwt-read public behavior', function () {
   it('extracts authenticated bearer context through canonical utilities', function () {
     const request = createRequest({ Authorization: `Bearer ${createUserToken()}` });
 
-    jwtValidateAndExtract(request, publicKey);
+    jwtValidateAndExtract(request, verificationJwks);
 
     assert.strictEqual(jwtGetClientId(request), USER_ID);
     assert.strictEqual(doesJwtUserHasRole(request, 'admin'), true);
@@ -55,67 +55,67 @@ describe('@carecard/jwt-read public behavior', function () {
     const requiredRequest = createRequest({ Authorization: `Bearer ${invalidToken}` });
     requiredRequest.jwt = { payload: { sub: 'stale-user' } };
 
-    assert.throws(() => jwtValidateAndExtract(requiredRequest, publicKey));
+    assert.throws(() => jwtValidateAndExtract(requiredRequest, verificationJwks));
     assert.strictEqual(requiredRequest.jwt, null);
 
     const optionalRequest = createRequest({ Authorization: `Bearer ${invalidToken}` });
-    jwtValidateAndExtractNoThrow(optionalRequest, publicKey);
+    jwtValidateAndExtractNoThrow(optionalRequest, verificationJwks);
     assert.strictEqual(optionalRequest.jwt, null);
   });
 
   it('handles custom-header and visitor tokens through canonical utilities', function () {
     const webRequest = createRequest({ 'X-Token': createUserToken() });
-    jwtValidateAndExtractWebToken(webRequest, publicKey, 'X-Token');
+    jwtValidateAndExtractWebToken(webRequest, verificationJwks, 'X-Token');
     assert.strictEqual(jwtGetClientId(webRequest), USER_ID);
 
     const invalidWebRequest = createRequest({ 'X-Token': corruptToken(createUserToken()) });
-    jwtValidateAndExtractWebTokenNoThrow(invalidWebRequest, publicKey, 'X-Token');
+    jwtValidateAndExtractWebTokenNoThrow(invalidWebRequest, verificationJwks, 'X-Token');
     assert.strictEqual(invalidWebRequest.jwt, null);
 
     const visitorRequest = createRequest({
       Visitor: `Bearer ${createSignedToken({ sub: USER_ID })}`,
     });
-    jwtValidateAndExtractVisitorNoThrow(visitorRequest, publicKey);
+    jwtValidateAndExtractVisitorNoThrow(visitorRequest, verificationJwks);
     assert.strictEqual(jwtGetVisitorClientId(visitorRequest), USER_ID);
   });
 
   it('reports required middleware errors while optional middleware continues', async function () {
     const bearerRequest = createRequest({ Authorization: `Bearer ${createUserToken()}` });
-    await expectMiddlewareSuccess(jwtVerify(publicKey), bearerRequest);
+    await expectMiddlewareSuccess(jwtVerify(verificationJwks), bearerRequest);
 
     const webRequest = createRequest({ 'X-Token': createUserToken() });
-    await expectMiddlewareSuccess(jwtVerifyWebToken(publicKey, 'X-Token'), webRequest);
+    await expectMiddlewareSuccess(jwtVerifyWebToken(verificationJwks, 'X-Token'), webRequest);
 
     const visitorRequest = createRequest({
       Visitor: `Bearer ${createSignedToken({ sub: USER_ID })}`,
     });
-    await expectMiddlewareSuccess(jwtVerifyVisitorNoThrow(publicKey), visitorRequest);
+    await expectMiddlewareSuccess(jwtVerifyVisitorNoThrow(verificationJwks), visitorRequest);
 
     const invalidToken = corruptToken(createUserToken());
     const requiredError = await captureMiddlewareError(
-      jwtVerify(publicKey),
+      jwtVerify(verificationJwks),
       createRequest({ Authorization: `Bearer ${invalidToken}` }),
     );
     assert.ok(requiredError instanceof Error);
 
     await expectMiddlewareSuccess(
-      jwtVerifyNoThrow(publicKey),
+      jwtVerifyNoThrow(verificationJwks),
       createRequest({ Authorization: `Bearer ${invalidToken}` }),
     );
     await expectMiddlewareSuccess(
-      jwtVerifyWebTokenNoThrow(publicKey, 'X-Token'),
+      jwtVerifyWebTokenNoThrow(verificationJwks, 'X-Token'),
       createRequest({ 'X-Token': invalidToken }),
     );
   });
 
   it('enforces requested roles through bearer middleware', async function () {
     await expectMiddlewareSuccess(
-      jwtVerifyAndHasRole('admin', publicKey),
+      jwtVerifyAndHasRole('admin', verificationJwks),
       createRequest({ Authorization: `Bearer ${createUserToken()}` }),
     );
 
     const deniedError = await captureMiddlewareError(
-      jwtVerifyAndHasRole('reviewer', publicKey),
+      jwtVerifyAndHasRole('reviewer', verificationJwks),
       createRequest({ Authorization: `Bearer ${createUserToken()}` }),
     );
     assert.ok(deniedError instanceof Error);
@@ -130,14 +130,14 @@ describe('@carecard/jwt-read public behavior', function () {
     };
     const directRequest = createRequest({ [DEFAULT_USER_AUTHORIZATION_HEADER_NAME]: token });
 
-    jwtValidateAndExtractUserAuthorization(directRequest, publicKey, undefined, options);
+    jwtValidateAndExtractUserAuthorization(directRequest, verificationJwks, undefined, options);
 
     assert.strictEqual(directRequest.userAuthorization.payload.sub, AUTHORIZATION_SUBJECT);
     assert.strictEqual(directRequest.userAuthorization.payload.table, 'documents');
 
     const middlewareRequest = createRequest({ [DEFAULT_USER_AUTHORIZATION_HEADER_NAME]: token });
     await expectMiddlewareSuccess(
-      jwtVerifyUserAuthorization(publicKey, undefined, options),
+      jwtVerifyUserAuthorization(verificationJwks, undefined, options),
       middlewareRequest,
     );
 
@@ -145,21 +145,24 @@ describe('@carecard/jwt-read public behavior', function () {
     const optionalRequest = createRequest({
       [DEFAULT_USER_AUTHORIZATION_HEADER_NAME]: invalidToken,
     });
-    jwtValidateAndExtractUserAuthorizationNoThrow(optionalRequest, publicKey);
+    jwtValidateAndExtractUserAuthorizationNoThrow(optionalRequest, verificationJwks);
     assert.strictEqual(optionalRequest.userAuthorization, null);
-    await expectMiddlewareSuccess(jwtVerifyUserAuthorizationNoThrow(publicKey), optionalRequest);
+    await expectMiddlewareSuccess(
+      jwtVerifyUserAuthorizationNoThrow(verificationJwks),
+      optionalRequest,
+    );
   });
 
   it('accepts only service tokens matching the expected issuer and audience', async function () {
     const token = createServiceToken('ms-institutions', 'ms-auth');
     const directRequest = createRequest({ Authorization: `Bearer ${token}` });
 
-    jwtValidateAndExtractService(directRequest, publicKey, 'ms-institutions', 'ms-auth');
+    jwtValidateAndExtractService(directRequest, verificationJwks, 'ms-institutions', 'ms-auth');
     assert.strictEqual(directRequest.jwt.payload.iss, 'ms-institutions');
     assert.strictEqual(directRequest.jwt.payload.aud, 'ms-auth');
 
     await expectMiddlewareSuccess(
-      jwtVerifyService(publicKey, 'ms-institutions', 'ms-auth'),
+      jwtVerifyService(verificationJwks, 'ms-institutions', 'ms-auth'),
       createRequest({ Authorization: `Bearer ${token}` }),
     );
 
@@ -167,7 +170,12 @@ describe('@carecard/jwt-read public behavior', function () {
       Authorization: `Bearer ${createServiceToken('ms-search', 'ms-auth')}`,
     });
     assert.throws(() =>
-      jwtValidateAndExtractService(wrongIssuerRequest, publicKey, 'ms-institutions', 'ms-auth'),
+      jwtValidateAndExtractService(
+        wrongIssuerRequest,
+        verificationJwks,
+        'ms-institutions',
+        'ms-auth',
+      ),
     );
     assert.strictEqual(wrongIssuerRequest.jwt, null);
   });
@@ -179,17 +187,17 @@ describe('@carecard/jwt-read public behavior', function () {
     };
     const directRequest = createRequest({ Authorization: 'Bearer opaque-server-token' });
 
-    await jwtValidateAndExtractOrServerAuth(directRequest, publicKey, introspector);
+    await jwtValidateAndExtractOrServerAuth(directRequest, verificationJwks, introspector);
 
     assert.strictEqual(directRequest.jwt.payload.sub, USER_ID);
     assert.strictEqual(directRequest.jwt.payload.email_verified, true);
 
     await expectMiddlewareSuccess(
-      jwtVerifyOrServerAuth(publicKey, introspector),
+      jwtVerifyOrServerAuth(verificationJwks, introspector),
       createRequest({ Authorization: 'Bearer opaque-server-token' }),
     );
     await expectMiddlewareSuccess(
-      jwtVerifyOrServerAuthAndHasRole('admin', publicKey, introspector),
+      jwtVerifyOrServerAuthAndHasRole('admin', verificationJwks, introspector),
       createRequest({ Authorization: 'Bearer opaque-server-token' }),
     );
   });
@@ -213,11 +221,7 @@ function createRequest(headers) {
 }
 
 function createSignedToken(payload) {
-  return jwtCreateSignedToken(
-    { alg: 'EdDSA', typ: 'JWT' },
-    { iat: Math.floor(Date.now() / 1000), ...payload },
-    privateKey,
-  );
+  return jwtCreateSignedToken({ iat: Math.floor(Date.now() / 1000), ...payload }, signingJwk);
 }
 
 function createUserToken() {
