@@ -113,7 +113,7 @@ depend on those folders being present.
 
 `lib/jwtLib.js` owns:
 
-- Signature verification using public keys.
+- Signature verification using parsed public Ed25519 JWKS values.
 - Middleware-like functions for Express, such as `verifyJwtAndRole`.
 - Service-to-service JWT verification and extraction helpers:
   `jwtValidateAndExtractService` and `jwtVerifyService`.
@@ -141,6 +141,13 @@ depend on those folders being present.
 Use `@carecard/auth-util` for JWT creation, decomposition, and signature
 verification. Do not duplicate cryptographic logic in this package.
 
+Every verification argument and nested `userAuthorization.verificationJwks`
+option must be a value returned by
+`parseJwtVerificationJwks(serializedJwks)`. Do not accept PEM text, RSA keys,
+raw JWK objects, missing-`kid` tokens, or single-key compatibility fallbacks.
+Verification selects the exact public key named by the token's RFC 7638
+thumbprint `kid`; unknown and retired kids fail closed.
+
 JWT creation functions do not belong in this package. Service-to-service token
 creation belongs in `@carecard/auth-util` via `jwtCreateServiceToken` and
 `jwtCreateServiceAuthorizationHeader`.
@@ -153,7 +160,7 @@ JWT context.
 Service JWTs must follow standard JWT claim semantics. They use `iss` for the
 sending service, `sub` for the sending service identity, `aud` for the
 receiving service, and NumericDate `iat`, `exp`, and optional `nbf` claims.
-Receivers must verify the signature with the sending service public key and
+Receivers must verify the signature with the sending service public JWKS and
 must check expected issuer, audience, subject, and lifetime. Do not add
 CareCard-specific replacement claims when a registered JWT claim covers the
 same meaning.

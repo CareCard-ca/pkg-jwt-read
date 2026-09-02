@@ -3,6 +3,7 @@
  */
 
 import type { NextFunction, Request, Response } from 'express';
+import type { JwtVerificationJwks } from '@carecard/auth-util';
 
 export const DEFAULT_USER_AUTHORIZATION_HEADER_NAME: 'X-Authorization-Context';
 export const DEFAULT_USER_AUTHORIZATION_MAX_TOKEN_LENGTH: 2048;
@@ -118,7 +119,7 @@ export interface JwtRequestContext {
 }
 
 export interface UserAuthorizationTokenOptions {
-  publicKey?: string;
+  verificationJwks?: JwtVerificationJwks;
   headerName?: string;
   maxTokenLength?: number;
   expectedType?: string;
@@ -166,7 +167,7 @@ export type ServerAuthIntrospector = (
  * and extracts it into req.jwt. Throws an error if invalid.
  */
 export function jwtVerify(
-  publicKey: string,
+  verificationJwks: JwtVerificationJwks,
   customErrorFunction?: () => void,
   options?: UserAuthorizationReadOptions,
 ): (req: AuthenticatedRequest, res: Response, next: NextFunction) => void;
@@ -176,7 +177,7 @@ export function jwtVerify(
  * Throws an error if invalid.
  */
 export function jwtVerifyWebToken(
-  publicKey: string,
+  verificationJwks: JwtVerificationJwks,
   headerName: string,
   customErrorFunction?: () => void,
   options?: UserAuthorizationReadOptions,
@@ -187,7 +188,7 @@ export function jwtVerifyWebToken(
  * and extracts it into req.jwt. Returns false instead of throwing if invalid.
  */
 export function jwtVerifyNoThrow(
-  publicKey: string,
+  verificationJwks: JwtVerificationJwks,
   options?: UserAuthorizationReadOptions,
 ): (req: AuthenticatedRequest, res: Response, next: NextFunction) => void;
 
@@ -196,7 +197,7 @@ export function jwtVerifyNoThrow(
  * Returns false instead of throwing if invalid.
  */
 export function jwtVerifyWebTokenNoThrow(
-  publicKey: string,
+  verificationJwks: JwtVerificationJwks,
   headerName: string,
   options?: UserAuthorizationReadOptions,
 ): (req: AuthenticatedRequest, res: Response, next: NextFunction) => void;
@@ -205,7 +206,7 @@ export function jwtVerifyWebTokenNoThrow(
  * Returns middleware that verifies X-Authorization-Context and extracts it into req.userAuthorization.
  */
 export function jwtVerifyUserAuthorization(
-  publicKey: string,
+  verificationJwks: JwtVerificationJwks,
   customErrorFunction?: () => void,
   options?: UserAuthorizationTokenOptions,
 ): (req: AuthenticatedRequest, res: Response, next: NextFunction) => void;
@@ -214,7 +215,7 @@ export function jwtVerifyUserAuthorization(
  * Returns middleware that verifies X-Authorization-Context into req.userAuthorization without throwing for invalid tokens.
  */
 export function jwtVerifyUserAuthorizationNoThrow(
-  publicKey: string,
+  verificationJwks: JwtVerificationJwks,
   options?: UserAuthorizationTokenOptions,
 ): (req: AuthenticatedRequest, res: Response, next: NextFunction) => void;
 
@@ -223,7 +224,7 @@ export function jwtVerifyUserAuthorizationNoThrow(
  * and extracts it into req.visitor. Returns false instead of throwing if invalid.
  */
 export function jwtVerifyVisitorNoThrow(
-  publicKey: string,
+  verificationJwks: JwtVerificationJwks,
   options?: UserAuthorizationReadOptions,
 ): (req: AuthenticatedRequest, res: Response, next: NextFunction) => void;
 
@@ -254,7 +255,7 @@ export function jwtGetAgeInSeconds(req?: JwtRequestContext): number;
  */
 export function jwtVerifyAndHasRole(
   userRole: string,
-  publicKey: string,
+  verificationJwks: JwtVerificationJwks,
   customErrorFunction?: () => void,
   options?: UserAuthorizationReadOptions,
 ): (req: AuthenticatedRequest, res: Response, next: NextFunction) => void;
@@ -264,7 +265,7 @@ export function jwtVerifyAndHasRole(
  * Server-auth tokens are validated by the supplied introspector on every request.
  */
 export function jwtVerifyOrServerAuth(
-  publicKey: string,
+  verificationJwks: JwtVerificationJwks,
   serverAuthIntrospector: ServerAuthIntrospector,
   customErrorFunction?: () => void,
   options?: UserAuthorizationReadOptions,
@@ -276,7 +277,7 @@ export function jwtVerifyOrServerAuth(
  */
 export function jwtVerifyOrServerAuthAndHasRole(
   userRole: string,
-  publicKey: string,
+  verificationJwks: JwtVerificationJwks,
   serverAuthIntrospector: ServerAuthIntrospector,
   customErrorFunction?: () => void,
   options?: UserAuthorizationReadOptions,
@@ -318,7 +319,7 @@ export function jwtGetContext(req: JwtRequestContext): JwtContext;
  */
 export function jwtValidateAndExtract(
   req: AuthenticatedRequest,
-  publicKey: string,
+  verificationJwks: JwtVerificationJwks,
   customErrorFunction?: () => void,
   options?: UserAuthorizationReadOptions,
 ): void;
@@ -328,7 +329,7 @@ export function jwtValidateAndExtract(
  */
 export function jwtValidateAndExtractUserAuthorization(
   req: AuthenticatedRequest,
-  publicKey: string,
+  verificationJwks: JwtVerificationJwks,
   customErrorFunction?: () => void,
   options?: UserAuthorizationTokenOptions,
 ): void;
@@ -338,7 +339,7 @@ export function jwtValidateAndExtractUserAuthorization(
  */
 export function jwtValidateAndExtractUserAuthorizationNoThrow(
   req: AuthenticatedRequest,
-  publicKey: string,
+  verificationJwks: JwtVerificationJwks,
   options?: UserAuthorizationTokenOptions,
 ): void;
 
@@ -347,7 +348,7 @@ export function jwtValidateAndExtractUserAuthorizationNoThrow(
  */
 export function jwtValidateAndExtractService(
   req: AuthenticatedRequest,
-  publicKey: string,
+  verificationJwks: JwtVerificationJwks,
   expectedIssuer: string,
   expectedAudience: string,
   customErrorFunction?: () => void,
@@ -360,7 +361,7 @@ export function jwtValidateAndExtractService(
  */
 export function jwtValidateAndExtractOrServerAuth(
   req: AuthenticatedRequest,
-  publicKey: string,
+  verificationJwks: JwtVerificationJwks,
   serverAuthIntrospector: ServerAuthIntrospector,
   customErrorFunction?: () => void,
   options?: UserAuthorizationReadOptions,
@@ -371,7 +372,7 @@ export function jwtValidateAndExtractOrServerAuth(
  */
 export function jwtValidateAndExtractWebToken(
   req: AuthenticatedRequest,
-  publicKey: string,
+  verificationJwks: JwtVerificationJwks,
   headerName: string,
   customErrorFunction?: () => void,
   options?: UserAuthorizationReadOptions,
@@ -382,7 +383,7 @@ export function jwtValidateAndExtractWebToken(
  */
 export function jwtValidateAndExtractNoThrow(
   req: AuthenticatedRequest,
-  publicKey: string,
+  verificationJwks: JwtVerificationJwks,
   options?: UserAuthorizationReadOptions,
 ): void;
 
@@ -391,7 +392,7 @@ export function jwtValidateAndExtractNoThrow(
  */
 export function jwtValidateAndExtractWebTokenNoThrow(
   req: AuthenticatedRequest,
-  publicKey: string,
+  verificationJwks: JwtVerificationJwks,
   headerName: string,
   options?: UserAuthorizationReadOptions,
 ): void;
@@ -401,7 +402,7 @@ export function jwtValidateAndExtractWebTokenNoThrow(
  */
 export function jwtValidateAndExtractVisitorNoThrow(
   req: AuthenticatedRequest,
-  publicKey: string,
+  verificationJwks: JwtVerificationJwks,
   options?: UserAuthorizationReadOptions,
 ): void;
 
@@ -409,7 +410,7 @@ export function jwtValidateAndExtractVisitorNoThrow(
  * Returns middleware that verifies a service-to-service JWT from one expected sender.
  */
 export function jwtVerifyService(
-  publicKey: string,
+  verificationJwks: JwtVerificationJwks,
   expectedIssuer: string,
   expectedAudience: string,
   customErrorFunction?: () => void,
@@ -422,7 +423,7 @@ export function jwtVerifyService(
  * @deprecated use jwtVerify
  */
 export function verifyJwt(
-  publicKey: string,
+  verificationJwks: JwtVerificationJwks,
   customErrorFunction?: () => void,
   options?: UserAuthorizationReadOptions,
 ): (req: AuthenticatedRequest, res: Response, next: NextFunction) => void;
@@ -433,7 +434,7 @@ export function verifyJwt(
  * @deprecated use jwtVerifyWebToken
  */
 export function verifyWebToken(
-  publicKey: string,
+  verificationJwks: JwtVerificationJwks,
   headerName: string,
   customErrorFunction?: () => void,
   options?: UserAuthorizationReadOptions,
@@ -445,7 +446,7 @@ export function verifyWebToken(
  * @deprecated use jwtVerifyNoThrow
  */
 export function verifyJwtNoThrow(
-  publicKey: string,
+  verificationJwks: JwtVerificationJwks,
   options?: UserAuthorizationReadOptions,
 ): (req: AuthenticatedRequest, res: Response, next: NextFunction) => void;
 
@@ -455,7 +456,7 @@ export function verifyJwtNoThrow(
  * @deprecated use jwtVerifyWebTokenNoThrow
  */
 export function verifyWebTokenNoThrow(
-  publicKey: string,
+  verificationJwks: JwtVerificationJwks,
   headerName: string,
   options?: UserAuthorizationReadOptions,
 ): (req: AuthenticatedRequest, res: Response, next: NextFunction) => void;
@@ -466,7 +467,7 @@ export function verifyWebTokenNoThrow(
  * @deprecated use jwtVerifyVisitorNoThrow
  */
 export function verifyVisitorNoThrow(
-  publicKey: string,
+  verificationJwks: JwtVerificationJwks,
   options?: UserAuthorizationReadOptions,
 ): (req: AuthenticatedRequest, res: Response, next: NextFunction) => void;
 
@@ -504,7 +505,7 @@ export function jwtAgeInSeconds(req?: JwtRequestContext): number;
  */
 export function verifyJwtAndRole(
   userRole: string,
-  publicKey: string,
+  verificationJwks: JwtVerificationJwks,
   customErrorFunction?: () => void,
   options?: UserAuthorizationReadOptions,
 ): (req: AuthenticatedRequest, res: Response, next: NextFunction) => void;

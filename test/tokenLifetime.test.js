@@ -11,21 +11,21 @@ const {
   jwtValidateAndExtractWebToken,
   jwtVerify,
 } = require('../index');
-const { privateKey, publicKey } = require('./keys/keys');
+const { signingJwk, verificationJwks } = require('./keys/keys');
 
 describe('JWT lifetime enforcement', function () {
   it('rejects an expired signed token through required and optional bearer boundaries', async function () {
     const token = createToken({ iat: nowSeconds() - 120, exp: nowSeconds() - 60 });
     const requiredRequest = createRequest({ Authorization: `Bearer ${token}` });
 
-    assert.throws(() => jwtValidateAndExtract(requiredRequest, publicKey));
+    assert.throws(() => jwtValidateAndExtract(requiredRequest, verificationJwks));
     assert.strictEqual(requiredRequest.jwt, null);
 
     const optionalRequest = createRequest({ Authorization: `Bearer ${token}` });
-    jwtValidateAndExtractNoThrow(optionalRequest, publicKey);
+    jwtValidateAndExtractNoThrow(optionalRequest, verificationJwks);
     assert.strictEqual(optionalRequest.jwt, null);
 
-    const middlewareError = await runMiddleware(jwtVerify(publicKey), requiredRequest);
+    const middlewareError = await runMiddleware(jwtVerify(verificationJwks), requiredRequest);
     assert.ok(middlewareError instanceof Error);
   });
 
@@ -43,13 +43,13 @@ describe('JWT lifetime enforcement', function () {
     assert.throws(() =>
       jwtValidateAndExtract(
         createRequest({ Authorization: `Bearer ${futureIssuedToken}` }),
-        publicKey,
+        verificationJwks,
       ),
     );
     assert.throws(() =>
       jwtValidateAndExtract(
         createRequest({ Authorization: `Bearer ${futureValidityToken}` }),
-        publicKey,
+        verificationJwks,
       ),
     );
   });
@@ -60,13 +60,13 @@ describe('JWT lifetime enforcement', function () {
     assert.throws(() =>
       jwtValidateAndExtractWebToken(
         createRequest({ 'X-Token': expiredToken }),
-        publicKey,
+        verificationJwks,
         'X-Token',
       ),
     );
 
     const visitorRequest = createRequest({ Visitor: `Bearer ${expiredToken}` });
-    jwtValidateAndExtractVisitorNoThrow(visitorRequest, publicKey);
+    jwtValidateAndExtractVisitorNoThrow(visitorRequest, verificationJwks);
     assert.strictEqual(visitorRequest.visitor, null);
   });
 });
@@ -78,7 +78,7 @@ function nowSeconds() {
 
 // Pattern: Test Data Builder - creates signed tokens with caller-controlled lifetime claims.
 function createToken(payload) {
-  return jwtCreateSignedToken({ alg: 'EdDSA', typ: 'JWT' }, payload, privateKey);
+  return jwtCreateSignedToken(payload, signingJwk);
 }
 
 // Pattern: Test Double - exposes the Express request header contract used by the package.

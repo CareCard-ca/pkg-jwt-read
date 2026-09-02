@@ -1,5 +1,6 @@
 import assert from 'assert';
 import { describe, it } from 'mocha';
+import type { JwtVerificationJwks } from '@carecard/auth-util';
 import {
   AuthenticatedRequest,
   DEFAULT_USER_AUTHORIZATION_HEADER_NAME,
@@ -51,6 +52,8 @@ import {
   visitorClientId,
 } from '../index';
 
+const verificationJwks = {} as JwtVerificationJwks;
+
 describe('TypeScript Type Definitions - JWT Read Utilities', () => {
   it('should verify role mapping functions', () => {
     assert.strictEqual(getNameOfRole('ad'), 'admin');
@@ -82,57 +85,56 @@ describe('TypeScript Type Definitions - JWT Read Utilities', () => {
   });
 
   it('should verify new middleware creator names', () => {
-    const publicKey = 'dummy-key';
-    assert.strictEqual(typeof jwtVerify(publicKey), 'function');
-    assert.strictEqual(typeof jwtVerifyWebToken(publicKey, 'X-Token'), 'function');
-    assert.strictEqual(typeof jwtVerifyNoThrow(publicKey), 'function');
-    assert.strictEqual(typeof jwtVerifyWebTokenNoThrow(publicKey, 'X-Token'), 'function');
-    assert.strictEqual(typeof jwtVerifyVisitorNoThrow(publicKey), 'function');
-    assert.strictEqual(typeof jwtVerifyAndHasRole('admin', publicKey), 'function');
+    assert.strictEqual(typeof jwtVerify(verificationJwks), 'function');
+    assert.strictEqual(typeof jwtVerifyWebToken(verificationJwks, 'X-Token'), 'function');
+    assert.strictEqual(typeof jwtVerifyNoThrow(verificationJwks), 'function');
+    assert.strictEqual(typeof jwtVerifyWebTokenNoThrow(verificationJwks, 'X-Token'), 'function');
+    assert.strictEqual(typeof jwtVerifyVisitorNoThrow(verificationJwks), 'function');
+    assert.strictEqual(typeof jwtVerifyAndHasRole('admin', verificationJwks), 'function');
     assert.strictEqual(
-      typeof jwtVerifyOrServerAuth(publicKey, () => ({ userId: '123' })),
+      typeof jwtVerifyOrServerAuth(verificationJwks, () => ({ userId: '123' })),
       'function',
     );
     assert.strictEqual(
-      typeof jwtVerifyOrServerAuthAndHasRole('admin', publicKey, () => ({ userId: '123' })),
+      typeof jwtVerifyOrServerAuthAndHasRole('admin', verificationJwks, () => ({ userId: '123' })),
       'function',
     );
     assert.strictEqual(
-      typeof jwtVerifyService(publicKey, 'ms-auth', 'ms-institutions'),
+      typeof jwtVerifyService(verificationJwks, 'ms-auth', 'ms-institutions'),
       'function',
     );
-    assert.strictEqual(typeof jwtVerifyUserAuthorization(publicKey), 'function');
-    assert.strictEqual(typeof jwtVerifyUserAuthorizationNoThrow(publicKey), 'function');
+    assert.strictEqual(typeof jwtVerifyUserAuthorization(verificationJwks), 'function');
+    assert.strictEqual(typeof jwtVerifyUserAuthorizationNoThrow(verificationJwks), 'function');
   });
 
   it('should execute validateAndExtract contracts', async () => {
     const optionalRequest = createAuthenticatedRequest();
-    jwtValidateAndExtractNoThrow(optionalRequest, 'invalid-public-key');
-    jwtValidateAndExtractWebTokenNoThrow(optionalRequest, 'invalid-public-key', 'X-Token');
-    jwtValidateAndExtractVisitorNoThrow(optionalRequest, 'invalid-public-key');
-    jwtValidateAndExtractUserAuthorizationNoThrow(optionalRequest, 'invalid-public-key');
+    jwtValidateAndExtractNoThrow(optionalRequest, verificationJwks);
+    jwtValidateAndExtractWebTokenNoThrow(optionalRequest, verificationJwks, 'X-Token');
+    jwtValidateAndExtractVisitorNoThrow(optionalRequest, verificationJwks);
+    jwtValidateAndExtractUserAuthorizationNoThrow(optionalRequest, verificationJwks);
     assert.strictEqual(optionalRequest.jwt, null);
     assert.strictEqual(optionalRequest.visitor, null);
     assert.strictEqual(optionalRequest.userAuthorization, null);
 
-    assert.throws(() => jwtValidateAndExtract(createAuthenticatedRequest(), 'invalid-public-key'));
+    assert.throws(() => jwtValidateAndExtract(createAuthenticatedRequest(), verificationJwks));
     assert.throws(() =>
-      jwtValidateAndExtractWebToken(createAuthenticatedRequest(), 'invalid-public-key', 'X-Token'),
+      jwtValidateAndExtractWebToken(createAuthenticatedRequest(), verificationJwks, 'X-Token'),
     );
     assert.throws(() =>
       jwtValidateAndExtractService(
         createAuthenticatedRequest(),
-        'invalid-public-key',
+        verificationJwks,
         'ms-auth',
         'ms-search',
       ),
     );
     assert.throws(() =>
-      jwtValidateAndExtractUserAuthorization(createAuthenticatedRequest(), 'invalid-public-key'),
+      jwtValidateAndExtractUserAuthorization(createAuthenticatedRequest(), verificationJwks),
     );
 
     const serverAuthRequest = createAuthenticatedRequest({ Authorization: 'Bearer opaque-token' });
-    await jwtValidateAndExtractOrServerAuth(serverAuthRequest, 'invalid-public-key', () => ({
+    await jwtValidateAndExtractOrServerAuth(serverAuthRequest, verificationJwks, () => ({
       userId: 'typed-user',
       valid: true,
     }));
@@ -212,7 +214,7 @@ describe('TypeScript Type Definitions - JWT Read Utilities', () => {
     };
     const options: UserAuthorizationReadOptions = {
       userAuthorization: {
-        publicKey: 'public-key',
+        verificationJwks,
         expectedType: 'carecard.authorization-context.scoped.v1',
         expectedIssuer: 'ms-institutions',
         expectedAudience: 'ms-documents',
@@ -230,13 +232,12 @@ describe('TypeScript Type Definitions - JWT Read Utilities', () => {
   });
 
   it('should verify middleware creator types', () => {
-    const publicKey = 'dummy-key';
-    assert.strictEqual(typeof verifyJwt(publicKey), 'function');
-    assert.strictEqual(typeof verifyWebToken(publicKey, 'X-Token'), 'function');
-    assert.strictEqual(typeof verifyJwtNoThrow(publicKey), 'function');
-    assert.strictEqual(typeof verifyWebTokenNoThrow(publicKey, 'X-Token'), 'function');
-    assert.strictEqual(typeof verifyVisitorNoThrow(publicKey), 'function');
-    assert.strictEqual(typeof verifyJwtAndRole('admin', publicKey), 'function');
+    assert.strictEqual(typeof verifyJwt(verificationJwks), 'function');
+    assert.strictEqual(typeof verifyWebToken(verificationJwks, 'X-Token'), 'function');
+    assert.strictEqual(typeof verifyJwtNoThrow(verificationJwks), 'function');
+    assert.strictEqual(typeof verifyWebTokenNoThrow(verificationJwks, 'X-Token'), 'function');
+    assert.strictEqual(typeof verifyVisitorNoThrow(verificationJwks), 'function');
+    assert.strictEqual(typeof verifyJwtAndRole('admin', verificationJwks), 'function');
   });
 
   it('should verify jwtGetContext types and behavior', () => {
@@ -290,7 +291,7 @@ describe('TypeScript Type Definitions - JWT Read Utilities', () => {
 
   it('should leave optional missing authentication unauthenticated', () => {
     const request = createAuthenticatedRequest();
-    jwtValidateAndExtractNoThrow(request, 'invalid-public-key');
+    jwtValidateAndExtractNoThrow(request, verificationJwks);
     assert.strictEqual(request.jwt, null);
   });
 
