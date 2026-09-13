@@ -281,10 +281,10 @@ with `--force-with-lease`.
 ## Agent Guidance Git Workflow
 
 Work from the owning repository root and stage only intended guidance changes.
-Use freshly fetched `origin/main` as the default base. Start `feature/codex`
+Use freshly fetched `origin/main` as the default base. Start `<agent-name>/<task-name>`
 from it, or rebase existing work when it does not already contain the latest
 `origin/main`. An explicit user instruction to use the current or another
-working branch overrides the default `feature/codex` selection.
+working branch overrides the default `<agent-name>/<task-name>` selection.
 
 Fetch again before every source-branch push and rebase only when the branch
 does not already contain the latest `origin/main`. Required fetches need no

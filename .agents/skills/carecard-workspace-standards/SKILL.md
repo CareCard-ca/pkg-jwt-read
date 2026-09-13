@@ -7,6 +7,9 @@ Non-negotiable root-cause solution rule: Always identify and solve the verified 
 
 # CareCard Workspace Standards
 
+First read [carecard-must-do](../carecard-must-do/SKILL.md); it is mandatory for every agent and task.
+Then read the [repository engineering standards](../pkg-jwt-read-coding-standards-and-best-practices/SKILL.md) before following this workflow.
+
 Mandatory companion: load
 `$pkg-jwt-read-coding-standards-and-best-practices` before this skill for every
 task in this repository.
@@ -53,7 +56,7 @@ Use before modifying, testing, reviewing, or debugging any CareCard workspace re
 ## When To Use
 
 - Use before modifying, testing, reviewing, or debugging any CareCard workspace repository or cross-repository contract.
-- Use as the first shared context before selecting narrower repository-specific skills.
+- Use as shared context after `carecard-must-do` and the repository engineering standards, before selecting narrower specialist skills.
 
 ## When Not To Use
 
@@ -191,10 +194,10 @@ making a new commit in the affected repository.
 ## Agent Guidance Git Workflow
 
 Work from the owning repository root and stage only intended guidance changes.
-Use freshly fetched `origin/main` as the default base. Start `feature/codex`
+Use freshly fetched `origin/main` as the default base. Start `<agent-name>/<task-name>`
 from it, or rebase existing work when it does not already contain the latest
 `origin/main`. An explicit user instruction to use the current or another
-working branch overrides the default `feature/codex` selection.
+working branch overrides the default `<agent-name>/<task-name>` selection.
 
 Fetch again before every source-branch push and rebase only when the branch
 does not already contain the latest `origin/main`. Required fetches need no

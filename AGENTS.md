@@ -1,4 +1,16 @@
-# Codex Instructions
+# Agent Instructions
+
+## Mandatory startup for every agent
+
+Every agent, including Codex, Claude, other assistants, and delegated agents,
+must read and follow [carecard-must-do](.agents/skills/carecard-must-do/SKILL.md)
+before beginning or resuming any task. This includes planning, questions,
+read-only investigation, coding, review, documentation, and validation.
+
+Then load the [repository engineering standards](.agents/skills/pkg-jwt-read-coding-standards-and-best-practices/SKILL.md)
+and the specialist skills relevant to the task.
+An agent without automatic skill discovery must open the skill explicitly;
+the requirement applies regardless of the agent platform.
 
 ## Non-negotiable Codex banked-reset requirement
 

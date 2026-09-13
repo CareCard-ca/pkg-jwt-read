@@ -1,9 +1,12 @@
 ---
 name: pkg-jwt-read-coding-standards-and-best-practices
-description: 'Mandatory for every pkg-jwt-read task, including analysis, clarification, planning, implementation, review, debugging, documentation, public API work, skill maintenance, and validation. Use before every narrower skill.'
+description: 'Use after carecard-must-do. Mandatory for every pkg-jwt-read task, including analysis, clarification, planning, implementation, review, debugging, documentation, public API work, skill maintenance, and validation. Use before every narrower skill.'
 ---
 
 # Pkg JWT Read Coding Standards And Best Practices
+
+First read [carecard-must-do](../carecard-must-do/SKILL.md); it is mandatory for every agent and task.
+Then apply this engineering standard before selecting narrower skills.
 
 ## JavaScript And TypeScript Style Contract
 
@@ -40,7 +43,7 @@ cross-repository end-to-end testing is its explicit responsibility.
 
 ## Mandatory Use And Authorities
 
-Load this skill before doing any work in `pkg-jwt-read`, including read-only
+After `carecard-must-do`, load this skill before doing any work in `pkg-jwt-read`, including read-only
 and documentation-only work. Then load every narrower skill that owns the
 affected package contract.
 
