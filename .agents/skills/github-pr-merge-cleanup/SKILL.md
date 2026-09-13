@@ -1,6 +1,6 @@
 ---
 name: github-pr-merge-cleanup
-description: 'Use only when the user explicitly asks for remote Git or GitHub PR work: pushing a branch, creating a missing PR, reviewing mergeability, validating, merging, deleting, or cleaning up a pull request branch.'
+description: 'Use for authorized GitHub PR squash merge and source cleanup. Default to fresh origin/main, rebase when needed, delete merged source branches, and synchronize main and development without deleting or force-pushing main.'
 ---
 
 Non-negotiable root-cause solution rule: Always identify and solve the verified root cause, use the stronger solution, and deliver a correct, durable, production-quality result. Never treat a temporary workaround, resource increase, retry, suppression, bypass, or symptom-only patch as completion. Validate the root-cause fix against the real failing workflow and prove the end state.
@@ -17,224 +17,225 @@ Non-negotiable error and warning rule: Never suppress, silence, hide, downgrade,
 
 Non-negotiable code organization rule: Functions with the same or equivalent behavior must use the same or clearly corresponding descriptive names across CareCard repositories, and equivalent functionality must live in files with the same names within each repository's established architecture. No backward compatibility names, aliases, or duplicate locations are allowed.
 
-## Purpose
+## Default Git Policy
 
-After the user explicitly asks for remote Git or GitHub PR work, push the
-branch, create a missing PR when needed, review, validate, merge, delete the
-branch when allowed, and clean local state for a GitHub pull request targeting
-`development`, or `main` when `development` is absent.
+Apply these defaults unless the user explicitly specifies otherwise. The
+prohibition on deleting or force-pushing `main` always applies.
 
-## When To Use
+1. Use `main` as the PR base and freshly fetched `origin/main` as the source of
+   truth. `origin/HEAD`, a stale local `main`, and the presence of `development`
+   do not change this default. If remote `main` is missing or cannot be fetched,
+   report the blocker instead of selecting another base.
+2. At task start, fetch `origin/main`, then create new work from that commit or
+   rebase the existing working branch onto it when needed. Honor an explicit
+   working-branch instruction; it changes branch selection, not freshness.
+3. Fetch again before every source-branch push. Rebase when the working branch
+   does not already contain the latest `origin/main`; a clean mergeability
+   check is not proof that rebasing is unnecessary. If it already contains that
+   commit, no rebase is needed. The direct `development` replacement below is a
+   ref synchronization, not a source-branch rebase.
+4. Squash-merge into remote `main` after the applicable validation passes.
+   Administrator privileges may be used to merge without GitHub reviews; they
+   do not authorize bypassing required checks. Verify the merge, then delete
+   the merged source branch remotely and locally.
+5. Fetch the latest remote `main` after merging and fast-forward local `main`
+   to that commit. Preserve divergent local work and report a blocked update
+   rather than discarding it.
+6. Replace branches named exactly `development`, locally and remotely, with
+   the latest remote `main` commit. Use an explicit, observed-commit
+   `--force-with-lease` for a non-fast-forward remote update. Create a missing
+   counterpart when local or remote `development` exists; leave repositories
+   with neither unchanged. If `development` was the merged source, recreate
+   it from the new `main` after deleting it. Other working branches are not
+   development synchronization targets.
+7. Never delete local or remote `main`, and never force-push to remote `main`,
+   including with `--force-with-lease`, a forced refspec, or a mirror push.
+   Check the exact destination ref before every deletion or forced update.
 
-- Use only when the user explicitly asks to push, review mergeability,
-  validate, merge, close, or clean up a GitHub pull request branch.
+Fetches needed to establish a fresh `origin/main` at task start and before a
+source-branch push are authorized without a separate approval question. Commits,
+pushes, PR mutations, and branch cleanup require an authorized task; a request
+for local work alone does not authorize publication. An authorized squash merge
+into `main` includes the merged-source cleanup, local `main` update, and
+`development` synchronization below unless the user explicitly says otherwise.
+Never delete local or remote `main`, or force-push to remote `main`, including
+with `--force-with-lease`.
 
-## When Not To Use
+## Prepare The Working Branch
 
-- Do not use for PR-only creation/update work without a merge request; use the
-  PR create/update skill.
-- Do not use when the user only asks for local code changes without PR merge
-  work.
+Work from the owning repository root. Inspect status, the current branch,
+upstream, and worktrees before changing refs. Preserve unrelated changes and
+existing commits; do not reset a working branch to discard its work. Use the
+user-named branch, or the current source branch for a single-repository task.
+If starting new work while on `main`, create a task branch from fresh
+`origin/main`. Do not use `main` or the selected base as a PR source branch.
+Stop if the source branch cannot be resolved or HEAD is detached.
 
-## Remote Git Operations Guardrail
+Fetch the authoritative ref explicitly:
 
-Do not run remote Git or GitHub operations unless the current user request
-explicitly asks for them. This includes `git fetch`, `git pull`, `git push`,
-`git push --delete`, remote branch cleanup, GitHub API calls, and any `gh pr`
-command that creates, updates, readies, merges, closes, or cleans up a pull
-request. Do not infer permission from branch names, validation needs, prior
-workflow habits, or convenience; ask first when remote state would help but was
-not requested.
+```sh
+git fetch origin refs/heads/main:refs/remotes/origin/main
+```
 
-## Scope
+For an existing working branch, check whether it includes the fetched commit:
 
-Use this skill from the root of the repository that owns the pull request. The
-repository must use GitHub CLI, have a remote base branch, and have the target
-branch available locally or on `origin`.
+```sh
+if git merge-base --is-ancestor origin/main HEAD; then
+  printf '%s\n' 'Working branch already contains the latest origin/main.'
+else
+  ancestry_result=$?
+  if [ "$ancestry_result" -ne 1 ]; then
+    exit "$ancestry_result"
+  fi
+  git rebase origin/main
+fi
+```
 
-Default terms:
+Repeat the fetch and ancestry check before every source-branch push, including
+pushes after validation fixes. If rebasing changes the validated inputs, rerun
+the affected validation. Preserve successful evidence for unchanged inputs.
+If a rebase conflicts, abort only the rebase started by this task and report
+the conflict; do not push or discard work. Preserve any pre-existing Git
+operation and dirty worktree rather than trying to reset through it.
 
-- Base branch: `development` when `origin/development` exists, otherwise
-  `main` when `origin/main` exists.
-- Target branch: the current branch unless the user names another branch.
-- Pull request: the open PR whose head is the target branch and whose base is
-  the base branch.
+Before rebasing a published source branch, record its remote commit and verify
+that its existing work is accounted for locally. Reconcile unincorporated
+remote work before rewriting it. Use a normal push for a new branch or a
+fast-forward update. When a rebase requires rewriting the remote source, use
+an explicit lease tied to the recorded source commit:
 
-Do not continue automatically when:
+```sh
+if [ -z "$source_branch" ] || [ "$source_branch" = main ]; then
+  printf '%s\n' 'Refusing to delete or force-update main or an unnamed branch.' >&2
+  exit 1
+fi
+git push --set-upstream \
+  --force-with-lease="refs/heads/$source_branch:$observed_source_commit" \
+  origin "HEAD:refs/heads/$source_branch"
+```
 
-- `gh auth status` fails.
-- The target branch is detached or is the base branch.
-- The working tree has uncommitted changes that are not part of the requested
-  PR cleanup.
-- Neither `origin/development` nor `origin/main` exists.
-- A rebase or validation fix would require behavior changes instead of coding
-  criteria cleanup.
+Resolve `source_branch` and `observed_source_commit` from verified repository
+state before using this example. Do not replace a rejected lease with
+`--force` or retry against a new expected commit without inspecting the remote
+change. Keep hooks enabled. Verify that the remote source commit equals the
+local commit after a successful push.
 
-If no open pull request exists for the target branch and selected base, create
-one as part of the merge workflow when the user requested push/PR/merge
-completion.
+## Create Or Update The Pull Request
 
-## Workflow
+1. Confirm GitHub authentication, the intended source branch, and the clean,
+   committed changes included in the PR. Load the owning repository skills and
+   run their applicable validation. Stage and commit only authorized changes;
+   preserve supplied branch names, titles, commit messages, and PR text.
+2. Prepare and push the source branch using the fresh-main procedure above.
+3. Find the open PR for that source. Reuse the exact source/base match. If
+   automation created the task PR against `development`, retarget that PR to
+   `main` and recheck its diff and checks instead of creating a duplicate.
+   Honor an explicit user-selected base; do not silently retarget that choice.
+4. Create a missing PR against `main` when PR creation is authorized. Use a
+   file for a multiline body with `gh pr create --body-file` or
+   `gh pr edit --body-file`. Do not create an empty PR for a source already
+   represented in the base; report the no-op and perform only authorized
+   cleanup supported by merge or content-equivalence evidence.
+5. Mark draft PRs ready in the authorized create/update/ready or merge workflow,
+   while preserving an explicit request to keep the PR as a draft. Keep the title factual and preserve exact user-supplied text.
+   A create/update-only request ends with the PR; it does not authorize merging.
 
-1. Capture the base branch, target branch, and authentication state:
+## Squash Merge And Delete The Source Branch
 
-   ```sh
-   gh auth status
-   remote_base_refs="$(git ls-remote --heads origin development main)"
-   remote_query_status=$?
-   if [ "$remote_query_status" -ne 0 ]; then
-     printf 'Unable to inspect origin base branches (exit %s).\n' "$remote_query_status" >&2
-     exit "$remote_query_status"
-   fi
-   case "$remote_base_refs" in
-     *"refs/heads/development") base="development" ;;
-     *"refs/heads/main") base="main" ;;
-     *)
-       printf '%s\n' "No origin/development or origin/main branch exists." >&2
-       exit 1
-       ;;
-   esac
-   target_branch="$(git branch --show-current)"
-   test -n "$target_branch"
-   test "$target_branch" != "$base"
-   git status --short
-   ```
-
-   If the user names a target branch, use that branch instead of the current
-   branch. If the target branch is not local but exists on `origin`, create a
-   local branch from the remote head before continuing:
-
-   ```sh
-   if ! git show-ref --verify --quiet "refs/heads/$target_branch"; then
-     git fetch origin "$target_branch:$target_branch"
-   fi
-   git switch "$target_branch"
-   git fetch origin "$base" --prune
-   ```
-
-2. Push the target branch to the same remote branch name. Do not use
-   `--no-verify`; pre-push hooks must run.
-
-   ```sh
-   git push -u origin "$target_branch"
-   local_sha="$(git rev-parse HEAD)"
-   remote_sha="$(git ls-remote --heads origin "$target_branch" | awk '{print $1}')"
-   test "$local_sha" = "$remote_sha"
-   ```
-
-3. Reuse an existing open PR for this exact branch/base pair, or create one
-   when none exists:
-
-   ```sh
-   pr_number="$(gh pr list \
-     --head "$target_branch" \
-     --base "$base" \
-     --state open \
-     --json number \
-     --jq '.[0].number // empty')"
-
-   if [ -z "$pr_number" ]; then
-     git log --reverse --format='%s' "origin/$base..HEAD"
-     git diff --stat "origin/$base...HEAD"
-     pr_url="$(gh pr create \
-       --base "$base" \
-       --head "$target_branch" \
-       --title "$title" \
-       --body "$body")"
-     pr_number="$(gh pr view "$pr_url" --json number --jq '.number')"
-   fi
-   ```
-
-4. Mark draft PRs ready and check mergeability before changing history:
-
-   ```sh
-   is_draft="$(gh pr view "$pr_number" --json isDraft --jq '.isDraft')"
-   if [ "$is_draft" = "true" ]; then
-     gh pr ready "$pr_number"
-   fi
-   gh pr view "$pr_number" --json mergeStateStatus,mergeable,headRefName,baseRefName
-   if git merge-tree --write-tree HEAD "origin/$base" >/tmp/pull-request-merge-close-merge-tree.out
-   then
-     merge_conflict_detected=false
-   else
-     merge_conflict_detected=true
-   fi
-   ```
-
-5. If a merge conflict is detected, rebase the target branch on the fresh base
-   branch. Abort and stop if the rebase conflicts:
+1. Verify the PR base, source branch, source commit, draft state, mergeability,
+   and required validation. Push any authorized changes through the fresh-main
+   procedure first. Confirm checks apply to the commit being merged. Record
+   local and remote development presence and commit IDs before source cleanup.
+2. Squash-merge the verified source commit. Administrator privileges are
+   permitted to merge without reviews, with applicable checks still passing:
 
    ```sh
-   if [ "$merge_conflict_detected" = true ]; then
-     if git rebase "origin/$base"; then
-       git push --force-with-lease -u origin "$target_branch"
-     else
-       git rebase --abort
-       echo "Rebase conflicted; aborted without merging."
-       exit 1
-     fi
-   fi
+   gh pr merge "$pr_number" --squash --admin \
+     --match-head-commit "$source_commit"
    ```
 
-6. Load and apply all relevant repository skills before merging, then confirm
-   the PR is still mergeable after any validation changes.
+   Preserve a supplied squash message with `--subject` and, for remaining
+   lines, `--body-file`. Do not change repository rules to make a merge pass.
 
-7. Merge the PR with GitHub CLI. Delete the remote target branch only when it is
-   not protected:
+3. Verify GitHub reports the PR as merged and record its squash commit. Fetch
+   `origin/main` and prove it contains that squash commit. A squash merge does
+   not preserve source commit IDs, so ordinary source ancestry alone is not
+   merge proof.
+4. Before deleting anything, verify the source is not `main`, the local source
+   has no newer unmerged work, and the remote source still equals the merged
+   source commit. Delete an existing remote source using a lease so a
+   concurrent push is not erased:
 
    ```sh
-   protected="$(gh api "repos/{owner}/{repo}/branches/$target_branch" --jq '.protected')"
-   protection_query_status=$?
-   if [ "$protection_query_status" -ne 0 ]; then
-     printf 'Unable to inspect branch protection (exit %s).\n' "$protection_query_status" >&2
-     exit "$protection_query_status"
+   if [ -z "$source_branch" ] || [ "$source_branch" = main ]; then
+     printf '%s\n' 'Refusing to delete or force-update main or an unnamed branch.' >&2
+     exit 1
    fi
-   case "$protected" in
-     true|false) ;;
-     *)
-       printf 'Unexpected branch protection value: %s\n' "$protected" >&2
-       exit 1
-       ;;
-   esac
-   if [ "$protected" = true ]; then
-     gh pr merge "$pr_number" --squash --admin
-   else
-     gh pr merge "$pr_number" --squash --admin --delete-branch
-   fi
+   git push --force-with-lease="refs/heads/$source_branch:$source_commit" \
+     origin ":refs/heads/$source_branch"
    ```
 
-8. If the merge succeeded and the remote branch still exists while unprotected,
-   delete it explicitly:
+   An already-absent remote branch needs no deletion. If branch protection or
+   a changed source prevents deletion, report cleanup as blocked; do not alter
+   repository protection or discard newly added commits.
+
+5. Switch safely off the source branch. Delete the verified merged local
+   source. `git branch -D -- "$source_branch"` is permitted only after the
+   explicit non-`main` guard and squash-merge proof; do not use an unconditional
+   `-d || -D` fallback. Preserve dirty or independently checked-out worktrees.
+   Confirm source absence locally and remotely. A merged `development` source
+   is subsequently recreated under the synchronization rule below.
+
+## Synchronize Main And Development
+
+Run after an authorized squash merge into `main`, unless the user explicitly
+changes the cleanup instructions. Do not reset development after a merge into
+an explicitly selected different base.
+
+1. Fetch `origin/main` again. Fast-forward local `main` with
+   `git merge --ff-only origin/main` while on `main`, or create local `main`
+   from `origin/main` if missing. If local `main` diverges, preserve its commits
+   and report the blocked synchronization. Never force-push or delete `main`.
+2. Use the old local and remote `development` commit IDs and presence recorded
+   before source cleanup. If neither existed, report development sync
+   as not applicable. Otherwise ensure both refs point to the freshly fetched
+   `origin/main` commit, creating a missing counterpart. This intentionally
+   replaces divergent development history; preserve dirty worktrees and do
+   not apply it to any other working branch.
+3. Record `main_commit` from `origin/main` and `observed_development_commit`
+   from a successful remote query; use an empty expected value only when that
+   query proves the remote branch absent. Update the remote with an explicit
+   destination and lease:
 
    ```sh
-   if [ "$protected" != true ]; then
-     remote_target_ref="$(git ls-remote --heads origin "$target_branch")"
-     remote_query_status=$?
-     if [ "$remote_query_status" -ne 0 ]; then
-       printf 'Unable to inspect the remote target branch (exit %s).\n' "$remote_query_status" >&2
-       exit "$remote_query_status"
-     fi
-     if [ -n "$remote_target_ref" ]; then
-       git push origin --delete "$target_branch"
-     fi
-   fi
+   git push \
+     --force-with-lease="refs/heads/development:$observed_development_commit" \
+     origin "$main_commit:refs/heads/development"
    ```
 
-9. Clean up the local repository after merge:
+   Skip a push when the remote ref already equals `main_commit`. A rejected
+   lease requires inspecting concurrent changes before attempting another
+   update. Do not use a broad force push or mirror push.
 
-   ```sh
-   git fetch origin --prune
-   git switch "$base"
-   git pull --ff-only origin "$base"
-   git branch -d "$target_branch" || git branch -D "$target_branch"
-   git ls-remote --heads origin "$target_branch"
-   ```
+4. From the clean `main` checkout, create or repoint local `development` at
+   `main_commit` and set it to track `origin/development`. Do not overwrite a
+   branch checked out with uncommitted work in another worktree. Keep the
+   checkout on `main` unless the user specified a different final branch.
+5. Fetch and query the final remote refs. Verify commit equality for local
+   `main`, remote `main`, and both `development` refs where applicable, together
+   with merged-source absence, except when the source was `development` and
+   has been recreated at the new main commit. Tree equality alone is
+   insufficient for these synchronized refs. If remote `main` advanced, synchronize to its new commit
+   and recheck; report an unstable or blocked state instead of claiming parity.
 
-10. Final response should include the PR URL, selected base branch, whether a
-    rebase was performed, what validation and skill checks ran, whether any
-    cleanup commit was added, whether the remote target branch was deleted or
-    protected, whether the local target branch was deleted, and whether local
-    base branch is up to date.
+## Reporting
+
+Report the repository, working branch, fetched main commit, whether rebasing
+was needed, validation results, push result, PR URL and state, administrator
+merge use, source cleanup, final checkout, and main/development commit parity.
+Distinguish merged, unchanged, not applicable, and blocked repositories. Give
+the exact failing command and reason for an incomplete step. Do not amend
+commits unless explicitly requested; use additive commits for follow-up work.
 
 ## TDD And Validation
 

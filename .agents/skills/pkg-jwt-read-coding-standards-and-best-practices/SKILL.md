@@ -1,9 +1,12 @@
 ---
 name: pkg-jwt-read-coding-standards-and-best-practices
-description: 'Mandatory for every pkg-jwt-read task, including analysis, clarification, planning, implementation, review, debugging, documentation, public API work, skill maintenance, and validation. Use before every narrower skill.'
+description: 'Use after carecard-must-do. Mandatory for every pkg-jwt-read task, including analysis, clarification, planning, implementation, review, debugging, documentation, public API work, skill maintenance, and validation. Use before every narrower skill.'
 ---
 
 # Pkg JWT Read Coding Standards And Best Practices
+
+First read [carecard-must-do](../carecard-must-do/SKILL.md); it is mandatory for every agent and task.
+Then apply this engineering standard before selecting narrower skills.
 
 ## JavaScript And TypeScript Style Contract
 
@@ -40,7 +43,7 @@ cross-repository end-to-end testing is its explicit responsibility.
 
 ## Mandatory Use And Authorities
 
-Load this skill before doing any work in `pkg-jwt-read`, including read-only
+After `carecard-must-do`, load this skill before doing any work in `pkg-jwt-read`, including read-only
 and documentation-only work. Then load every narrower skill that owns the
 affected package contract.
 
@@ -175,7 +178,11 @@ them unused and replaced.
    none exists, run the strongest repository-native focused validation.
 5. Fix every in-scope failure at its root cause and rerun the exact command.
 6. Report exact commands, results, limitations, and remaining risk.
-7. Do not perform remote Git or GitHub operations unless explicitly requested.
+7. Fetch the latest `origin/main` at task start and before every source-branch push;
+   these required fetches need no separate approval. Start new work from that
+   commit or rebase existing work when it does not already contain it. Commits,
+   pushes, PR mutations, and branch cleanup still require an authorized task.
+   Never delete local or remote `main` or force-push to remote `main`.
 
 ## TDD And Validation
 

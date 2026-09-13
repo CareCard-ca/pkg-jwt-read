@@ -7,6 +7,9 @@ Non-negotiable root-cause solution rule: Always identify and solve the verified 
 
 # CareCard Workspace Standards
 
+First read [carecard-must-do](../carecard-must-do/SKILL.md); it is mandatory for every agent and task.
+Then read the [repository engineering standards](../pkg-jwt-read-coding-standards-and-best-practices/SKILL.md) before following this workflow.
+
 Mandatory companion: load
 `$pkg-jwt-read-coding-standards-and-best-practices` before this skill for every
 task in this repository.
@@ -53,7 +56,7 @@ Use before modifying, testing, reviewing, or debugging any CareCard workspace re
 ## When To Use
 
 - Use before modifying, testing, reviewing, or debugging any CareCard workspace repository or cross-repository contract.
-- Use as the first shared context before selecting narrower repository-specific skills.
+- Use as shared context after `carecard-must-do` and the repository engineering standards, before selecting narrower specialist skills.
 
 ## When Not To Use
 
@@ -172,7 +175,14 @@ config.
 
 ## Remote Git Operations Guardrail
 
-Do not run remote Git or GitHub operations unless the current user request explicitly asks for them. This includes `git fetch`, `git pull`, `git push`, `git push --delete`, remote branch cleanup, GitHub API calls, and any `gh pr` command that creates, updates, readies, merges, closes, or cleans up a pull request. Do not infer permission from branch names, validation needs, prior workflow habits, or convenience; ask first when remote state would help but was not requested.
+Fetches needed to establish a fresh `origin/main` at task start and before a
+source-branch push are authorized without a separate approval question. Commits,
+pushes, PR mutations, and branch cleanup require an authorized task; a request
+for local work alone does not authorize publication. An authorized squash merge
+into `main` includes the merged-source cleanup, local `main` update, and
+`development` synchronization below unless the user explicitly says otherwise.
+Never delete local or remote `main`, or force-push to remote `main`, including
+with `--force-with-lease`.
 
 ## Commit Continuation Rule
 
@@ -183,37 +193,31 @@ making a new commit in the affected repository.
 
 ## Agent Guidance Git Workflow
 
-When this skill or any repository-owned `.agents` guidance changes, use the
-repository's agents-only Git workflow:
+Work from the owning repository root and stage only intended guidance changes.
+Use freshly fetched `origin/main` as the default base. Start `<agent-name>/<task-name>`
+from it, or rebase existing work when it does not already contain the latest
+`origin/main`. An explicit user instruction to use the current or another
+working branch overrides the default `<agent-name>/<task-name>` selection.
 
-1. Work from the affected repository root and confirm only intended `.agents`
-   files changed.
-2. Use `development` as the base branch when `origin/development` exists;
-   otherwise use the repository's default base branch, usually `main`.
-3. Create or update `feature/codex` from the updated remote base branch and
-   commit all the changed `.agents` guidance files there.
-4. Push `feature/codex`, create or reuse a pull request into the base branch,
-   and mark the pull request ready for review with `gh pr ready <number>`.
-5. Squash-merge with administrator privileges and delete the remote branch:
+Fetch again before every source-branch push and rebase only when the branch
+does not already contain the latest `origin/main`. Required fetches need no
+separate approval; commits, pushes, PR mutations, and cleanup require an
+authorized task. A local guidance edit does not authorize publishing it.
 
-   ```sh
-   gh pr merge <number> --squash --admin --delete-branch
-   ```
+For an authorized merge, create or reuse the PR into `main`, run applicable
+validation, and squash-merge; administrator privileges may be used without
+GitHub reviews. Verify the merge and delete its source branch remotely and
+locally after checking for newer unmerged work. Then fast-forward local `main`
+and replace local and remote branches named exactly `development` with the
+latest remote `main` commit, using an explicit observed-commit
+`--force-with-lease` remotely. Create a missing development counterpart when
+either existed; leave repositories with neither unchanged. If development was
+the merged source, recreate it from the new main. Verify commit parity and
+cleanup; preserve dirty worktrees and report conflicts or rejected leases.
 
-6. After merge, update the local base branch and remove the local feature
-   branch:
-
-   ```sh
-   git fetch origin <base> --prune
-   git switch <base>
-   git pull --ff-only origin <base>
-   git branch -d feature/codex
-   git ls-remote --heads origin feature/codex
-   ```
-
-Do not commit or push `.agents` guidance changes directly from `development`
-or `main`. Do not stage unrelated files, generated output, dependency folders,
-build artifacts, logs, or `.DS_Store`.
+Never delete local or remote `main` or force-push to remote `main`, including
+with `--force-with-lease`. Guard exact destination refs before deleting or
+forcing any branch. Do not amend commits or stage unrelated files.
 
 ## Shared Packages And API Contracts
 
