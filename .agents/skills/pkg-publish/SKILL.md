@@ -54,30 +54,79 @@ Always publish packages in this order, one repository at a time:
 5. `@carecard/telemetry`
 
 Publish by pushing the package release branch, creating or reusing a pull
-request into `development`, marking it ready, waiting for checks, squash-merging
+request into `main`, marking it ready, waiting for checks, squash-merging
 with administrator privileges, and verifying npm publication with:
 
 ```sh
 npm view <package-name>@<target-version> version
 ```
 
-The package GitHub workflow publishes automatically from `development`. Do not
-create a `main` merge unless the user explicitly asks for it.
+The package GitHub workflows accept pushes to `main` and `development` and
+publish an unpublished version. Use the `main` squash merge as the release
+path and verify npm publication before continuing. Subsequent development
+synchronization must reuse the same version; it is not a second release.
+
+## Default Git Policy
+
+Apply these defaults unless the user explicitly specifies otherwise. The
+prohibition on deleting or force-pushing `main` always applies.
+
+1. Use `main` as the PR base and freshly fetched `origin/main` as the source of
+   truth. `origin/HEAD`, a stale local `main`, and the presence of `development`
+   do not change this default. If remote `main` is missing or cannot be fetched,
+   report the blocker instead of selecting another base.
+2. At task start, fetch `origin/main`, then create new work from that commit or
+   rebase the existing working branch onto it when needed. Honor an explicit
+   working-branch instruction; it changes branch selection, not freshness.
+3. Fetch again before every source-branch push. Rebase when the working branch
+   does not already contain the latest `origin/main`; a clean mergeability
+   check is not proof that rebasing is unnecessary. If it already contains that
+   commit, no rebase is needed. The direct `development` replacement below is a
+   ref synchronization, not a source-branch rebase.
+4. Squash-merge into remote `main` after the applicable validation passes.
+   Administrator privileges may be used to merge without GitHub reviews; they
+   do not authorize bypassing required checks. Verify the merge, then delete
+   the merged source branch remotely and locally.
+5. Fetch the latest remote `main` after merging and fast-forward local `main`
+   to that commit. Preserve divergent local work and report a blocked update
+   rather than discarding it.
+6. Replace branches named exactly `development`, locally and remotely, with
+   the latest remote `main` commit. Use an explicit, observed-commit
+   `--force-with-lease` for a non-fast-forward remote update. Create a missing
+   counterpart when local or remote `development` exists; leave repositories
+   with neither unchanged. If `development` was the merged source, recreate
+   it from the new `main` after deleting it. Other working branches are not
+   development synchronization targets.
+7. Never delete local or remote `main`, and never force-push to remote `main`,
+   including with `--force-with-lease`, a forced refspec, or a mirror push.
+   Check the exact destination ref before every deletion or forced update.
+
+Fetches needed to establish a fresh `origin/main` at task start and before a
+source-branch push are authorized without a separate approval question. Commits,
+pushes, PR mutations, and branch cleanup require an authorized task; a request
+for local work alone does not authorize publication. An authorized squash merge
+into `main` includes the merged-source cleanup, local `main` update, and
+`development` synchronization below unless the user explicitly says otherwise.
+Never delete local or remote `main`, or force-push to remote `main`, including
+with `--force-with-lease`.
 
 ## Deferred Package Push
 
 Commit coordinated version and dependency updates locally as the release sequence
 progresses. Do not push a `pkg-*` release branch until that package is the next
-package being published by merge into `development`.
+package being published by merge into `main`.
 
 Immediately before each package's publishing turn:
 
 1. Verify the repository is on the intended release branch and has a clean
    working tree.
 2. Run required validation and every direct `.husky` script for that repository.
-3. Push that package's release branch.
-4. Create or reuse the pull request into `development`, merge it, and wait for
-   npm publication before continuing to dependency fanout.
+3. Fetch `origin/main` again, rebase the release branch when it does not already
+   contain that commit, and push with hooks enabled. Use an explicit observed-commit
+   lease if a rebase requires rewriting an already-pushed source branch.
+4. Create or reuse the pull request into `main`, merge it, and wait for
+   npm publication before continuing to dependency fanout. Complete merged-source
+   cleanup and main/development synchronization under the default Git policy.
 
 ## Dependency Fanout
 
