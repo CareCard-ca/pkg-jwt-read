@@ -1,6 +1,6 @@
 ---
 name: github-pr-merge-cleanup
-description: 'Use for authorized GitHub PR squash merge and source cleanup. Default to fresh origin/main, rebase when needed, delete merged source branches, and synchronize main and development without deleting or force-pushing main.'
+description: 'Use for authorized GitHub PR squash merge and source cleanup. Create a branch from fresh origin/main only from main or development; otherwise preserve and rebase the current branch for subsequent tasks. Delete merged source branches, and synchronize main and development without deleting or force-pushing main.'
 ---
 
 Non-negotiable root-cause solution rule: Always identify and solve the verified root cause, use the stronger solution, and deliver a correct, durable, production-quality result. Never treat a temporary workaround, resource increase, retry, suppression, bypass, or symptom-only patch as completion. Validate the root-cause fix against the real failing workflow and prove the end state.
@@ -26,9 +26,12 @@ prohibition on deleting or force-pushing `main` always applies.
    truth. `origin/HEAD`, a stale local `main`, and the presence of `development`
    do not change this default. If remote `main` is missing or cannot be fetched,
    report the blocker instead of selecting another base.
-2. At task start, fetch `origin/main`, then create new work from that commit or
-   rebase the existing working branch onto it when needed. Honor an explicit
-   working-branch instruction; it changes branch selection, not freshness.
+2. At task start, fetch `origin/main`. Create `<agent-name>/<branch-name>`
+   from that commit only when the current branch is `main` or `development`.
+   Otherwise keep and rebase the current branch onto that commit, preserving
+   its existing commits and building subsequent task commits on top. Honor an
+   explicit working-branch instruction; it changes branch selection, not
+   freshness.
 3. Fetch again before every source-branch push. Rebase when the working branch
    does not already contain the latest `origin/main`; a clean mergeability
    check is not proof that rebasing is unnecessary. If it already contains that
@@ -65,11 +68,14 @@ with `--force-with-lease`.
 
 Work from the owning repository root. Inspect status, the current branch,
 upstream, and worktrees before changing refs. Preserve unrelated changes and
-existing commits; do not reset a working branch to discard its work. Use the
-user-named branch, or the current source branch for a single-repository task.
-If starting new work while on `main`, create a task branch from fresh
-`origin/main`. Do not use `main` or the selected base as a PR source branch.
-Stop if the source branch cannot be resolved or HEAD is detached.
+existing commits; do not reset a working branch to discard its work. Honor the
+user's explicit working-branch instruction. Create a new
+`<agent-name>/<branch-name>` from fresh `origin/main` only when the current
+branch is `main` or `development`. Otherwise keep the current branch, rebase it
+onto fresh `origin/main`, and build the new task's commits on its existing
+work. A different task or a clean working tree does not require a new branch.
+Do not use `main` or the selected base as a PR source branch. Stop if the source
+branch cannot be resolved or HEAD is detached.
 
 Fetch the authoritative ref explicitly:
 
@@ -77,22 +83,16 @@ Fetch the authoritative ref explicitly:
 git fetch origin refs/heads/main:refs/remotes/origin/main
 ```
 
-For an existing working branch, check whether it includes the fetched commit:
+For an existing working branch, preserve any uncommitted changes and rebase
+before starting task changes; restore any changes temporarily set aside:
 
 ```sh
-if git merge-base --is-ancestor origin/main HEAD; then
-  printf '%s\n' 'Working branch already contains the latest origin/main.'
-else
-  ancestry_result=$?
-  if [ "$ancestry_result" -ne 1 ]; then
-    exit "$ancestry_result"
-  fi
-  git rebase origin/main
-fi
+git rebase origin/main
 ```
 
-Repeat the fetch and ancestry check before every source-branch push, including
-pushes after validation fixes. If rebasing changes the validated inputs, rerun
+Before every source-branch push, including pushes after validation fixes,
+fetch again and rebase when the branch does not already contain the latest
+`origin/main`. If rebasing changes the validated inputs, rerun
 the affected validation. Preserve successful evidence for unchanged inputs.
 If a rebase conflicts, abort only the rebase started by this task and report
 the conflict; do not push or discard work. Preserve any pre-existing Git
