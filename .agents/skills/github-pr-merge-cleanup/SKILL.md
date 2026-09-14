@@ -1,6 +1,6 @@
 ---
 name: github-pr-merge-cleanup
-description: 'Use for authorized GitHub PR squash merge and source cleanup. Create a branch from fresh origin/main only from main or development; otherwise preserve and rebase the current branch for subsequent tasks. Delete merged source branches, and synchronize main and development without deleting or force-pushing main.'
+description: 'Use for authorized GitHub PR squash merge and source cleanup. Create a branch from fresh origin/main only without a working branch or from main or development; otherwise preserve and rebase the current branch for subsequent tasks. Delete merged source branches, and synchronize main and development without deleting or force-pushing main.'
 ---
 
 Non-negotiable root-cause solution rule: Always identify and solve the verified root cause, use the stronger solution, and deliver a correct, durable, production-quality result. Never treat a temporary workaround, resource increase, retry, suppression, bypass, or symptom-only patch as completion. Validate the root-cause fix against the real failing workflow and prove the end state.
@@ -19,6 +19,12 @@ Non-negotiable code organization rule: Functions with the same or equivalent beh
 
 ## Default Git Policy
 
+Reuse the current working branch for every follow-up request, even when the
+subject changes or the working tree is clean. Create a branch only when no
+working branch exists or the checkout is on `main` or `development`. Otherwise,
+fetch remote `main` HEAD and rebase the same working branch onto that fetched
+commit, preserving its commits and uncommitted work.
+
 Apply these defaults unless the user explicitly specifies otherwise. The
 prohibition on deleting or force-pushing `main` always applies.
 
@@ -27,7 +33,8 @@ prohibition on deleting or force-pushing `main` always applies.
    do not change this default. If remote `main` is missing or cannot be fetched,
    report the blocker instead of selecting another base.
 2. At task start, fetch `origin/main`. Create `<agent-name>/<branch-name>`
-   from that commit only when the current branch is `main` or `development`.
+   from that commit only when no working branch exists or the current branch is
+   `main` or `development`.
    Otherwise keep and rebase the current branch onto that commit, preserving
    its existing commits and building subsequent task commits on top. Honor an
    explicit working-branch instruction; it changes branch selection, not
@@ -70,8 +77,9 @@ Work from the owning repository root. Inspect status, the current branch,
 upstream, and worktrees before changing refs. Preserve unrelated changes and
 existing commits; do not reset a working branch to discard its work. Honor the
 user's explicit working-branch instruction. Create a new
-`<agent-name>/<branch-name>` from fresh `origin/main` only when the current
-branch is `main` or `development`. Otherwise keep the current branch, rebase it
+`<agent-name>/<branch-name>` from fresh `origin/main` only when no working branch
+exists or the current branch is `main` or `development`. Otherwise keep the current
+branch, rebase it
 onto fresh `origin/main`, and build the new task's commits on its existing
 work. A different task or a clean working tree does not require a new branch.
 Do not use `main` or the selected base as a PR source branch. Stop if the source
