@@ -194,10 +194,12 @@ making a new commit in the affected repository.
 ## Agent Guidance Git Workflow
 
 Work from the owning repository root and stage only intended guidance changes.
-Use freshly fetched `origin/main` as the default base. Start `<agent-name>/<task-name>`
-from it, or rebase existing work when it does not already contain the latest
-`origin/main`. An explicit user instruction to use the current or another
-working branch overrides the default `<agent-name>/<task-name>` selection.
+Fetch fresh `origin/main` at task start. Create `<agent-name>/<branch-name>`
+from it only when the current branch is `main` or `development`. Otherwise keep
+and rebase the current branch onto it, preserving existing commits and
+uncommitted changes. Build subsequent task commits on that same branch, even
+for a different task or a clean working tree. Honor explicit user
+working-branch instructions.
 
 Fetch again before every source-branch push and rebase only when the branch
 does not already contain the latest `origin/main`. Required fetches need no

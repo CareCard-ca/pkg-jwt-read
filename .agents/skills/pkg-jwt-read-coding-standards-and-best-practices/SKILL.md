@@ -178,11 +178,14 @@ them unused and replaced.
    none exists, run the strongest repository-native focused validation.
 5. Fix every in-scope failure at its root cause and rerun the exact command.
 6. Report exact commands, results, limitations, and remaining risk.
-7. Fetch the latest `origin/main` at task start and before every source-branch push;
-   these required fetches need no separate approval. Start new work from that
-   commit or rebase existing work when it does not already contain it. Commits,
-   pushes, PR mutations, and branch cleanup still require an authorized task.
-   Never delete local or remote `main` or force-push to remote `main`.
+7. Fetch the latest `origin/main` at task start and before every source-branch
+   push; these required fetches need no separate approval. Create
+   `<agent-name>/<branch-name>` from it only when the current branch is `main`
+   or `development`. Otherwise rebase the current branch onto it, preserving
+   existing commits and uncommitted changes, and build subsequent task commits
+   on that same branch. Commits, pushes, PR mutations, and branch cleanup still
+   require an authorized task. Never delete local or remote `main` or
+   force-push to remote `main`.
 
 ## TDD And Validation
 
