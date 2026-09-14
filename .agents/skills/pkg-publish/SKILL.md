@@ -68,6 +68,12 @@ synchronization must reuse the same version; it is not a second release.
 
 ## Default Git Policy
 
+Reuse the current working branch for every follow-up request, even when the
+subject changes or the working tree is clean. Create a branch only when no
+working branch exists or the checkout is on `main` or `development`. Otherwise,
+fetch remote `main` HEAD and rebase the same working branch onto that fetched
+commit, preserving its commits and uncommitted work.
+
 Apply these defaults unless the user explicitly specifies otherwise. The
 prohibition on deleting or force-pushing `main` always applies.
 
@@ -76,7 +82,8 @@ prohibition on deleting or force-pushing `main` always applies.
    do not change this default. If remote `main` is missing or cannot be fetched,
    report the blocker instead of selecting another base.
 2. At task start, fetch `origin/main`. Create `<agent-name>/<branch-name>`
-   from that commit only when the current branch is `main` or `development`.
+   from that commit only when no working branch exists or the current branch is
+   `main` or `development`.
    Otherwise keep and rebase the current branch onto that commit, preserving
    its existing commits and building subsequent task commits on top. Honor an
    explicit working-branch instruction; it changes branch selection, not

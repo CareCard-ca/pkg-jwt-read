@@ -280,9 +280,16 @@ with `--force-with-lease`.
 
 ## Agent Guidance Git Workflow
 
+Reuse the current working branch for every follow-up request, even when the
+subject changes or the working tree is clean. Create a branch only when no
+working branch exists or the checkout is on `main` or `development`. Otherwise,
+fetch remote `main` HEAD and rebase the same working branch onto that fetched
+commit, preserving its commits and uncommitted work.
+
 Work from the owning repository root and stage only intended guidance changes.
 Fetch fresh `origin/main` at task start. Create `<agent-name>/<branch-name>`
-from it only when the current branch is `main` or `development`. Otherwise keep
+from it only when no working branch exists or the current branch is `main` or
+`development`. Otherwise keep
 and rebase the current branch onto it, preserving existing commits and
 uncommitted changes. Build subsequent task commits on that same branch, even
 for a different task or a clean working tree. Honor explicit user

@@ -63,12 +63,19 @@ as an undisclosed replacement working repository.
 
 ## Choose and refresh the working branch
 
+Reuse the current working branch for every follow-up request, even when the
+subject changes or the working tree is clean. Create a branch only when no
+working branch exists or the checkout is on `main` or `development`. Otherwise,
+fetch remote `main` HEAD and rebase the same working branch onto that fetched
+commit, preserving its commits and uncommitted work.
+
 Identify the repository directory, current branch, and working-tree state.
 Fetch `origin/main` at task start before making task changes.
 
 - Create and switch to a new `<agent-name>/<branch-name>` branch from freshly
-  fetched `origin/main` only when the current branch is `main` or
-  `development`. Use the agent's recognizable lowercase name and a descriptive
+  fetched `origin/main` only when no working branch exists or the current branch is
+  `main` or `development`. Use the agent's recognizable lowercase name and a
+  descriptive
   branch name, or the exact branch name supplied by the user.
 - On every other branch, keep the current branch and rebase it onto freshly
   fetched `origin/main` before starting task changes. Preserve its existing

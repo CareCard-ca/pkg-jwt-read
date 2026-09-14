@@ -169,6 +169,12 @@ them unused and replaced.
 
 ## Completion
 
+Reuse the current working branch for every follow-up request, even when the
+subject changes or the working tree is clean. Create a branch only when no
+working branch exists or the checkout is on `main` or `development`. Otherwise,
+fetch remote `main` HEAD and rebase the same working branch onto that fetched
+commit, preserving its commits and uncommitted work.
+
 1. Review each changed repository's diff and status independently.
 2. Run focused runtime and type tests, then all broader checks required by
    local skills.
@@ -180,8 +186,9 @@ them unused and replaced.
 6. Report exact commands, results, limitations, and remaining risk.
 7. Fetch the latest `origin/main` at task start and before every source-branch
    push; these required fetches need no separate approval. Create
-   `<agent-name>/<branch-name>` from it only when the current branch is `main`
-   or `development`. Otherwise rebase the current branch onto it, preserving
+   `<agent-name>/<branch-name>` from it only when no working branch exists or the
+   current branch is `main` or `development`. Otherwise rebase the current branch
+   onto it, preserving
    existing commits and uncommitted changes, and build subsequent task commits
    on that same branch. Commits, pushes, PR mutations, and branch cleanup still
    require an authorized task. Never delete local or remote `main` or
