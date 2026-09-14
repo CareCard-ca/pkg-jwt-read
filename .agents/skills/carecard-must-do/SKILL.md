@@ -1,6 +1,6 @@
 ---
 name: carecard-must-do
-description: 'Non-negotiable startup requirements for every agent, including Codex, Claude, other assistants, and delegated agents. Load first whenever beginning or resuming any task to govern questions, visible working copies, and agent-named branches.'
+description: 'Non-negotiable startup requirements for every agent, including Codex, Claude, other assistants, and delegated agents. Load first whenever beginning or resuming any task to govern questions, visible working copies, and working-branch continuity.'
 ---
 
 # CareCard Must Do
@@ -61,18 +61,27 @@ resources owned by the task when cleanup is authorized. Ordinary temporary
 logs, build artifacts, and test fixtures are permitted when they are not used
 as an undisclosed replacement working repository.
 
-## Work on an agent-named branch
+## Choose and refresh the working branch
 
-Before changing repository files, create and switch to a task-specific branch
-named `<agent-name>/<task-name>` in the owning repository. Use the agent's
-recognizable lowercase name and a descriptive task name, such as
-`codex/carecard-must-do`, `claude/fix-login`, or `junie/update-validation`.
-Reuse an existing agent-named branch only when continuing that same task.
-Read-only investigation and planning do not require creating a branch.
+Identify the repository directory, current branch, and working-tree state.
+Fetch `origin/main` at task start before making task changes.
 
-Identify the repository directory and working branch before making changes.
-Preserve existing commits and unrelated local changes. Start new work from
-freshly fetched `origin/main`, or rebase continuing work onto it when needed.
+- Create and switch to a new `<agent-name>/<branch-name>` branch from freshly
+  fetched `origin/main` only when the current branch is `main` or
+  `development`. Use the agent's recognizable lowercase name and a descriptive
+  branch name, or the exact branch name supplied by the user.
+- On every other branch, keep the current branch and rebase it onto freshly
+  fetched `origin/main` before starting task changes. Preserve its existing
+  commits and build the new task's commits on top of that work. Reuse this
+  branch for subsequent tasks, including when the working tree is clean or
+  the new task differs from the previous one.
+
+Preserve uncommitted changes when preparing the rebase and restore any changes
+that were temporarily set aside. Do not reset, replace, squash, or discard the
+current branch's work merely to start a new task. Honor explicit user
+working-branch instructions. Read-only investigation and planning do not
+require creating a branch.
+
 Fetch again before every source-branch push and rebase when the branch does
 not already contain the latest `origin/main`.
 

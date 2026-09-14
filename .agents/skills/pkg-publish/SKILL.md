@@ -75,9 +75,12 @@ prohibition on deleting or force-pushing `main` always applies.
    truth. `origin/HEAD`, a stale local `main`, and the presence of `development`
    do not change this default. If remote `main` is missing or cannot be fetched,
    report the blocker instead of selecting another base.
-2. At task start, fetch `origin/main`, then create new work from that commit or
-   rebase the existing working branch onto it when needed. Honor an explicit
-   working-branch instruction; it changes branch selection, not freshness.
+2. At task start, fetch `origin/main`. Create `<agent-name>/<branch-name>`
+   from that commit only when the current branch is `main` or `development`.
+   Otherwise keep and rebase the current branch onto that commit, preserving
+   its existing commits and building subsequent task commits on top. Honor an
+   explicit working-branch instruction; it changes branch selection, not
+   freshness.
 3. Fetch again before every source-branch push. Rebase when the working branch
    does not already contain the latest `origin/main`; a clean mergeability
    check is not proof that rebasing is unnecessary. If it already contains that
