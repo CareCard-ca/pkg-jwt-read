@@ -5,6 +5,25 @@ description: 'Use after carecard-must-do. Mandatory for every pkg-jwt-read task,
 
 # Pkg JWT Read Coding Standards And Best Practices
 
+## Release 1.1.1 and production data
+
+CareCard Release 1.1.1 is the production baseline. Seeding with
+`--seed-release-data` is complete. Production cluster data, database rows,
+and stored user files will be preserved going forward. There will be no
+complete user-data wipeout and re-creation.
+
+Future production changes must use data-preserving migrations. Do not replay
+the completed initialization or run reset, rollback, or seed workflows as part
+of ordinary production deployment.
+
+## Commit and merge documentation and skills with the task
+
+In each owning repository, include all task-related documentation, plans, and
+skill changes in the same commit as the related task changes. Merge them
+together into remote `main`. Do not leave changed documentation or skills
+uncommitted or unmerged, and do not declare the task complete until their
+inclusion in the merged commit is verified. Preserve unrelated work.
+
 First read [carecard-must-do](../carecard-must-do/SKILL.md); it is mandatory for every agent and task.
 Then apply this engineering standard before selecting narrower skills.
 

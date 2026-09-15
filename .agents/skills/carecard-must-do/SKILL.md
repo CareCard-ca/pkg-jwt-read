@@ -5,6 +5,14 @@ description: 'Non-negotiable startup requirements for every agent, including Cod
 
 # CareCard Must Do
 
+## Explicit approval before GitHub settings changes
+
+Before changing any GitHub setting, explain the exact proposed change, ask the
+user explicitly, and wait for their approval. This includes temporary changes
+to GitHub Actions, workflow enablement, branch protection, and repository or
+organization settings. Authorization to commit, push, merge, tag, cancel runs,
+or clean up branches does not authorize settings changes.
+
 ## Mandatory for every agent
 
 Every agent must read and follow this skill before beginning or resuming work
