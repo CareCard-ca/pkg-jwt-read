@@ -62,6 +62,34 @@ npm install @carecard/jwt-read
 
 ## Usage
 
+### Application namespace verification
+
+Callers with an existing signature and lifetime verifier can compose
+`jwtHasApplicationAudience(payload, expectedAudience)` with that verifier. This
+predicate only checks audience; it does not authenticate an unsigned payload.
+
+Application authentication requires an explicit expected audience supplied by the
+owning application's configuration. `jwtReadApplicationToken(token, jwks,
+expectedAudience)` returns the verified credential or `null`. It accepts one
+nonempty audience string matching `aud` exactly and retains signature, `kid`,
+subject, and lifetime checks. A missing expected audience is a configuration
+error. Namespace values and defaults do not belong in this package.
+
+Express consumers use `jwtVerifyApplication(jwks, expectedAudience)` or
+`jwtVerifyApplicationOrServerAuth(jwks, expectedAudience, introspector)`.
+`jwtVerifyApplicationOrServerAuthAndHasRole(role, jwks, expectedAudience,
+introspector)` adds the existing role check. Corresponding callable boundaries
+are `jwtValidateAndExtractApplication` and
+`jwtValidateAndExtractApplicationOrServerAuth`.
+
+Opaque introspection must return `aud` with the owning application's namespace
+and an unexpired session lifetime. Audience rejection clears `req.jwt`; a JWT
+cannot be retried as an opaque session. `jwtGetApplicationContext(req)` projects
+the verified audience as `application_namespace` alongside the existing user ID
+and normalized role. These APIs reuse existing key rotation and signing helpers.
+Service-JWT issuer and receiving-service audience checks retain their existing
+separate contract.
+
 ### Middleware-like Verification (`verifyJwtAndRole`)
 
 ```javascript
