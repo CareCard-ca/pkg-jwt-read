@@ -111,6 +111,15 @@ depend on those folders being present.
 
 ## JWT Verification Layer
 
+Application-namespace consumers use `jwtReadApplicationToken`,
+`jwtValidateAndExtractApplication`, `jwtValidateAndExtractApplicationOrServerAuth`,
+and the corresponding `jwtVerifyApplication*` middleware. Require an explicit
+configuration-owned audience and exactly one matching user `aud`; preserve the
+claim for opaque introspection and `jwtGetApplicationContext`. Keep namespace
+values out of package code. Never retry rejected JWTs as opaque sessions. Reuse
+the existing EdDSA/JWKS and service-token contracts; adding an audience does not
+create another key system.
+
 `lib/jwtLib.js` owns:
 
 - Signature verification using parsed public Ed25519 JWKS values.

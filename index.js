@@ -2,6 +2,14 @@ const jwtLib = require('./lib/jwtLib');
 const jwtRoles = require('./lib/jwtRoles');
 
 module.exports = {
+  jwtHasApplicationAudience: jwtLib.hasApplicationAudience,
+  jwtReadApplicationToken: jwtLib.readApplicationJwt,
+  jwtValidateAndExtractApplication: jwtLib.validateAndExtractApplicationJwt,
+  jwtValidateAndExtractApplicationOrServerAuth: jwtLib.validateAndExtractApplicationJwtOrServerAuth,
+  jwtVerifyApplication: jwtLib.verifyApplicationJwt,
+  jwtVerifyApplicationOrServerAuth: jwtLib.verifyApplicationJwtOrServerAuth,
+  jwtVerifyApplicationOrServerAuthAndHasRole: jwtLib.verifyApplicationJwtOrServerAuthAndHasRole,
+  jwtGetApplicationContext: jwtRoles.getApplicationContext,
   DEFAULT_USER_AUTHORIZATION_HEADER_NAME: jwtLib.DEFAULT_USER_AUTHORIZATION_HEADER_NAME,
   DEFAULT_USER_AUTHORIZATION_MAX_TOKEN_LENGTH: jwtLib.DEFAULT_USER_AUTHORIZATION_MAX_TOKEN_LENGTH,
   jwtVerify: jwtLib.verifyJwt,

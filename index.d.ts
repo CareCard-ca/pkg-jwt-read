@@ -141,6 +141,7 @@ export interface AuthenticatedRequest extends Request, JwtRequestContext {
 }
 
 export interface ServerAuthIntrospectionClaims {
+  aud?: string;
   valid?: boolean;
   sub?: string;
   userId?: string;
@@ -161,6 +162,67 @@ export type ServerAuthIntrospector = (
   token: string,
   req: AuthenticatedRequest,
 ) => Promise<ServerAuthIntrospectionClaims> | ServerAuthIntrospectionClaims;
+
+export interface ApplicationJwtPayload extends JwtPayload {
+  sub: string;
+  aud: string;
+}
+
+export interface ApplicationJwtRequestObject extends JwtRequestObject {
+  payload: ApplicationJwtPayload;
+}
+
+export interface ApplicationJwtContext extends JwtContext {
+  application_namespace: string;
+}
+
+/** Checks only audience; callers must independently verify signature, subject and lifetime. */
+export function jwtHasApplicationAudience(payload: unknown, expectedAudience: string): boolean;
+
+/** Reads a signed user token only for one explicit application audience. */
+export function jwtReadApplicationToken(
+  token: string,
+  verificationJwks: JwtVerificationJwks,
+  expectedAudience: string,
+): ApplicationJwtRequestObject | null;
+
+export function jwtGetApplicationContext(req: JwtRequestContext): ApplicationJwtContext;
+
+export function jwtValidateAndExtractApplication(
+  req: AuthenticatedRequest,
+  verificationJwks: JwtVerificationJwks,
+  expectedAudience: string,
+  customErrorFunction?: () => void,
+): AuthenticatedRequest;
+
+export function jwtValidateAndExtractApplicationOrServerAuth(
+  req: AuthenticatedRequest,
+  verificationJwks: JwtVerificationJwks,
+  expectedAudience: string,
+  serverAuthIntrospector: ServerAuthIntrospector,
+  customErrorFunction?: () => void,
+): Promise<AuthenticatedRequest>;
+
+export function jwtVerifyApplication(
+  verificationJwks: JwtVerificationJwks,
+  expectedAudience: string,
+  customErrorFunction?: () => void,
+): (req: AuthenticatedRequest, res: Response, next: NextFunction) => void;
+
+export function jwtVerifyApplicationOrServerAuth(
+  verificationJwks: JwtVerificationJwks,
+  expectedAudience: string,
+  serverAuthIntrospector: ServerAuthIntrospector,
+  customErrorFunction?: () => void,
+): (req: AuthenticatedRequest, res: Response, next: NextFunction) => Promise<void>;
+
+export function jwtVerifyApplicationOrServerAuthAndHasRole(
+  role: string,
+  verificationJwks: JwtVerificationJwks,
+  expectedAudience: string,
+  serverAuthIntrospector: ServerAuthIntrospector,
+  customErrorFunction?: () => void,
+): (req: AuthenticatedRequest, res: Response, next: NextFunction) => Promise<void>;
 
 /**
  * Returns a middleware that verifies a JWT from the 'Authorization: Bearer <token>' header
