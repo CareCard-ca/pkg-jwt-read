@@ -3,6 +3,7 @@
 const { runIndexedMochaTests } = require('../scripts/testParallel/runIndexedMochaTests.cjs');
 
 const parallelTestFiles = [
+  'test/applicationAudience.test.js',
   'test/jwtLib.test.js',
   'test/jwtKeyRotation.test.js',
   'test/jwtRoles.test.js',
