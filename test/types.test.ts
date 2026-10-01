@@ -20,6 +20,8 @@ import {
   jwtGetRoleName,
   jwtGetVisitorClientId,
   jwtIsExpired,
+  jwtIsAccessTokenExpired,
+  jwtGetAccessTokenDeadline,
   jwtValidateAndExtract,
   jwtValidateAndExtractNoThrow,
   jwtValidateAndExtractOrServerAuth,
@@ -79,6 +81,8 @@ describe('TypeScript Type Definitions - JWT Read Utilities', () => {
     assert.strictEqual(jwtGetClientId(request), 'typed-user');
     assert.strictEqual(jwtGetVisitorClientId(request), 'typed-visitor');
     assert.strictEqual(jwtIsExpired(request), false);
+    assert.strictEqual(jwtIsAccessTokenExpired(request), false);
+    assert.strictEqual(jwtGetAccessTokenDeadline(request.jwt?.payload), issuedAt + 60);
     assert.ok(jwtGetAgeInSeconds(request) >= 10);
     assert.strictEqual(jwtGetRoleName('ad'), 'admin');
     assert.strictEqual(jwtGetRoleCode('admin'), 'ad');
