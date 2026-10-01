@@ -120,6 +120,14 @@ values out of package code. Never retry rejected JWTs as opaque sessions. Reuse
 the existing EdDSA/JWKS and service-token contracts; adding an audience does not
 create another key system.
 
+Application access tokens expire at `min(exp, iat + 600)` at the exact boundary,
+with no grace for clock skew. Require integer access timing claims and reject
+future issuance. Use `jwtIsAccessTokenExpired` after awaited authorization work
+and whenever previously extracted credentials are reused. Opaque introspection
+must return its original access issuance time and source session identity.
+Durable login expiration, revocation, and independently authenticated renewal
+remain owned by `ms-auth`; an access token alone must never grant renewal.
+
 `lib/jwtLib.js` owns:
 
 - Signature verification using parsed public Ed25519 JWKS values.

@@ -82,8 +82,17 @@ introspector)` adds the existing role check. Corresponding callable boundaries
 are `jwtValidateAndExtractApplication` and
 `jwtValidateAndExtractApplicationOrServerAuth`.
 
-Opaque introspection must return `aud` with the owning application's namespace
-and an unexpired session lifetime. Audience rejection clears `req.jwt`; a JWT
+Application access expires at the earlier of `exp` and `iat + 600`, including the
+exact boundary. Missing, malformed, or future `iat` claims are rejected. No clock
+skew extends this limit. `jwtGetAccessTokenDeadline(payload)` returns this access
+deadline, and `jwtIsAccessTokenExpired(req)` checks the current clock on every use.
+Consumers must also validate durable session expiration and revocation with the
+owning authentication service. Access tokens alone do not authorize renewal.
+
+Opaque introspection must return `aud` with the owning application's namespace,
+the original access `iat`, an access expiration, and the source session identity.
+The application reader rechecks access expiry after asynchronous introspection
+and preserves `sid` in its request context. Audience rejection clears `req.jwt`; a JWT
 cannot be retried as an opaque session. `jwtGetApplicationContext(req)` projects
 the verified audience as `application_namespace` alongside the existing user ID
 and normalized role. These APIs reuse existing key rotation and signing helpers.

@@ -24,6 +24,8 @@ export interface JwtHeader {
  * Represents the standard JWT payload (claims) structure.
  */
 export interface JwtPayload {
+  /** Durable login session bound to this access credential. */
+  sid?: string;
   /** Issued at time, in seconds since the epoch. */
   iat?: number;
   /** Expiration time, in seconds since the epoch. */
@@ -141,6 +143,9 @@ export interface AuthenticatedRequest extends Request, JwtRequestContext {
 }
 
 export interface ServerAuthIntrospectionClaims {
+  sid?: string;
+  iat?: number;
+  issuedAt?: string;
   aud?: string;
   valid?: boolean;
   sub?: string;
@@ -167,6 +172,11 @@ export interface ApplicationJwtPayload extends JwtPayload {
   sub: string;
   aud: string;
 }
+
+/** Returns the strict access deadline in epoch seconds, or null for invalid time claims. */
+export function jwtGetAccessTokenDeadline(payload: JwtPayload | null | undefined): number | null;
+/** Rechecks the earlier of exp and iat + 600 without clock-skew grace. */
+export function jwtIsAccessTokenExpired(req: JwtRequestContext | null | undefined): boolean;
 
 export interface ApplicationJwtRequestObject extends JwtRequestObject {
   payload: ApplicationJwtPayload;

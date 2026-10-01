@@ -42,6 +42,7 @@ function createSessionClaims(claims = {}) {
     aud: 'product-one',
     roles: ['ad'],
     email_verified: false,
+    iat: Math.floor(Date.now() / 1000),
     expiresAt: new Date(Date.now() + 60_000).toISOString(),
     ...claims,
   };

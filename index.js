@@ -1,7 +1,10 @@
 const jwtLib = require('./lib/jwtLib');
 const jwtRoles = require('./lib/jwtRoles');
+const accessTokenLifetime = require('./lib/accessTokenLifetime');
 
 module.exports = {
+  jwtIsAccessTokenExpired: accessTokenLifetime.isAccessTokenExpired,
+  jwtGetAccessTokenDeadline: accessTokenLifetime.getAccessTokenDeadline,
   jwtHasApplicationAudience: jwtLib.hasApplicationAudience,
   jwtReadApplicationToken: jwtLib.readApplicationJwt,
   jwtValidateAndExtractApplication: jwtLib.validateAndExtractApplicationJwt,
