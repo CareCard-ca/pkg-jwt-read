@@ -11,7 +11,7 @@ Future production changes must use data-preserving migrations. Do not replay
 the completed initialization or run reset, rollback, or seed workflows as part
 of ordinary production deployment.
 
-The [completed seed inventory and verification record](https://github.com/CareCard-ca/cc-seed-data/blob/main/plans/production-seed-result.md)
+The [completed seed inventory and verification record](https://github.com/CareCard-ca/plans/blob/main/cc-seed-data/production-seed-result.md)
 documents the accepted release baseline and verification limitations.
 
 Non-negotiable test order invariance rule: Every test must pass independently of which tests run before or after it, and the suite must pass in every execution order. Each test must establish the state it needs, isolate mutable state, and clean up state it owns; it must never rely on another test's setup, mutations, or cleanup. Default test, CI, and Husky commands must use the test framework's ordinary ordering and must not force randomized ordering. Random-order execution is an explicit diagnostic only, and every failure it exposes must be fixed at the root cause.
