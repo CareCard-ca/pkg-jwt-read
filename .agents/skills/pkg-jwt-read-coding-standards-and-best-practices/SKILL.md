@@ -5,6 +5,15 @@ description: 'Use after carecard-must-do. Mandatory for every pkg-jwt-read task,
 
 # Pkg JWT Read Coding Standards And Best Practices
 
+## Mandatory API Contract Skill
+
+Non-negotiable: On every task, read and apply
+[carecard-api-contract](../carecard-api-contract/SKILL.md) after
+`carecard-must-do` and this engineering skill, before any narrower skill. This
+applies to planning, read-only work, implementation, tests, documentation, and
+skill maintenance. All non-authoritative representations must always conform
+to the implemented server and direct browser API contracts.
+
 ## Release 1.1.1 and production data
 
 CareCard Release 1.1.1 is the production baseline. Seeding with
