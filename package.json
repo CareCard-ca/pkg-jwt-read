@@ -50,7 +50,7 @@
     "typescript": "6.0.3"
   },
   "dependencies": {
-    "@carecard/auth-util": "3.40.0",
+    "@carecard/auth-util": "3.41.0",
     "@carecard/common-util": "3.41.0",
     "@carecard/validate": "3.41.0"
   },
