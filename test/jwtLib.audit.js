@@ -1544,8 +1544,10 @@ describe('Lib jwtLib.js', function () {
   });
 
   describe('Internal helpers and edge cases', function () {
-    it('should handle null in _extractJwtNoThrow', function () {
-      assert.strictEqual(jwtLib._extractJwtNoThrow(null), null);
+    it('continues unauthenticated for a null bearer header', function () {
+      const request = { get: () => null };
+      jwtRead.jwtValidateAndExtractNoThrow(request, verificationJwks);
+      assert.strictEqual(request.jwt, null);
     });
 
     it('should fail closed for a non-Bearer token when a custom handler returns', function () {
@@ -1555,8 +1557,10 @@ describe('Lib jwtLib.js', function () {
       );
     });
 
-    it('should handle null in _extractWebTokenNoThrow', function () {
-      assert.strictEqual(jwtLib._extractWebTokenNoThrow(null), null);
+    it('continues unauthenticated for a null custom-header token', function () {
+      const request = { get: () => null };
+      jwtRead.jwtValidateAndExtractWebTokenNoThrow(request, verificationJwks, 'X-Token');
+      assert.strictEqual(request.jwt, null);
     });
 
     it('should handle null in _validateWebTokenNoThrow', function () {

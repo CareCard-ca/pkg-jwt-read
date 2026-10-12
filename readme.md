@@ -345,3 +345,10 @@ A correct implementation may be completely rewritten or refactored without requi
 Any test that fails solely because the implementation changed while the externally observable behavior remained correct is incorrectly designed and must be rewritten or removed.
 
 This requirement is mandatory for all new tests and must be applied whenever existing tests are modified.
+
+## Contract whitespace
+
+Bearer and custom-header credentials trim outer whitespace before verification.
+Bearer parsing accepts the complete header and rejects extra words or whitespace
+inside a token; it never discards a supplied suffix. Signed bytes, signature
+checks, application audiences and access lifetimes retain their existing rules.

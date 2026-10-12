@@ -128,6 +128,10 @@ must return its original access issuance time and source session identity.
 Durable login expiration, revocation, and independently authenticated renewal
 remain owned by `ms-auth`; an access token alone must never grant renewal.
 
+Normalize outer credential whitespace at the header boundary. Require a complete
+Bearer header, reject extra words and internal token whitespace, and preserve
+all signature, audience and lifetime checks.
+
 `lib/jwtLib.js` owns:
 
 - Signature verification using parsed public Ed25519 JWKS values.

@@ -5,6 +5,7 @@ const { runIndexedMochaTests } = require('../scripts/testParallel/runIndexedMoch
 const parallelTestFiles = [
   'test/accessTokenLifetime.test.js',
   'test/applicationAudience.test.js',
+  'test/inputWhitespace.test.js',
   'test/jwtLib.test.js',
   'test/jwtKeyRotation.test.js',
   'test/jwtRoles.test.js',
