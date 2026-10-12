@@ -1,6 +1,6 @@
 {
   "name": "@carecard/jwt-read",
-  "version": "3.40.0",
+  "version": "3.41.0",
   "repository": {
     "type": "git",
     "url": "https://github.com/CareCard-ca/pkg-jwt-read.git"
@@ -9,7 +9,7 @@
   "main": "index.js",
   "types": "index.d.ts",
   "engines": {
-    "node": ">=24.20.0 <25"
+    "node": ">=24.21.0 <25"
   },
   "scripts": {
     "test": "node scripts/runPackageTask.mjs test",
@@ -34,31 +34,31 @@
   "author": "CareCard team",
   "license": "ISC",
   "devDependencies": {
-    "@eslint/js": "9.39.5",
+    "@eslint/js": "10.0.1",
     "@types/express": "5.0.6",
     "@types/mocha": "10.0.10",
-    "@types/node": "25.9.9",
-    "@typescript-eslint/parser": "8.71.0",
-    "eslint": "9.39.5",
+    "@types/node": "24.19.2",
+    "@typescript-eslint/parser": "8.71.1",
+    "eslint": "10.12.0",
     "globals": "17.13.0",
     "husky": "9.1.7",
     "lint-staged": "17.6.0",
-    "mocha": "11.8.0",
+    "mocha": "12.0.3",
     "nyc": "18.0.0",
-    "prettier": "3.9.9",
+    "prettier": "3.9.10",
     "ts-node": "10.9.2",
     "typescript": "6.0.3"
   },
   "dependencies": {
-    "@carecard/auth-util": "3.40.0",
-    "@carecard/common-util": "3.40.0",
-    "@carecard/validate": "3.40.0"
+    "@carecard/auth-util": "3.41.0",
+    "@carecard/common-util": "3.41.0",
+    "@carecard/validate": "3.41.0"
   },
   "overrides": {
-    "diff": "8.0.4",
+    "diff": "9.0.0",
     "brace-expansion": "5.0.12",
     "minimatch": "10.2.6",
     "serialize-javascript": "7.1.2",
-    "js-yaml": "4.3.2"
+    "js-yaml": "5.4.3"
   }
 }
