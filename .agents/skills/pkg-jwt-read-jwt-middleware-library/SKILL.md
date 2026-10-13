@@ -36,13 +36,12 @@ validate both the generic package contract and the owning public boundaries.
 
 ## Purpose
 
-CareCard JWT read package for parsing, request attachment, visitor tokens, role mapping, JWT-or-server-auth authorization middleware, exports, and tests.
+Generic JWT readers for signature verification, registered constraints, opaque custom claims, caller-configured introspection, exports, and tests.
 
 ## When To Use
 
-- Use when changing pkg-jwt-read JWT parsing, server-auth introspection
-  middleware, visitor tokens, role checks, auth context, package exports, or
-  tests.
+- Use when changing generic JWT readers, bearer transport parsing, configured
+  constraints, canonical introspection, public types, or tests.
 - Pair with `carecard-workspace-standards` when the task affects shared CareCard conventions or cross-repository contracts.
 
 ## When Not To Use
