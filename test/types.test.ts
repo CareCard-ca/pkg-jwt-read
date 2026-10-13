@@ -30,3 +30,4 @@ export function readCredential(keys: JwtVerificationJwks): void {
     })),
   );
 }
+expectType<string | undefined>(jwtGetClientId({ jwt: { payload: { sub: 'subject' } } }));

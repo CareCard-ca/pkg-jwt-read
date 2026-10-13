@@ -10,7 +10,7 @@ export interface AuthenticatedRequest extends Request {
   jwt?: JwtParts | null;
 }
 export interface TokenRequest {
-  jwt?: JwtParts | null;
+  jwt?: { payload?: JwtPayload; age?: number } | null;
 }
 export interface TokenRequirements {
   issuer?: string;
