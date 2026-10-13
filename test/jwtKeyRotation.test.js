@@ -1,39 +1,31 @@
 'use strict';
-
-const assert = require('node:assert').strict;
+const assert = require('node:assert/strict');
+const { describe, it } = require('mocha');
 const {
   jwtCreateSignedToken,
   parseJwtSigningJwk,
   parseJwtVerificationJwks,
 } = require('@carecard/auth-util');
-const { jwtValidateAndExtract, jwtValidateAndExtractNoThrow } = require('..');
+const { jwtReadVerifiedToken } = require('..');
 const { createJwkIdentity } = require('./keys/keys');
-
-function createBearerRequest(token) {
-  return {
-    get(headerName) {
-      return headerName.toLowerCase() === 'authorization' ? `Bearer ${token}` : undefined;
-    },
-  };
-}
-
-describe('JWT verification key rotation', function () {
-  it('accepts active and retiring kids and rejects a removed kid', function () {
-    const active = createJwkIdentity();
-    const retiring = createJwkIdentity();
-    const signingJwk = parseJwtSigningJwk(JSON.stringify(retiring.signing));
-    const token = jwtCreateSignedToken({ sub: 'retiring-user' }, signingJwk);
-    const rotatingJwks = parseJwtVerificationJwks(
+describe('verification key rotation', () => {
+  it('accepts retained keys and rejects removed keys', () => {
+    const active = createJwkIdentity(),
+      retiring = createJwkIdentity();
+    const token = jwtCreateSignedToken(
+      { sub: 'subject' },
+      parseJwtSigningJwk(JSON.stringify(retiring.signing)),
+    );
+    const keys = parseJwtVerificationJwks(
       JSON.stringify({ keys: [active.verification, retiring.verification] }),
     );
-    const retiredJwks = parseJwtVerificationJwks(JSON.stringify({ keys: [active.verification] }));
-    const acceptedRequest = createBearerRequest(token);
-    const rejectedRequest = createBearerRequest(token);
-
-    jwtValidateAndExtract(acceptedRequest, rotatingJwks);
-    jwtValidateAndExtractNoThrow(rejectedRequest, retiredJwks);
-
-    assert.strictEqual(acceptedRequest.jwt.payload.sub, 'retiring-user');
-    assert.strictEqual(rejectedRequest.jwt, null);
+    assert.equal(jwtReadVerifiedToken(token, keys).payload.sub, 'subject');
+    assert.equal(
+      jwtReadVerifiedToken(
+        token,
+        parseJwtVerificationJwks(JSON.stringify({ keys: [active.verification] })),
+      ),
+      null,
+    );
   });
 });

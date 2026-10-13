@@ -2,15 +2,7 @@
 
 const { runIndexedMochaTests } = require('../scripts/testParallel/runIndexedMochaTests.cjs');
 
-const parallelTestFiles = [
-  'test/accessTokenLifetime.test.js',
-  'test/applicationAudience.test.js',
-  'test/inputWhitespace.test.js',
-  'test/jwtLib.test.js',
-  'test/jwtKeyRotation.test.js',
-  'test/jwtRoles.test.js',
-  'test/tokenLifetime.test.js',
-];
+const parallelTestFiles = ['test/configuredTokens.test.js', 'test/jwtKeyRotation.test.js'];
 
 if (require.main === module) {
   runIndexedMochaTests(parallelTestFiles)

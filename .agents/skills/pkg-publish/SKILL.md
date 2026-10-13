@@ -19,6 +19,21 @@ Non-negotiable error and warning rule: Never suppress, silence, hide, downgrade,
 
 Non-negotiable code organization rule: Functions with the same or equivalent behavior must use the same or clearly corresponding descriptive names across CareCard repositories, and equivalent functionality must live in files with the same names within each repository's established architecture. No backward compatibility names, aliases, or duplicate locations are allowed.
 
+## Non-Negotiable Package Independence
+
+`pkg-*` must always be agnostic to roles and the inner workings of `ms-*` and
+`app-*`. Packages must not own business role codes, permissions, workflow
+states, domain payload schemas, database caller contexts, application routes,
+or application-specific policy defaults. Those contracts belong to their
+owning services and applications.
+
+Keep packages limited to reusable technical mechanisms. Accept explicit
+caller-supplied schemas, parsers, policy configuration, identities, and opaque
+custom claims where needed. Never import a service or application, copy its
+business catalogue into a package, infer privilege from custom claims, or add
+caller-name branches. Preserve consumer behavior in owner-local adapters and
+validate both the generic package contract and the owning public boundaries.
+
 ## Trigger
 
 Run this skill after every `pkg-*` repository change that touches non-Markdown

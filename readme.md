@@ -1,32 +1,59 @@
 # @carecard/jwt-read
 
-## Release 1.1.1 and production data
+Generic JWT signature and registered-claim verification. Custom claims are opaque;
+role semantics, request contexts, application ownership, auth-response aliases,
+and access lifetimes belong to the owning services and applications.
 
-CareCard Release 1.1.1 is the production baseline. Seeding with
-`--seed-release-data` is complete. Production cluster data, database rows,
-and stored user files will be preserved going forward. There will be no
-complete user-data wipeout and re-creation.
+## Verified tokens
 
-Future production changes must use data-preserving migrations. Do not replay
-the completed initialization or run reset, rollback, or seed workflows as part
-of ordinary production deployment.
+`jwtReadVerifiedToken(token, parsedJwks, requirements?)` returns header and payload
+only after signature, expiration, issued-at, and not-before validation. Invalid
+credentials return null. Caller requirements may specify issuer, subject, audience
+(string or list), maximumAgeSeconds, and validateClaims. The callback defines
+custom-claim policy explicitly; it must return true to accept the payload.
 
-The [completed seed inventory and verification record](https://github.com/CareCard-ca/plans/blob/main/cc-seed-data/production-seed-result.md)
-documents the accepted release baseline and verification limitations.
+There is no application audience shape or ten-minute lifetime default. A caller
+may require a single string audience in validateClaims when its own contract
+requires one. Malformed requirements raise TypeError.
+
+```js
+const { jwtReadVerifiedToken } = require('@carecard/jwt-read');
+const parts = jwtReadVerifiedToken(token, verificationJwks, {
+  issuer: 'issuer',
+  audience: 'receiver',
+  maximumAgeSeconds: 900,
+  validateClaims: payload => payload.custom === 'expected',
+});
+```
+
+## Introspection and transport
+
+`jwtReadIntrospectedToken(token, introspect, requirements?)` accepts caller-normalized
+`{ active: true, claims }` results and applies the same explicit constraints.
+It preserves canonical custom claims without inferring service response fields.
+Introspection failures propagate to the owner.
+
+`jwtReadBearerToken(header)` accepts exactly one complete HTTP Bearer credential,
+including outer whitespace, and rejects extra words or internal token whitespace.
+
+`jwtGetTokenDeadline(payload, maximumAgeSeconds?)` returns the expiration or the
+earlier explicit maximum age, with no business-policy default. Invalid timing
+returns null. `jwtIsTokenExpired(request, maximumAgeSeconds?)` checks current time.
+
+The existing generic `jwtGetClientId`, `jwtGetAgeInSeconds`, and `jwtIsExpired`
+helpers expose standard subject/timing values. They assign no role or privilege.
+Express request payload types contain registered and opaque custom claims only.
+
+## Validation
+
+Run `npm run test:All`, `npm run lint`, and `npm run format:check`. Tests use the
+public package root and exercise opaque claims, configurable identities and
+lifetimes, key rotation, canonical introspection, malformed input, and timing.
+Business authorization and mapping are tested through owner-local boundaries.
 
 Non-negotiable test order invariance rule: Every test must pass independently of which tests run before or after it, and the suite must pass in every execution order. Each test must establish the state it needs, isolate mutable state, and clean up state it owns; it must never rely on another test's setup, mutations, or cleanup. Default test, CI, and Husky commands must use the test framework's ordinary ordering and must not force randomized ordering. Random-order execution is an explicit diagnostic only, and every failure it exposes must be fixed at the root cause.
 
 Non-negotiable root-cause solution rule: Always identify and solve the verified root cause, use the stronger solution, and deliver a correct, durable, production-quality result. Never treat a temporary workaround, resource increase, retry, suppression, bypass, or symptom-only patch as completion. Validate the root-cause fix against the real failing workflow and prove the end state.
-
-![Tests Passing](https://github.com/CareCard-ca/pkg-jwt-read/actions/workflows/ci.yml/badge.svg)
-![Coverage](https://img.shields.io/badge/Coverage-80%25-orange)
-
-Utility package for reading, parsing, and verifying JWTs in the CareCard
-ecosystem. It also provides the shared request middleware used by `ms-*`
-services to accept either an `ms-auth` JWT or an opaque server-auth token
-introspected by `ms-auth`.
-
-## Development Rule
 
 Non-negotiable TDD rule: Always write the failing test first, run it to confirm it fails for the intended reason, then implement the code and rerun the test until it passes. Test Driven Development is required for all coding work and must not be skipped. For documentation- or skill-only edits, run the relevant focused non-test
 validation before changing the prose; do not add automated tests that inspect
@@ -39,316 +66,3 @@ Non-negotiable error and warning rule: Never suppress, silence, hide, downgrade,
 Non-negotiable TypeScript type rule: Never use the TypeScript type `any`; always use specific domain types, generics, existing project types, or `unknown` with explicit narrowing in all TypeScript-family files (`.ts`, `.tsx`, `.mts`, `.cts`, and `.d.ts`).
 
 Non-negotiable code organization rule: Functions with the same or equivalent behavior must use the same or clearly corresponding descriptive names across CareCard repositories, and equivalent functionality must live in files with the same names within each repository's established architecture. No backward compatibility names, aliases, or duplicate locations are allowed.
-
-## Features
-
-- **JWT Verification**: Middleware-like utilities for signature and role verification.
-- **Express Integration**: Designed to work seamlessly with Express `req` objects.
-- **Role Mapping**: Simple utility for translating internal role codes to human-readable names.
-- **Claims Extraction**: Easy extraction of `sub` (clientId) and other JWT payload claims.
-- **Expiration Management**: Helpers to check if a JWT is expired and calculate its remaining TTL.
-- **Service JWTs**: Helpers for verifying and extracting microservice-to-microservice JWTs with standard `iss`, `sub`, `aud`, `iat`, and `exp` claims.
-- **JWT or Server Auth**: Middleware helpers that verify normal JWTs locally and
-  call a service-provided introspector for opaque server-auth tokens.
-- **Scoped User Authorization**: Optional `X-Authorization-Context`
-  verification attaches compact scoped authorization claims to
-  `req.userAuthorization` without replacing `req.jwt`.
-
-## Installation
-
-```bash
-npm install @carecard/jwt-read
-```
-
-## Usage
-
-### Application namespace verification
-
-Callers with an existing signature and lifetime verifier can compose
-`jwtHasApplicationAudience(payload, expectedAudience)` with that verifier. This
-predicate only checks audience; it does not authenticate an unsigned payload.
-
-Application authentication requires an explicit expected audience supplied by the
-owning application's configuration. `jwtReadApplicationToken(token, jwks,
-expectedAudience)` returns the verified credential or `null`. It accepts one
-nonempty audience string matching `aud` exactly and retains signature, `kid`,
-subject, and lifetime checks. A missing expected audience is a configuration
-error. Namespace values and defaults do not belong in this package.
-
-Express consumers use `jwtVerifyApplication(jwks, expectedAudience)` or
-`jwtVerifyApplicationOrServerAuth(jwks, expectedAudience, introspector)`.
-`jwtVerifyApplicationOrServerAuthAndHasRole(role, jwks, expectedAudience,
-introspector)` adds the existing role check. Corresponding callable boundaries
-are `jwtValidateAndExtractApplication` and
-`jwtValidateAndExtractApplicationOrServerAuth`.
-
-Application access expires at the earlier of `exp` and `iat + 600`, including the
-exact boundary. Missing, malformed, or future `iat` claims are rejected. No clock
-skew extends this limit. `jwtGetAccessTokenDeadline(payload)` returns this access
-deadline, and `jwtIsAccessTokenExpired(req)` checks the current clock on every use.
-Consumers must also validate durable session expiration and revocation with the
-owning authentication service. Access tokens alone do not authorize renewal.
-
-Opaque introspection must return `aud` with the owning application's namespace,
-the original access `iat`, an access expiration, and the source session identity.
-The application reader rechecks access expiry after asynchronous introspection
-and preserves `sid` in its request context. Audience rejection clears `req.jwt`; a JWT
-cannot be retried as an opaque session. `jwtGetApplicationContext(req)` projects
-the verified audience as `application_namespace` alongside the existing user ID
-and normalized role. These APIs reuse existing key rotation and signing helpers.
-Service-JWT issuer and receiving-service audience checks retain their existing
-separate contract.
-
-### Middleware-like Verification (`verifyJwtAndRole`)
-
-```javascript
-const { verifyJwtAndRole, throwUsedTokenError } = require('@carecard/jwt-read');
-const { parseJwtVerificationJwks } = require('@carecard/auth-util');
-
-const verificationJwks = parseJwtVerificationJwks(process.env.MS_AUTH_JWT_VERIFICATION_JWKS);
-const verifyAdmin = verifyJwtAndRole('admin', verificationJwks, throwUsedTokenError);
-
-// In an Express controller/middleware
-try {
-  await verifyAdmin(req, res, next);
-  // If successful, req.jwt contains { header, payload }
-  console.log(req.jwt.payload.sub);
-} catch (error) {
-  // Handle verification error
-}
-```
-
-### Bearer JWT Verification
-
-```javascript
-const { jwtVerify } = require('@carecard/jwt-read');
-
-app.use(jwtVerify(verificationJwks));
-```
-
-### Role Utilities
-
-```javascript
-const { getNameOfRole, getCodeOfRole } = require('@carecard/jwt-read');
-
-console.log(getNameOfRole('ad')); // Result: 'admin'
-console.log(getCodeOfRole('super_admin')); // Result: 'su'
-```
-
-### Auth RLS Role Semantics
-
-`ms-auth` treats a JWT or server-auth payload containing `roles: ["ad"]` as the
-auth-service super-admin signal for its RLS policies. Consumers may map `ad` to
-UI/domain names such as `super_admin`, but middleware should preserve the
-original roles array on the request context so services can make
-database-context decisions consistently.
-
-Docs that mention `ms-auth` controller internals should use concise action
-names such as `loginUser`, `registerUser`, `getUserDetail`, and `renewJwt`.
-Access level is conveyed by route middleware and endpoint placement, not by
-`public`/`protected`/`admin`/`Handler` suffixes.
-
-### Service-To-Service JWTs
-
-Use service JWT verification helpers for backend service calls. The sending
-service signs the token with `@carecard/auth-util`. The receiving service uses
-this package to verify the token by `kid` through the sending service's public
-JWKS and check the expected issuer and audience.
-
-```javascript
-const { jwtCreateServiceAuthorizationHeader } = require('@carecard/auth-util');
-const { jwtVerifyService } = require('@carecard/jwt-read');
-
-const authorization = jwtCreateServiceAuthorizationHeader({
-  issuer: 'ms-institutions',
-  audience: 'ms-auth',
-  signingJwk: institutionsSigningJwk,
-});
-
-app.use(
-  jwtVerifyService(
-    institutionsVerificationJwks,
-    'ms-institutions',
-    'ms-auth',
-    throwNotAuthorizedError,
-  ),
-);
-```
-
-Service JWT payloads follow standard JWT semantics:
-
-- `iss`: sending service
-- `sub`: sending service identity
-- `aud`: receiving service
-- `iat`: issued-at NumericDate
-- `exp`: expiration NumericDate
-
-### JWT Or Server-Auth Middleware
-
-Use the `OrServerAuth` helpers on app-facing `ms-*` routes that should accept
-both current authentication modes. The JWT path verifies locally with the
-`ms-auth` public JWKS. The server-auth path calls the provided introspector,
-which should send the opaque token to
-`POST /api/v1/ms-auth/server-auth/introspect` with the receiving service's
-service JWT.
-
-```javascript
-const {
-  jwtGetRoleCode,
-  jwtVerifyOrServerAuth,
-  jwtVerifyOrServerAuthAndHasRole,
-} = require('@carecard/jwt-read');
-
-const verifyUser = jwtVerifyOrServerAuth(
-  msAuthVerificationJwks,
-  token => introspectServerAuthTokenWithMsAuth(token),
-  throwNotAuthorizedError,
-);
-
-const verifyAdmin = jwtVerifyOrServerAuthAndHasRole(
-  jwtGetRoleCode('admin'),
-  msAuthVerificationJwks,
-  token => introspectServerAuthTokenWithMsAuth(token),
-  throwNotAuthorizedError,
-);
-```
-
-The introspector must return claims for valid tokens. This package normalizes
-those claims onto `req.jwt.payload` with `authMode: "server-auth"` and
-`auth_mode: "server-auth"` so services can keep their existing JWT-backed
-database context and role checks.
-
-Server-auth email verification claims are copied only when present. The
-`emailVerified` and `email_verified` names retain their exact values, and
-omission remains omission.
-
-### Scoped User Authorization Context
-
-Use `jwtVerifyUserAuthorization` when a route needs to verify only the compact
-authorization-context token carried in `X-Authorization-Context`. The token is
-read as a raw JWT header value, not as `Bearer <token>`.
-The exported `DEFAULT_USER_AUTHORIZATION_MAX_TOKEN_LENGTH` is `2048`; token
-issuers and consumers should use that shared constant instead of duplicating a
-local limit.
-
-```javascript
-const { jwtVerifyUserAuthorization } = require('@carecard/jwt-read');
-
-app.use(
-  jwtVerifyUserAuthorization(institutionsVerificationJwks, throwNotAuthorizedError, {
-    expectedType: 'carecard.authorization-context.scoped.v1',
-    expectedIssuer: 'ms-institutions',
-    expectedAudience: 'ms-documents',
-  }),
-);
-```
-
-Existing JWT verification helpers can also read the header by passing an
-optional trailing options object. This preserves current `req.jwt` behavior and
-adds decoded scoped claims to `req.userAuthorization`.
-
-```javascript
-const verifyUser = jwtVerifyOrServerAuth(
-  msAuthVerificationJwks,
-  token => introspectServerAuthTokenWithMsAuth(token),
-  throwNotAuthorizedError,
-  {
-    userAuthorization: {
-      verificationJwks: institutionsVerificationJwks,
-      expectedType: 'carecard.authorization-context.scoped.v1',
-      expectedIssuer: 'ms-institutions',
-      expectedAudience: 'ms-documents',
-    },
-  },
-);
-```
-
-Every verification value must come from
-`parseJwtVerificationJwks(serializedJwks)`. A JWKS may contain active and
-retiring public Ed25519 keys, so rotation adds the replacement verifier before
-switching signers and removes the retiring key only after the maximum JWT
-lifetime plus clock skew. Unknown or removed `kid` values fail closed.
-
-When the optional reader is configured, a missing `X-Authorization-Context`
-leaves `req.userAuthorization` as `null`. If the header is present but invalid,
-throwing middleware fails closed. No-throw middleware clears
-`req.userAuthorization` and continues.
-
-`jwtGetContext(req)` preserves the normal database caller shape of `user_id`
-and optional `role`. When a verified `req.userAuthorization.payload` is present,
-it also returns `authorizationContext` with those compact claims and the original
-`userAuthorization` object so service models can set `app.authz_context` for
-RLS without rebuilding the full authorization graph.
-
-## Testing
-
-Run tests using:
-
-```bash
-npm test
-```
-
-To run tests with coverage:
-
-```bash
-npm run test:coverage
-```
-
-To run type tests:
-
-```bash
-npm run test:types
-```
-
-## Architecture
-
-The package is organized into several modules:
-
-- `jwtLib`: Main logic for JWT verification, extraction, and Express integration.
-- `jwtRoles`: Role mapping between internal codes and names.
-
-All modules are exported through the main `index.js`.
-
-## Fail-Closed Test Lifecycle Audit
-
-The current package tests own no HTTP listener, database pool, Kafka client,
-background timer, or child process after completion. Mocha's test timeout fails
-a stalled async test, the suites run without bail or forced exit, and npm
-preserves each command's nonzero status. Keep natural process exit as the open
-handle regression check; validation must not hide failures with retries, forced
-success, skipped tests, or output suppression.
-
-Do not add unpublished executable validation code to a `pkg-*` repository. If a
-future test owns a long-lived resource or demonstrates a post-suite hang, add a
-contract-tested process watchdog through the coordinated package version,
-publish, and consumer propagation workflow. That watchdog must return
-immediately when no helper remains, allow only a bounded 250 ms settlement
-window for already-stopping helpers, fail persistent descendants, preserve
-failures and output, use exit code `124` only for a real outer deadline, and
-remain a final guard rather than a substitute for explicit cleanup.
-
-## TDD And Validation
-
-Test Driven Development is a non-negotiable requirement.
-
-The sole purpose of automated tests is to verify observable functionality and externally visible behavior.
-Tests must validate what the system does through its public interfaces and expected outcomes.
-
-Tests must not assert, inspect, or depend on implementation details, including but not limited to:
-
-- The existence of specific lines of code, statements, functions, classes, files, or modules.
-- Specific algorithms, control flow, variable names, method calls, code snippets, or internal implementation choices.
-- Any internal structure that can change without changing externally observable behavior.
-
-A correct implementation may be completely rewritten or refactored without requiring changes to functional tests, provided its externally observable behavior remains unchanged.
-
-Any test that fails solely because the implementation changed while the externally observable behavior remained correct is incorrectly designed and must be rewritten or removed.
-
-This requirement is mandatory for all new tests and must be applied whenever existing tests are modified.
-
-## Contract whitespace
-
-Bearer and custom-header credentials trim outer whitespace before verification.
-Bearer parsing accepts the complete header and rejects extra words or whitespace
-inside a token; it never discards a supplied suffix. Signed bytes, signature
-checks, application audiences and access lifetimes retain their existing rules.

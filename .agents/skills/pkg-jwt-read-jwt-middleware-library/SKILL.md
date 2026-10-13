@@ -19,15 +19,29 @@ Non-negotiable TypeScript type rule: Never use the TypeScript type `any`; always
 
 Non-negotiable code organization rule: Functions with the same or equivalent behavior must use the same or clearly corresponding descriptive names across CareCard repositories, and equivalent functionality must live in files with the same names within each repository's established architecture. No backward compatibility names, aliases, or duplicate locations are allowed.
 
+## Non-Negotiable Package Independence
+
+`pkg-*` must always be agnostic to roles and the inner workings of `ms-*` and
+`app-*`. Packages must not own business role codes, permissions, workflow
+states, domain payload schemas, database caller contexts, application routes,
+or application-specific policy defaults. Those contracts belong to their
+owning services and applications.
+
+Keep packages limited to reusable technical mechanisms. Accept explicit
+caller-supplied schemas, parsers, policy configuration, identities, and opaque
+custom claims where needed. Never import a service or application, copy its
+business catalogue into a package, infer privilege from custom claims, or add
+caller-name branches. Preserve consumer behavior in owner-local adapters and
+validate both the generic package contract and the owning public boundaries.
+
 ## Purpose
 
-CareCard JWT read package for parsing, request attachment, visitor tokens, role mapping, JWT-or-server-auth authorization middleware, exports, and tests.
+Generic JWT readers for signature verification, registered constraints, opaque custom claims, caller-configured introspection, exports, and tests.
 
 ## When To Use
 
-- Use when changing pkg-jwt-read JWT parsing, server-auth introspection
-  middleware, visitor tokens, role checks, auth context, package exports, or
-  tests.
+- Use when changing generic JWT readers, bearer transport parsing, configured
+  constraints, canonical introspection, public types, or tests.
 - Pair with `carecard-workspace-standards` when the task affects shared CareCard conventions or cross-repository contracts.
 
 ## When Not To Use
@@ -66,309 +80,26 @@ CareCard JWT read package for parsing, request attachment, visitor tokens, role 
 - Never suppress errors, lint failures, type failures, security failures, or failing tests; fix the underlying issue or report the blocker.
 - Do not log or expose secrets, JWTs, passwords, credentials, private keys, sensitive personal data, SQL internals, or stack traces.
 
-## Overview
+## Generic Token Contract
 
-Use this skill when working inside `pkg-jwt-read`, the `@carecard/jwt-read`
-package. It provides utilities for reading, parsing, verifying, and attaching
-JWT data in the CareCard ecosystem. It depends on `@carecard/auth-util` for
-low-level cryptographic operations. It also exposes middleware helpers that
-allow `ms-*` services to accept either an `ms-auth` JWT or an opaque server-auth
-token introspected by `ms-auth`.
+Keep public exports and declarations aligned. Use `lib/configuredTokens.js` for
+signature-backed readers, explicit registered constraints, canonical caller
+introspection, generic bearer parsing, and caller-selected deadlines. Keep
+standard subject/timing helpers in `lib/registeredClaims.js`.
 
-Use `$carecard-workspace-standards` for shared workspace, dependency, package,
-testing, and security rules. Legacy `pkg-jwt-read/.codex` and
-`pkg-jwt-read/.junie` guidance has been migrated into these skills; do not
-depend on those folders being present.
+Do not add role maps, business claim schemas, application audience rules,
+request/database caller contexts, auth-response aliases, framework routes,
+service names, or fixed application lifetimes. The owner supplies custom-claim
+validation and canonical introspection results. HTTP authorization strategies
+and downstream account refresh remain owner responsibilities.
 
-## Non-Negotiable Rules
+Use parsed keys and crypto primitives from auth-util. Invalid credentials fail
+closed; malformed configuration throws; introspection errors propagate. Preserve
+arbitrary custom claims exactly without assigning authority or mutating meaning.
+Use unknown and narrowing, never TypeScript any.
 
-- Never use TypeScript type `any`. Use specific JWT, Express, request, payload,
-  header, role, generic, or `unknown` types with narrowing.
-- Follow this repository's coding style, naming conventions, and CommonJS
-  project structure.
-- Use Test-Driven Development: add a new failing consumer-facing Mocha or type
-  test through the supported package root before changing behavior. Modify a
-  pre-existing test only after the user grants fresh, explicit permission for
-  that exact change.
-- Never suppress errors, linter warnings, TypeScript errors, or failing tests.
-  Handle the underlying issue.
-- Do not add dependencies unless absolutely needed. Ask for confirmation first
-  with the reason and tradeoff.
-- Before finalizing work, run every direct script in `.husky` and fix anything
-  they report.
-
-## Package Shape
-
-- Keep `index.js` as the centralized public export surface.
-- Keep TypeScript declarations in `index.d.ts` aligned with every public export
-  in `index.js`.
-- Keep JWT verification and request attachment behavior in `lib/jwtLib.js`.
-- Keep role code/name mapping and JWT context behavior in `lib/jwtRoles.js`.
-- Preserve the package's CommonJS module style unless the repository is
-  intentionally migrated.
-- Keep backward-compatible deprecated exports unless the user explicitly asks to
-  remove them.
-
-## JWT Verification Layer
-
-Application-namespace consumers use `jwtReadApplicationToken`,
-`jwtValidateAndExtractApplication`, `jwtValidateAndExtractApplicationOrServerAuth`,
-and the corresponding `jwtVerifyApplication*` middleware. Require an explicit
-configuration-owned audience and exactly one matching user `aud`; preserve the
-claim for opaque introspection and `jwtGetApplicationContext`. Keep namespace
-values out of package code. Never retry rejected JWTs as opaque sessions. Reuse
-the existing EdDSA/JWKS and service-token contracts; adding an audience does not
-create another key system.
-
-Application access tokens expire at `min(exp, iat + 600)` at the exact boundary,
-with no grace for clock skew. Require integer access timing claims and reject
-future issuance. Use `jwtIsAccessTokenExpired` after awaited authorization work
-and whenever previously extracted credentials are reused. Opaque introspection
-must return its original access issuance time and source session identity.
-Durable login expiration, revocation, and independently authenticated renewal
-remain owned by `ms-auth`; an access token alone must never grant renewal.
-
-Normalize outer credential whitespace at the header boundary. Require a complete
-Bearer header, reject extra words and internal token whitespace, and preserve
-all signature, audience and lifetime checks.
-
-`lib/jwtLib.js` owns:
-
-- Signature verification using parsed public Ed25519 JWKS values.
-- Middleware-like functions for Express, such as `verifyJwtAndRole`.
-- Service-to-service JWT verification and extraction helpers:
-  `jwtValidateAndExtractService` and `jwtVerifyService`.
-- JWT-or-server-auth helpers: `jwtValidateAndExtractOrServerAuth`,
-  `jwtVerifyOrServerAuth`, and `jwtVerifyOrServerAuthAndHasRole`.
-- Extraction of `sub`/clientId and other claims from JWT objects.
-- Expiration checks and TTL calculations.
-- Request attachment behavior for authenticated JWT objects and visitor tokens.
-- Request attachment behavior for compact scoped authorization-context JWTs
-  from `X-Authorization-Context` as `req.userAuthorization`.
-- Shared header defaults for scoped authorization context:
-  `DEFAULT_USER_AUTHORIZATION_HEADER_NAME` and
-  `DEFAULT_USER_AUTHORIZATION_MAX_TOKEN_LENGTH`. Token issuers and consuming
-  services should import these constants instead of duplicating the header name
-  or 2048-character limit.
-- Server-auth request attachment behavior that normalizes introspected claims
-  into `req.jwt.payload` with `authMode: "server-auth"` and
-  `auth_mode: "server-auth"`.
-- Server-auth email verification claims are copied only when present. The
-  `emailVerified` and `email_verified` names retain their exact values, and
-  omission remains omission.
-- Integration with `@carecard/common-util` for standardized login and
-  authorization errors.
-
-Use `@carecard/auth-util` for JWT creation, decomposition, and signature
-verification. Do not duplicate cryptographic logic in this package.
-
-Every verification argument and nested `userAuthorization.verificationJwks`
-option must be a value returned by
-`parseJwtVerificationJwks(serializedJwks)`. Do not accept PEM text, RSA keys,
-raw JWK objects, missing-`kid` tokens, or single-key compatibility fallbacks.
-Verification selects the exact public key named by the token's RFC 7638
-thumbprint `kid`; unknown and retired kids fail closed.
-
-JWT creation functions do not belong in this package. Service-to-service token
-creation belongs in `@carecard/auth-util` via `jwtCreateServiceToken` and
-`jwtCreateServiceAuthorizationHeader`.
-
-Opaque server-auth token creation, hashing, persistence, and introspection
-belong in `ms-auth`. This package only accepts a caller-provided introspector
-function and normalizes valid introspection claims into the existing request
-JWT context.
-
-Service JWTs must follow standard JWT claim semantics. They use `iss` for the
-sending service, `sub` for the sending service identity, `aud` for the
-receiving service, and NumericDate `iat`, `exp`, and optional `nbf` claims.
-Receivers must verify the signature with the sending service public JWKS and
-must check expected issuer, audience, subject, and lifetime. Do not add
-CareCard-specific replacement claims when a registered JWT claim covers the
-same meaning.
-
-Scoped authorization-context JWTs from `X-Authorization-Context` are independent
-from the primary `Authorization` JWT. They must attach to
-`req.userAuthorization`, not `req.jwt`, and they should be read as raw JWT
-header values rather than `Bearer` tokens. Existing JWT and server-auth
-middleware may accept an optional trailing `userAuthorization` options object;
-preserve legacy behavior when that option is omitted.
-
-## Role Mapping Layer
-
-`lib/jwtRoles.js` owns translation between internal role codes and human-readable
-role names, such as `ad` and `admin`.
-
-- Update `lib/jwtRoles.js` when adding or changing roles.
-- Keep role code, role name, context, and authorization helper behavior covered
-  by focused tests.
-- Preserve existing role semantics unless a task explicitly changes
-  authorization behavior.
-- Preserve the original JWT `roles` array on request context. `ms-auth` RLS
-  treats a payload containing `ad` as the auth-service super-admin signal;
-  dashboard code may map that to `super_admin`, but middleware must not hide,
-  rename, or drop the raw role payload needed by backend database contexts.
-
-## NoThrow And Error Behavior
-
-- Preserve the distinction between throwing APIs and `NoThrow` APIs.
-- `NoThrow` variants should set the attached request property to `null` for
-  invalid tokens without hiding unexpected implementation errors.
-- Use provided `throwError` and `throwUsedTokenError` patterns to keep
-  ecosystem error responses consistent.
-- Use `@carecard/common-util` error helpers for login and authorization
-  failures.
-- Keep user-facing errors safe and avoid exposing token internals or
-  verification details.
-
-## Security Rules
-
-- Treat JWT parsing, signature verification, server-auth introspection,
-  visitor tokens, authorization roles, and request context as
-  security-sensitive.
-- Do not log JWTs, token fragments, public/private keys, decoded payloads,
-  authorization headers, visitor headers, or sensitive request data.
-- Keep missing headers, invalid signatures, expired tokens, revoked or invalid
-  server-auth tokens, role failures, and used-token errors behaviorally
-  distinct where existing APIs do so.
-
-## Types And API Contracts
-
-- Model JWT header, payload, server-auth introspection claims, request
-  attachment, visitor attachment, user authorization attachment, role, and
-  context shapes explicitly in
-  `index.d.ts`.
-- Prefer `AuthenticatedRequest`, `JwtHeader`, `JwtPayload`, `JwtParts`,
-  `JwtRequestObject`, `VisitorRequestObject`, and `JwtContext` over loose
-  request objects.
-- When existing declarations are too loose, improve them with specific types as
-  part of the touched change instead of adding new loose types.
-- Keep overloads for context-bound helpers such as `jwtIsExpired` readable and
-  verify them by compiling realistic consumer usage through the package root.
-- When public types, overloads, or attached request behavior changes, compile
-  the supported consumer contract without asserting that named exports or
-  declaration nodes exist.
-
-## Tests
-
-- Use Mocha for runtime tests under `test`.
-- Exercise runtime behavior only through the package's supported root exports;
-  tests must not mirror `lib` modules or depend on internal file layout.
-- Verify request-attachment and context-bound behavior through those public
-  exports without asserting internal method calls.
-- Compile realistic consumer code through the package root with `tsc` to verify externally visible declaration behavior.
-- Add focused tests for valid JWTs, invalid JWTs, missing headers, role checks,
-  visitor token extraction, expiration behavior, request attachment behavior,
-  server-auth introspection success/failure, NoThrow behavior, and
-  context-bound helpers when those areas change.
-- Set `NODE_ENV=test` where tests or scripts require it.
-- Keep tests deterministic and avoid real external services.
-
-## Validation
-
-Useful commands:
-
-- `npm run lint`
-- `npm run lint:fix`
-- `npm run format`
-- `npm run format:check`
-- `npm run test`
-- `npm run test:types`
-- `npm run test:coverage`
-- `npm run test:All`
-
-Before pushing or finalizing, run every direct `.husky` script. The current
-`.husky/pre-commit` runs:
-
-```bash
-npm run lint:fix
-npm run format
-npm run test:All
-```
-
-If any validation command cannot run, report the exact command, failure reason,
-and remaining risk.
-
-## Remote Git Operations Guardrail
-
-Fetches needed to establish a fresh `origin/main` at task start and before a
-source-branch push are authorized without a separate approval question. Commits,
-pushes, PR mutations, and branch cleanup require an authorized task; a request
-for local work alone does not authorize publication. An authorized squash merge
-into `main` includes the merged-source cleanup, local `main` update, and
-`development` synchronization below unless the user explicitly says otherwise.
-Never delete local or remote `main`, or force-push to remote `main`, including
-with `--force-with-lease`.
-
-## Agent Guidance Git Workflow
-
-Reuse the current working branch for every follow-up request, even when the
-subject changes or the working tree is clean. Create a branch only when no
-working branch exists or the checkout is on `main` or `development`. Otherwise,
-fetch remote `main` HEAD and rebase the same working branch onto that fetched
-commit, preserving its commits and uncommitted work.
-
-Work from the owning repository root and stage only intended guidance changes.
-Fetch fresh `origin/main` at task start. Create `<agent-name>/<branch-name>`
-from it only when no working branch exists or the current branch is `main` or
-`development`. Otherwise keep
-and rebase the current branch onto it, preserving existing commits and
-uncommitted changes. Build subsequent task commits on that same branch, even
-for a different task or a clean working tree. Honor explicit user
-working-branch instructions.
-
-Fetch again before every source-branch push and rebase only when the branch
-does not already contain the latest `origin/main`. Required fetches need no
-separate approval; commits, pushes, PR mutations, and cleanup require an
-authorized task. A local guidance edit does not authorize publishing it.
-
-For an authorized merge, create or reuse the PR into `main`, run applicable
-validation, and squash-merge; administrator privileges may be used without
-GitHub reviews. Verify the merge and delete its source branch remotely and
-locally after checking for newer unmerged work. Then fast-forward local `main`
-and replace local and remote branches named exactly `development` with the
-latest remote `main` commit, using an explicit observed-commit
-`--force-with-lease` remotely. Create a missing development counterpart when
-either existed; leave repositories with neither unchanged. If development was
-the merged source, recreate it from the new main. Verify commit parity and
-cleanup; preserve dirty worktrees and report conflicts or rejected leases.
-
-Never delete local or remote `main` or force-push to remote `main`, including
-with `--force-with-lease`. Guard exact destination refs before deleting or
-forcing any branch. Do not amend commits or stage unrelated files.
-
-## Fail-Closed Test Lifecycle Audit
-
-The current package tests own no HTTP listener, database pool, Kafka client,
-background timer, or child process after completion. Mocha's test timeout fails
-a stalled async test, the suites run without bail or forced exit, and npm
-preserves each command's nonzero status. Keep natural process exit as the open
-handle regression check; validation must not hide failures with retries, forced
-success, skipped tests, or output suppression.
-
-Do not add unpublished executable validation code to a `pkg-*` repository. If a
-future test owns a long-lived resource or demonstrates a post-suite hang, add a
-contract-tested process watchdog through the coordinated package version,
-publish, and consumer propagation workflow. That watchdog must return
-immediately when no helper remains, allow only a bounded 250 ms settlement
-window for already-stopping helpers, fail persistent descendants, preserve
-failures and output, use exit code `124` only for a real outer deadline, and
-remain a final guard rather than a substitute for explicit cleanup.
-
-## TDD And Validation
-
-Test Driven Development is a non-negotiable requirement.
-
-The sole purpose of automated tests is to verify observable functionality and externally visible behavior.
-Tests must validate what the system does through its public interfaces and expected outcomes.
-
-Tests must not assert, inspect, or depend on implementation details, including but not limited to:
-
-- The existence of specific lines of code, statements, functions, classes, files, or modules.
-- Specific algorithms, control flow, variable names, method calls, code snippets, or internal implementation choices.
-- Any internal structure that can change without changing externally observable behavior.
-
-A correct implementation may be completely rewritten or refactored without requiring changes to functional tests, provided its externally observable behavior remains unchanged.
-
-Any test that fails solely because the implementation changed while the externally observable behavior remained correct is incorrectly designed and must be rewritten or removed.
-
-This requirement is mandatory for all new tests and must be applied whenever existing tests are modified.
+Write failing public-root behavior and type tests before changes. Cover explicit
+constraints, timing boundaries, malformed inputs, retained/removed keys, opaque
+claims, and introspection failure. Run the complete repository-native suite,
+lint, formatting, types, and normal Husky checks. Architecture audits are separate
+from functional tests and must not expose private functions for testing.

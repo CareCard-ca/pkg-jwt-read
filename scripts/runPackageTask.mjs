@@ -10,9 +10,7 @@ export const packageTasks = Object.freeze({
     { command: 'node', arguments: ['scripts/testParallel/parallelTestPolicy.audit.mjs'] },
     { command: 'mocha', arguments: ['test/config/errorWarningSuppression.audit.js'] },
     { command: 'mocha', arguments: ['test/config/repositoryIsolation.audit.js'] },
-    { command: 'mocha', arguments: ['test/config/serverAuthEmailVerificationDocs.audit.js'] },
     { command: 'mocha', arguments: ['test/config/tddGuidanceDocs.audit.js'] },
-    { command: 'mocha', arguments: ['test/jwtLib.audit.js'] },
   ],
   test: [
     { command: 'npm', arguments: ['run', 'validate:audits'] },
