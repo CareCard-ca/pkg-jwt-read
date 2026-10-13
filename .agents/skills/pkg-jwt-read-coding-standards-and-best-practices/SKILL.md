@@ -5,6 +5,21 @@ description: 'Use after carecard-must-do. Mandatory for every pkg-jwt-read task,
 
 # Pkg JWT Read Coding Standards And Best Practices
 
+## Non-Negotiable Package Independence
+
+`pkg-*` must always be agnostic to roles and the inner workings of `ms-*` and
+`app-*`. Packages must not own business role codes, permissions, workflow
+states, domain payload schemas, database caller contexts, application routes,
+or application-specific policy defaults. Those contracts belong to their
+owning services and applications.
+
+Keep packages limited to reusable technical mechanisms. Accept explicit
+caller-supplied schemas, parsers, policy configuration, identities, and opaque
+custom claims where needed. Never import a service or application, copy its
+business catalogue into a package, infer privilege from custom claims, or add
+caller-name branches. Preserve consumer behavior in owner-local adapters and
+validate both the generic package contract and the owning public boundaries.
+
 ## Mandatory API Contract Skill
 
 Non-negotiable: On every task, read and apply
