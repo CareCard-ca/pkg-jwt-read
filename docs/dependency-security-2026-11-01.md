@@ -25,3 +25,7 @@ Non-negotiable repository isolation rule: Every repository must run its Husky ho
 The direct `@carecard/common-util` dependency selects 3.45.0 from the verified
 coordinated registry release. Preserve the generic public contract and the
 full native validation gates when consuming this dependency.
+
+The direct `@carecard/validate` dependency selects 3.45.0 from the verified
+coordinated registry release. Preserve the generic public contract and the
+full native validation gates when consuming this dependency.
