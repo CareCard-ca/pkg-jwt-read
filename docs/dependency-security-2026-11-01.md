@@ -29,3 +29,7 @@ full native validation gates when consuming this dependency.
 The direct `@carecard/validate` dependency selects 3.45.0 from the verified
 coordinated registry release. Preserve the generic public contract and the
 full native validation gates when consuming this dependency.
+
+The direct `@carecard/auth-util` dependency selects 3.45.0 from the verified
+coordinated registry release. Preserve the generic public contract and the
+full native validation gates when consuming this dependency.
