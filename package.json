@@ -51,7 +51,7 @@
   },
   "dependencies": {
     "@carecard/auth-util": "3.44.0",
-    "@carecard/common-util": "3.44.0",
+    "@carecard/common-util": "3.45.0",
     "@carecard/validate": "3.44.0"
   },
   "overrides": {
